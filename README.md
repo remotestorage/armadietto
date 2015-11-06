@@ -13,9 +13,9 @@ maintenance of restore resumes.
 
 ### CAVEAT EMPTOR
 
-Although it may have been published to the `npm` repo, this project is still
-considered experimental. It has not been widely deployed, and I am in the
-process of rolling it out for personal use and within my company.
+This project is still considered experimental. It has not been widely deployed,
+and I am in the process of rolling it out for personal use and within my
+company.
 
 As with any alpha-stage storage technology, you MUST expect that it will eat
 your data and take precautions against this. You SHOULD expect that its APIs and

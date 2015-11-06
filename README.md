@@ -1,4 +1,15 @@
-# reStore [![Build Status](https://secure.travis-ci.org/jcoglan/restore.svg)](http://travis-ci.org/jcoglan/restore)
+# (mo)reStore [![Build Status](https://secure.travis-ci.org/untitaker/morestore.svg)](http://travis-ci.org/untitaker/morestore)
+
+## What is this?
+
+reStore is a [RemoteStorage][1] server written for Node.js.
+
+moreStore is a fork of [reStore](https://github.com/jcoglan/restore). The
+original author, James Coglan, stopped development of the project. This fork
+contains critical bugfixes, and will persist as an independent project until
+maintenance of restore resumes.
+
+[1]: http://www.w3.org/community/unhosted/wiki/RemoteStorage
 
 ### CAVEAT EMPTOR
 
@@ -13,24 +24,14 @@ reports but you MUST NOT expect that I will.
 
 Per the MIT license, **usage is entirely at your own risk**.
 
-## What is this?
-
-reStore [RemoteStorage][1] server written for Node.js. It is designed to be
-compatible with [RemoteStorage.js][2] from version 0.6 onwards, covering
-versions [RemoteStorage-2011.10][3], [RemoteStorage-2012.04][4], and
-[draft-dejong][5] of the protocol.
-
-[1]: http://www.w3.org/community/unhosted/wiki/RemoteStorage
-[2]: http://remotestorage.io/
-[3]: http://www.w3.org/community/unhosted/wiki/RemoteStorage-2011.10
-[4]: http://www.w3.org/community/unhosted/wiki/RemoteStorage-2012.04
-[5]: http://tools.ietf.org/id/draft-dejong-remotestorage.txt
 
 
 ## Installation
 
 ```
-$ npm install restore
+$ git clone https://github.com/untitaker/morestore
+$ cd morestore
+$ npm install
 ```
 
 

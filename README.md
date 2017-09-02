@@ -1,10 +1,10 @@
-# (mo)reStore [![Build Status](https://secure.travis-ci.org/untitaker/morestore.svg)](http://travis-ci.org/untitaker/morestore)
+# reStore [![Build Status](https://secure.travis-ci.org/lesion/restore.svg)](http://travis-ci.org/lesion/restore)
 
 ## What is this?
 
 reStore is a [RemoteStorage][1] server written for Node.js.
 
-moreStore is a fork of [reStore](https://github.com/jcoglan/restore). The
+This is a fork of [reStore](https://github.com/jcoglan/restore). The
 original author, James Coglan, stopped development of the project. This fork
 contains critical bugfixes, and will persist as an independent project until
 maintenance of restore resumes.
@@ -29,8 +29,8 @@ Per the MIT license, **usage is entirely at your own risk**.
 ## Installation
 
 ```
-$ git clone https://github.com/untitaker/morestore
-$ cd morestore
+$ git clone https://github.com/lesion/restore
+$ cd restore
 $ npm install
 ```
 

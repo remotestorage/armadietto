@@ -13,5 +13,5 @@
     "cert": "/etc/letsencrypt/live/example.com/cert.pem",
     "key": "/etc/letsencrypt/live/example.com/privkey.pem"
   },
-  "baseURL": ""
+  "basePath": ""
 }

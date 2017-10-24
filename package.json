@@ -16,16 +16,11 @@
   },
   "main": "./lib/restore.js",
   "dependencies": {
-    "async": "",
     "ejs": ">= 2.0.0",
     "lockfile": ">= 1.0.0",
-    "mkdirp": "",
     "redis": ">= 0.8.2"
   },
-  "devDependencies": {
-    "jstest": "",
-    "rimraf": ""
-  },
+  "devDependencies": {},
   "scripts": {
     "test": "node spec/runner.js"
   },

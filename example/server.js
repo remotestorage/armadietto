@@ -1,17 +1,17 @@
-var armadietto = require('../lib/armadietto'),
-    store,
-    server;
+const Armadietto = require('../lib/armadietto');
+let store,
+  server;
 
-var type = process.argv[2];
+const  type = process.argv[2];
 
 if (type === 'redis')
-  store = new armadietto.Redis({database: 3});
+  store = new Armadietto.Redis({database: 3});
 else
-  store = new armadietto.FileTree({path: __dirname + '/tree'});
+  store = new Armadietto.FileTree({path: __dirname + '/tree'});
 
-server = new armadietto({
+server = new Armadietto({
   store:  store,
-  http:   {port: 80},
+  http:   {port: 8080},
   https:  {
     force:  true,
     port:   443,

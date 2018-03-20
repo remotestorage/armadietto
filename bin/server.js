@@ -1,31 +1,30 @@
 #!/usr/bin/env node
+const Armadietto = require('../lib/armadietto')
+const path = require('path')
+const fs = require('fs')
 
-var Armadietto = require('../lib/armadietto')
-var path = require('path')
-var fs = require('fs')
-
-var remoteStorageServer = {
+const remoteStorageServer = {
 
   // read and return configuration file
-  readConf: function(confPath) {
+  readConf (confPath) {
     return JSON.parse(fs.readFileSync(confPath, 'utf8'))
   },
 
   // parse cli args
-  parseArgs: function() {
-    var ArgumentParser = require('argparse').ArgumentParser
-    var version = require(__dirname + '/../package.json').version
-    var parser = new ArgumentParser({
+  parseArgs () {
+    const ArgumentParser = require('argparse').ArgumentParser
+    const version = require(path.join(__dirname, '/../package.json')).version
+    const parser = new ArgumentParser({
       version: version,
       addHelp: true,
       description: 'NodeJS remoteStorage server / ' + version
     })
 
-    parser.addArgument(['-c','--conf'], {
-      help: 'Path to configuration',
+    parser.addArgument(['-c', '--conf'], {
+      help: 'Path to configuration'
     })
 
-    parser.addArgument(['-e','--exampleConf'], {
+    parser.addArgument(['-e', '--exampleConf'], {
       help: 'Print configuration example',
       action: 'storeTrue'
     })
@@ -33,12 +32,12 @@ var remoteStorageServer = {
     return parser.parseArgs()
   },
 
-  init: function() {
-    var args = this.parseArgs()
-    var conf = {}
+  init () {
+    const args = this.parseArgs()
+    let conf = {}
 
     if (args.exampleConf) {
-      console.log(fs.readFileSync(__dirname + '/conf.example.json', 'utf8'))
+      console.log(fs.readFileSync(path.join(__dirname, '/conf.example.json'), 'utf8'))
       return -1
     }
 
@@ -49,16 +48,16 @@ var remoteStorageServer = {
 
     try {
       conf = this.readConf(args.conf)
-    } catch(e) {
-      console.error( e.toString() )
+    } catch (e) {
+      console.error(e.toString())
       return -1
     }
-    
+
     console.log('[INFO] Starting remoteStorage: http://' + conf.http.host + ':' + conf.http.port)
 
-    process.umask(077)
-    var store = new Armadietto.FileTree({path: conf.storage_path});
-    var server = new Armadietto({
+    process.umask(0o077)
+    const store = new Armadietto.FileTree({path: conf.storage_path});
+    const server = new Armadietto({
       basePath: conf.basePath,
       store,
       http: {
@@ -78,13 +77,10 @@ var remoteStorageServer = {
       cacheViews: conf.cache_views
     })
 
-
-    server.boot();
+    server.boot()
   }
 }
 
 if (require.main === module) {
   remoteStorageServer.init()
 }
-
-

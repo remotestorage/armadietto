@@ -1,6 +1,6 @@
 {
   "allow_signup": true,
-  "storage_path": "/usr/share/reStore",
+  "storage_path": "/usr/share/armadietto",
   "cache_views": true,
   "http": {
     "host": "0.0.0.0",

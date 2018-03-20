@@ -1,8 +1,8 @@
-var RestoreSteps = require("../restore_steps"),
+var armadiettoSteps = require("../armadietto_steps"),
     JS = require("jstest")
 
 JS.Test.describe("Storage", function() { with(this) {
-  include(RestoreSteps)
+  include(armadiettoSteps)
 
   define("buffer", function(string) {
     return {

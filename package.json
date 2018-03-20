@@ -1,7 +1,7 @@
 {
-  "name": "restore",
+  "name": "armadietto",
   "description": "Simple remoteStorage server",
-  "homepage": "http://github.com/jcoglan/restore",
+  "homepage": "http://github.com/jcoglan/armadietto",
   "author": "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)",
   "keywords": [
     "remoteStorage",
@@ -15,9 +15,9 @@
     "node": ">=6.11.0"
   },
   "bin": {
-    "reStore": "./bin/server.js"
+    "armadietto": "./bin/server.js"
   },
-  "main": "./lib/restore.js",
+  "main": "./lib/armadietto.js",
   "dependencies": {
     "argparse": "^1.0.7",
     "async": "",
@@ -35,10 +35,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/jcoglan/restore.git"
+    "url": "git://github.com/jcoglan/armadietto.git"
   },
   "bugs": {
-    "url": "http://github.com/jcoglan/restore/issues"
-  }
+    "url": "http://github.com/jcoglan/armadietto/issues"
   }
 }

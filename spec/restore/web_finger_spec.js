@@ -1,8 +1,8 @@
-var RestoreSteps = require("../restore_steps"),
+var armadiettoSteps = require("../armadietto_steps"),
     JS = require("jstest")
 
 JS.Test.describe("WebFinger", function() { with(this) {
-  include(RestoreSteps)
+  include(armadiettoSteps)
 
   before(function() { this.start(4567) })
   after (function() { this.stop() })

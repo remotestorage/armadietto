@@ -1,15 +1,15 @@
-var reStore = require('../lib/restore'),
+var armadietto = require('../lib/armadietto'),
     store,
     server;
 
 var type = process.argv[2];
 
 if (type === 'redis')
-  store = new reStore.Redis({database: 3});
+  store = new armadietto.Redis({database: 3});
 else
-  store = new reStore.FileTree({path: __dirname + '/tree'});
+  store = new armadietto.FileTree({path: __dirname + '/tree'});
 
-server = new reStore({
+server = new armadietto({
   store:  store,
   http:   {port: 80},
   https:  {

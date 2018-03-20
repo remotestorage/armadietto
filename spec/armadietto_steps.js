@@ -1,4 +1,4 @@
-var armadietto = require("../lib/armadietto"),
+var Armadietto = require("../lib/armadietto"),
     http    = require("http"),
     qs      = require("querystring"),
     JS      = require("jstest")
@@ -46,7 +46,7 @@ var request = function(self, host, port, method, path, params, headers, callback
 
 module.exports = JS.Test.asyncSteps({
   start: function(port, callback) {
-    this._server = new armadietto({store: this.store, http: {port: port}})
+    this._server = new Armadietto({store: this.store, http: {port: port}})
     this._port = port
     this._server.boot()
     process.nextTick(callback)

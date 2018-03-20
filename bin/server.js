@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var armadietto = require('../lib/armadietto')
+var Armadietto = require('../lib/armadietto')
 var path = require('path')
 var fs = require('fs')
 
@@ -57,8 +57,8 @@ var remoteStorageServer = {
     console.log('[INFO] Starting remoteStorage: http://' + conf.http.host + ':' + conf.http.port)
 
     process.umask(077)
-    var store = new armadietto.FileTree({path: conf.storage_path});
-    var server = new armadietto({
+    var store = new Armadietto.FileTree({path: conf.storage_path});
+    var server = new Armadietto({
       basePath: conf.basePath,
       store,
       http: {

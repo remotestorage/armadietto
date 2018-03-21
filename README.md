@@ -1,3 +1,5 @@
+[WIP] Absolutely not production ready!
+
 # armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto)
 
 ## What is this?
@@ -150,3 +152,62 @@ behaviour to enforce secure connections.
 
 
 ### Storage backends
+armadietto supports pluggable storage backends, and comes with two implementations
+out of the box:
+
+* `Armadietto.FileTree` - Uses the filesystem hierarchy and stores each item in its
+  own individual file. Content and metadata are stored in separate files so the
+  content does not need base64-encoding and can be hand-edited. Must only be run
+  using a single server process.
+* `Armadietto.Redis` - Stores data in a Redis database, and all stored data is
+  base64-encoded. It can be run with any number of server processes.
+
+All the backends support the same set of features, including the ability to
+store arbitrary binary data with content types and modification times.
+
+They are configured as follows:
+
+```js
+// To use the file tree store:
+var store = new Armadietto.FileTree({path: 'path/to/storage'});
+
+// To use the Redis store:
+var store = new Armadietto.Redis({
+  host:     'redis.example.com',    // default is 'localhost'
+  port:     1234,                   // default is 6379
+  database: 2,                      // default is 0
+  password: 'unhosted'              // default is no password
+});
+
+// Then create the server with your store:
+var server = new Armadietto({
+                store:  store,
+                http:   {port: process.argv[2]}
+              });
+
+server.boot();
+```
+
+
+## License
+
+(The MIT License)
+
+Copyright (c) 2012-2015 James Coglan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the 'Software'), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

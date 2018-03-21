@@ -23,16 +23,11 @@ var request = function(self, host, port, method, path, params, headers, callback
     options.path += "?" + query
 
   var request = http.request(options, function(response) {
-    var body = new Buffer(0)
-    response.on("data", function(chunk) {
-      var buffer = new Buffer(body.length + chunk.length)
-      body.copy(buffer)
-      chunk.copy(buffer, body.length)
-      body = buffer
-    })
-    response.on("end", function() {
-      response.buffer = body
-      response.body = body.toString("utf8")
+    var body = []
+    response.on("data", chunk => body.push(chunk))
+    response.on("end", () => {
+      response.buffer = Buffer.concat(body)
+      response.body = response.buffer.toString("utf8")
       self.response = response
       callback()
     })

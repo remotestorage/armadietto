@@ -44,10 +44,10 @@ The following Node script will run a basic server:
 ```js
 process.umask(077);
 
-var armadietto = require('armadietto'),
-    store   = new armadietto.FileTree({path: 'path/to/storage'}),
-    
-    server  = new armadietto({
+var Armadietto = require('armadietto'),
+    store   = new Armadietto.FileTree({path: 'path/to/storage'}),
+
+    server  = new Armadietto({
                 store:  store,
                 http:   {host: '127.0.0.1', port: 8000}
               });
@@ -62,7 +62,7 @@ The server does not allow users to sign up, out of the box. If you need to allow
 that, use the `allow.signup` option:
 
 ```js
-var server = new armadietto({
+var server = new Armadietto({
                store: store,
                http:  {host: '127.0.0.1', port: 8000},
                allow: {signup: true}
@@ -107,7 +107,7 @@ both. This configuration boots the app on two ports, one secure and one
 plaintext:
 
 ```js
-var server = new armadietto({
+var server = new Armadietto({
   store:  store,
   http:   {
     host: '127.0.0.1',

@@ -1,7 +1,7 @@
 {
   "name": "armadietto",
   "description": "Simple remoteStorage server",
-  "homepage": "http://github.com/jcoglan/armadietto",
+  "homepage": "http://github.com/remotestorage/armadietto",
   "author": "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)",
   "keywords": [
     "remoteStorage",
@@ -35,9 +35,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/jcoglan/armadietto.git"
+    "url": "git://github.com/remotestorage/armadietto.git"
   },
   "bugs": {
-    "url": "http://github.com/jcoglan/armadietto/issues"
+    "url": "http://github.com/remotestorage/armadietto/issues"
   }
 }

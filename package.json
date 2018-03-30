@@ -1,6 +1,6 @@
 {
   "name": "armadietto",
-  "description": "Simple remoteStorage server",
+  "description": "Node.js remoteStorage server",
   "homepage": "http://github.com/remotestorage/armadietto",
   "author": "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)",
   "keywords": [
@@ -22,15 +22,17 @@
     "argparse": "^1.0.7",
     "ejs": ">= 2.0.0",
     "lockfile": ">= 1.0.0",
-    "mkdirp": "",
     "redis": ">= 0.8.2"
   },
   "devDependencies": {
-    "jstest": "",
-    "rimraf": ""
+    "eslint-config-standard": "^11.0.0",
+    "chai": "^4.1.2",
+    "chai-http": "^4.0.0",
+    "chai-spies": "^1.0.0",
+    "mocha": "^5.0.5"
   },
   "scripts": {
-    "test": "node spec/runner.js"
+    "test": "mocha spec/runner.js"
   },
   "repository": {
     "type": "git",

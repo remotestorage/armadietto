@@ -1,12 +1,12 @@
-const path = require('path')
-const Armadietto = require('../lib/armadietto')
-let store
-let server
+const path = require('path');
+const Armadietto = require('../lib/armadietto');
+let store;
+let server;
 
-const type = process.argv[2]
+const type = process.argv[2];
 
-if (type === 'redis') store = new Armadietto.Redis({database: 3})
-else store = new Armadietto.FileTree({path: path.join(__dirname, 'tree')})
+if (type === 'redis') store = new Armadietto.Redis({database: 3});
+else store = new Armadietto.FileTree({path: path.join(__dirname, 'tree')});
 
 server = new Armadietto({
   store,
@@ -21,6 +21,6 @@ server = new Armadietto({
     signup: true
   },
   cacheViews: false
-})
+});
 
-server.boot()
+server.boot();

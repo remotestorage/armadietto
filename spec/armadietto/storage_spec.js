@@ -75,7 +75,6 @@ describe('GET', () => {
   const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37);
 
   describe('when a valid access token is used', () => {
-
     afterEach(() => {
       sandbox.restore();
     });
@@ -83,7 +82,6 @@ describe('GET', () => {
     beforeEach(() => {
       sandbox.on(store, ['get']);
     });
-
 
     let get = async (path) => {
       const ret = await req.get(path)
@@ -102,27 +100,27 @@ describe('GET', () => {
     });
 
     it('asks the store for a deep item', async () => {
-      await get('/storage/zebcoe@local.dev/deep/dir/value')
+      await get('/storage/zebcoe@local.dev/deep/dir/value');
       expect(store.get).to.have.been.called.with('zebcoe', '/deep/dir/value');
     });
 
     it('passes the path literally to the store', async () => {
-      await get('/storage/zebcoe/locog/a%2Fpath')
+      await get('/storage/zebcoe/locog/a%2Fpath');
       expect(store.get).to.have.been.called.with('zebcoe', '/locog/a%2Fpath');
     });
 
     it('ask the store for a directory listing', async () => {
-      await get('/storage/zebcoe/locog/')
+      await get('/storage/zebcoe/locog/');
       expect(store.get).to.have.been.called.with('zebcoe', '/locog/');
     });
 
     it('ask the store for a deep directory listing', async () => {
-      await get('/storage/zebcoe/deep/dir/')
+      await get('/storage/zebcoe/deep/dir/');
       expect(store.get).to.have.been.called.with('zebcoe', '/deep/dir/');
     });
 
     it('ask the store for a root listing with unauthorized token', async () => {
-      await get('/storage/zebcoe/')
+      await get('/storage/zebcoe/');
       expect(store.get).to.have.been.called.exactly(0);
     });
 
@@ -154,12 +152,10 @@ describe('GET', () => {
       expect(store.get).to.have.been.called.exactly(0);
     });
 
-    
     it('do not ask the store for an item in a read-unauthorized directory', async () => {
       await get('/storage/zebcoe/statues/first');
       expect(store.get).to.have.been.called.exactly(0);
     });
-
 
     it('do not ask the store for an item of another user', async () => {
       await get('/storage/boris/locog/seats');
@@ -167,8 +163,7 @@ describe('GET', () => {
     });
   });
 
-  describe("when an invalid access token is used", () => {
-
+  describe('when an invalid access token is used', () => {
     afterEach(() => {
       sandbox.restore();
     });
@@ -177,70 +172,64 @@ describe('GET', () => {
       sandbox.on(store, ['get']);
     });
 
-
     let get = async (path) => {
       const ret = await req.get(path)
         .set('Authorization', 'Bearer bad_token').send();
       return ret;
     };
 
-
-    it("does not ask the store for the item", async () => {
-      await get( "/storage/zebcoe/locog/seats" );
-      expect(store.get).to.have.been.called.exactly(0)
-    });
-
-    it("asks the store for a public item", async () => {
-      await get( "/storage/zebcoe/public/locog/seats" )
-      expect(store.get).to.have.been.called.with("zebcoe", "/public/locog/seats")
-    });
-
-    it("does not ask the store for a public directory", async () => {
-      await get( "/storage/zebcoe/public/locog/seats/" );
+    it('does not ask the store for the item', async () => {
+      await get('/storage/zebcoe/locog/seats');
       expect(store.get).to.have.been.called.exactly(0);
     });
 
-    it("returns an OAuth error", async () => {
-      const res = await get( "/storage/zebcoe/locog/seats" );
-      expect(res).to.have.status( 401 );
-      expect(res).to.have.header( "Access-Control-Allow-Origin", "*" );
-      expect(res).to.have.header( "Cache-Control", "no-cache, no-store" );
-      expect(res).to.have.header( "WWW-Authenticate", 'Bearer realm="localhost:4567" error="invalid_token"' );
-    })
-  })
+    it('asks the store for a public item', async () => {
+      await get('/storage/zebcoe/public/locog/seats');
+      expect(store.get).to.have.been.called.with('zebcoe', '/public/locog/seats');
+    });
 
+    it('does not ask the store for a public directory', async () => {
+      await get('/storage/zebcoe/public/locog/seats/');
+      expect(store.get).to.have.been.called.exactly(0);
+    });
 
+    it('returns an OAuth error', async () => {
+      const res = await get('/storage/zebcoe/locog/seats');
+      expect(res).to.have.status(401);
+      expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+      expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+      expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="localhost:4567" error="invalid_token"');
+    });
+  });
 
+  describe('when the store returns an item', () => {
+    it('returns the value in the response', async () => {
+      store.get = () => ({ item: Buffer.from('a value') });
+      const res = await req.get('/storage/zebcoe/locog/seats')
+        .set('Authorization', 'Bearer a_token').send();
+      expect(res).to.have.status(200);
+      expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+      expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+      expect(res).to.have.header('Content-Length', '7');
+      expect(res).to.have.header('Content-Type', 'custom/type');
+      expect(res).to.have.header('ETag', '"1330177020000"');
+      // check_body(buffer('a value'));
+    });
+
+    it('returns a 412 for a failed conditional', async () => {
+      store.get = () => ({ item: Buffer.from('a value'), versionMatch: true });
+      const res = await req.get('/storage/zebcoe/locog/seats')
+      .set('Authorization', 'Bearer a_token').send();
+
+      get('/storage/zebcoe/locog/seats', {});
+      check_status(304);
+      check_header('Access-Control-Allow-Origin', '*');
+      check_header('Cache-Control', 'no-cache, no-store');
+      check_header('ETag', '"1330177020000"');
+      check_body('');
+    });
+  });
 });
-
-
-//     describe("when the store returns an item", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer a_token" )
-//       }})
-
-//       it("returns the value in the response", function() { with(this) {
-//         stub(store, "get").yields([null, item])
-//         get( "/storage/zebcoe/locog/seats", {} )
-//         check_status( 200 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_header( "Cache-Control", "no-cache, no-store" )
-//         check_header( "Content-Length", "7" )
-//         check_header( "Content-Type", "custom/type" )
-//         check_header( "ETag", '"1330177020000"' )
-//         check_body( buffer("a value") )
-//       }})
-
-//       it("returns a 412 for a failed conditional", function() { with(this) {
-//         stub(store, "get").yields([null, item, true])
-//         get( "/storage/zebcoe/locog/seats", {} )
-//         check_status( 304 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_header( "Cache-Control", "no-cache, no-store" )
-//         check_header( "ETag", '"1330177020000"' )
-//         check_body( "" )
-//       }})
-//     }})
 
 //     describe("when the store returns a directory listing", function() { with(this) {
 //       before(function() { with(this) {

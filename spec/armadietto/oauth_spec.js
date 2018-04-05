@@ -9,13 +9,6 @@ const Armadietto = require('../../lib/armadietto');
 chai.use(chaiHttp);
 chai.use(spies);
 
-before(() => {
-  this._server = new Armadietto({ store, http: { port: 4567 } });
-  this._server.boot();
-});
-
-after(() => { this._server.stop(); });
-
 const req = chai.request('http://localhost:4567');
 const get = async (path, params) => {
   const ret = await req.get(path)
@@ -28,24 +21,49 @@ const get = async (path, params) => {
 const post = async (path, params) => {
   const ret = await req.post(path)
     .redirects(0)
+    .type('form')
     .send(params);
   return ret;
 };
 
-let store = {};
+let store = {
+  authorize (clientId, username, permissions) {
+    return 'a_token';
+  },
+  authenticate (params) {
+  }
+};
 
+const sandbox = chai.spy.sandbox();
 describe('OAuth', async () => {
+  before(() => {
+    console.error('dentro il before di oauth spec');
+    this._server = new Armadietto({ store, http: { port: 4567 } });
+    this._server.boot();
+  });
+
+  after(() => { this._server.stop(); });
+
+  beforeEach(() => {
+    this.auth_params = {
+      username: 'zebcoe',
+      password: 'locog',
+      client_id: 'the_client_id',
+      redirect_uri: 'http://example.com/cb',
+      response_type: 'token',
+      scope: 'the_scope',
+      state: 'the_state'
+    };
+
+    sandbox.on(store, ['authorize', 'authenticate']);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('with invalid client input', () => {
     beforeEach(() => {
-      this.auth_params = {
-        username: 'zebcoe',
-        password: 'locog',
-        client_id: 'the_client_id',
-        redirect_uri: 'http://example.com/cb',
-        response_type: 'token',
-        scope: 'the_scope',
-        state: 'the_state'
-      };
       delete this.auth_params.state;
     });
 
@@ -88,63 +106,52 @@ describe('OAuth', async () => {
   });
 
   describe('with valid login credentials', async () => {
-    // before(async () => {
-    //   expect(store, 'authenticate')
-    //     .given(objectIncluding({username: 'zebcoe', password: 'locog'}))
-    //     .yielding([null]);
-    // });
-
     describe('without explicit read/write permissions', async () => {
-      before(() => { this.auth_params.scope = 'the_scope'; });
-
       it('authorizes the client to read and write', async () => {
-        expect(store, 'authorize').given('the_client_id', 'zebcoe', {the_scope: ['r', 'w']}).yielding([null, 'a_token']);
-        // post('/oauth', this.auth_params);
+        await post('/oauth', this.auth_params);
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r', 'w']});
       });
     });
 
     describe('with explicit read permission', async () => {
-      before(() => { this.auth_params.scope = 'the_scope:r'; });
-
       it('authorizes the client to read', async () => {
-        expect(store, 'authorize').given('the_client_id', 'zebcoe', {the_scope: ['r']}).yielding([null, 'a_token']);
-        // post('/oauth', this.auth_params);
+        this.auth_params.scope = 'the_scope:r';
+        await post('/oauth', this.auth_params);
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r']});
       });
     });
 
     describe('with explicit read/write permission', async () => {
-      before(function () { this.auth_params.scope = 'the_scope:rw'; });
-
       it('authorizes the client to read and write', async () => {
-        expect(store, 'authorize').given('the_client_id', 'zebcoe', {the_scope: ['r', 'w']}).yielding([null, 'a_token']);
-        // post('/oauth', this.auth_params);
+        this.auth_params.scope = 'the_scope:rw';
+        await post('/oauth', this.auth_params);
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r', 'w']});
       });
     });
 
     it('redirects with an access token', async () => {
-      // stub(store, 'authorize').yields([null, 'a_token']);
-      // post('/oauth', this.auth_params);
-      // check_redirect('http://example.com/cb#access_token=a_token&token_type=bearer&state=the_state');
+      const res = await post('/oauth', this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#access_token=a_token&token_type=bearer&state=the_state');
     });
   });
 
   describe('with invalid login credentials', async () => {
-    before(async () => {
-      // expect(store, 'authenticate')
-      //   .given(objectIncluding({username: 'zebcoe', password: 'locog'}))
-      //   .yielding([new Error()]);
-    });
-
     it('does not authorize the client', async () => {
-      expect(store, 'authorize').exactly(0);
-      // post('/oauth', this.auth_params);
+      store.authenticate = (params) => {
+        throw new Error();
+      };
+      await post('/oauth', this.auth_params);
+      expect(store.authorize).to.be.called.exactly(0);
     });
 
     it('returns a 401 response with the login form', async () => {
-      // post('/oauth', this.auth_params);
-      // check_status(401);
-      // check_header('Content-Type', 'text/html');
-      // check_body(/application <em>the_client_id<\/em> hosted/);
+      store.authenticate = (params) => {
+        throw new Error();
+      };
+      const res = await post('/oauth', this.auth_params);
+      expect(res).to.have.status(401);
+      expect(res).to.have.header('Content-Type', 'text/html');
+      expect(res.text).to.contain('application <em>the_client_id</em> hosted');
     });
   });
 });

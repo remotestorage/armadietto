@@ -37,7 +37,6 @@ let store = {
 const sandbox = chai.spy.sandbox();
 describe('OAuth', async () => {
   before(() => {
-    console.error('dentro il before di oauth spec');
     this._server = new Armadietto({ store, http: { port: 4567 } });
     this._server.boot();
   });

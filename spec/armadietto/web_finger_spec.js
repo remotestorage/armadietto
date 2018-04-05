@@ -9,26 +9,22 @@ const Armadietto = require('../../lib/armadietto');
 chai.use(chaiHttp);
 chai.use(spies);
 let store = {};
-
-before(async () => {
-  try {
-    this._server = new Armadietto({ store, http: { port: 4569 } });
-    await this._server.boot();
-  } catch (e) {
-    console.error('catch before ', e);
-  }
-});
-
-after(async () => { await this._server.stop(); });
 const host = 'http://localhost:4569';
 const req = chai.request(host);
 
 const get = async (path) => {
-  const ret = await req.get(path);
+  const ret = await req.get(path).buffer(true);
   return ret;
 };
 
 describe('WebFinger', () => {
+  before(async () => {
+    this._server = new Armadietto({ store, http: { port: 4569 } });
+    await this._server.boot();
+  });
+
+  after(async () => { await this._server.stop(); });
+
   it('returns webfinger data as JRD+JSON', async () => {
     const res = await get('/.well-known/webfinger');
     expect(res).to.have.status(200);
@@ -64,16 +60,12 @@ describe('WebFinger', () => {
     expect(res).to.have.status(200);
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/xrd+xml');
-    // console.error(res);
-    // console.error(res.body);
-    //     expect(res.text).to.be.equal('<?xml version="1.0" encoding="UTF-8"?>\n\
-    // <XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">\n\
-    //   <Link rel="lrdd"\n\
-    //         type="application/xrd+xml"\n\
-    //         template="' + host + '/webfinger/xrd?resource={uri}" />\n\
-    // </XRD>');
+    expect(res.text).to.be.equal(`<?xml version="1.0" encoding="UTF-8"?>
+<XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
+  <Link rel="lrdd"
+        type="application/xrd+xml"
+        template="${host}/webfinger/xrd?resource={uri}" />\n</XRD>\n`);
   });
-  //   }})
 
   it('returns account metadata as JSON', async () => {
     const res = await get('/webfinger/jrd?resource=acct:zebcoe@locog');
@@ -97,13 +89,12 @@ describe('WebFinger', () => {
     expect(res).to.have.status(200);
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/xrd+xml');
-    //     check_body( '<?xml version="1.0" encoding="UTF-8"?>\n\
-    // <XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">\n\
-    //   <Link rel="remoteStorage"\n\
-    //         api="simple"\n\
-    //         auth="' + host + '/oauth/zebcoe"\n\
-    //         template="' + host + '/storage/zebcoe/{category}" />\n\
-    // </XRD>' )
+    expect(res.text).to.be.equal(`<?xml version="1.0" encoding="UTF-8"?>
+<XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
+  <Link rel="remoteStorage"
+        api="simple"
+        auth="${host}/oauth/zebcoe"
+        template="${host}/storage/zebcoe/{category}" />\n</XRD>\n`);
   });
 
   it('returns resource metadata as JSON', async () => {

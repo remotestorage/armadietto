@@ -30,6 +30,7 @@ let store = {
 };
 
 const sandbox = chai.spy.sandbox();
+const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37);
 
 describe('Storage', () => {
   before(() => {
@@ -60,20 +61,18 @@ describe('Storage', () => {
 
   describe('OPTIONS', () => {
     it('returns access control headers', async () => {
-      const res = await req.options('/storage/zebcoe/locog/seats');
+      const res = await req.options('/storage/zebcoe/locog/seats').buffer(true);
       expect(res).to.have.status(200);
       expect(res).to.have.header('Access-Control-Allow-Origin', '*');
       expect(res).to.have.header('Access-Control-Allow-Headers', 'Authorization, Content-Length, Content-Type, If-Match, If-None-Match, Origin, X-Requested-With');
       expect(res).to.have.header('Access-Control-Allow-Methods', 'OPTIONS, GET, HEAD, PUT, DELETE');
       expect(res).to.have.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, ETag');
       expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
-      // check if body is empty
+      expect(res.text).to.be.equal('');
     });
   });
 
   describe('GET', () => {
-    const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37);
-
     describe('when a valid access token is used', () => {
       afterEach(() => {
         sandbox.restore();
@@ -173,7 +172,7 @@ describe('Storage', () => {
       });
 
       let get = async (path) => {
-        const ret = await req.get(path)
+        const ret = await req.get(path).buffer(true)
           .set('Authorization', 'Bearer bad_token').send();
         return ret;
       };
@@ -208,11 +207,16 @@ describe('Storage', () => {
       value: 'a value'
     };
 
+    let get = async (path) => {
+      const ret = await req.get(path).buffer(true)
+        .set('Authorization', 'Bearer a_token').send();
+      return ret;
+    };
+
     describe('when the store returns an item', () => {
       it('returns the value in the response', async () => {
         store.get = () => ({ item });
-        const res = await req.get('/storage/zebcoe/locog/seats').buffer(true)
-          .set('Authorization', 'Bearer a_token').send();
+        const res = await get('/storage/zebcoe/locog/seats');
         expect(res).to.have.status(200);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
@@ -224,8 +228,7 @@ describe('Storage', () => {
 
       it('returns a 304 for a failed conditional', async () => {
         store.get = () => ({ item, versionMatch: true });
-        const res = await req.get('/storage/zebcoe/locog/seats')
-          .set('Authorization', 'Bearer a_token').send();
+        const res = await get('/storage/zebcoe/locog/seats');
 
         expect(res).to.have.status(304);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
@@ -246,8 +249,7 @@ describe('Storage', () => {
       });
 
       it('returns the listing as JSON', async () => {
-        const res = await req.get('/storage/zebcoe/locog/seats/')
-          .set('Authorization', 'Bearer a_token').send();
+        const res = await get('/storage/zebcoe/locog/seats/');
         expect(res).to.have.status(200);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
@@ -264,8 +266,7 @@ describe('Storage', () => {
       });
 
       it('returns the listing as JSON', async () => {
-        const res = await req.get('/storage/zebcoe/locog/seats/')
-          .set('Authorization', 'Bearer a_token').send();
+        const res = await get('/storage/zebcoe/locog/seats/');
         expect(res).to.have.status(200);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
@@ -280,8 +281,7 @@ describe('Storage', () => {
       });
 
       it('returns an empty 404 response', async () => {
-        const res = await req.get('/storage/zebcoe/locog/seats/')
-          .set('Authorization', 'Bearer a_token').send();
+        const res = await get('/storage/zebcoe/locog/seats/');
         expect(res).to.have.status(404);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res.text).to.be.equal('');
@@ -294,205 +294,239 @@ describe('Storage', () => {
       });
 
       it('returns a 500 response with the error message', async () => {
-        const res = await req.get('/storage/zebcoe/locog/seats/').buffer(true)
-          .set('Authorization', 'Bearer a_token').send();
+        const res = await get('/storage/zebcoe/locog/seats/');
         expect(res).to.have.status(500);
-        // expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res.text).to.be.equal('We did something wrong');
       });
     });
   });
+
+  describe('PUT', () => {
+    before(() => {
+      sandbox.restore();
+      store.put = () => ({created: true});
+    });
+
+    let put = async (path, params) => {
+      const ret = await req.put(path).buffer(true).type('text/plain')
+        .set('Authorization', 'Bearer a_token').send(params);
+      return ret;
+    };
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    beforeEach(() => {
+      sandbox.on(store, ['put']);
+    });
+
+    describe('when a valid access token is used', () => {
+      it('tells the store to save the given value', async () => {
+        await put('/storage/zebcoe/locog/seats', 'a value');
+        expect(store.put).to.have.been.called.with('zebcoe', '/locog/seats',
+          'text/plain', Buffer.from('a value'), null);
+      });
+
+      it('tells the store to save a public value', async () => {
+        await put('/storage/zebcoe/public/locog/seats', 'a value');
+        expect(store.put).to.have.been.called.with('zebcoe', '/public/locog/seats',
+          'text/plain', Buffer.from('a value'), null);
+      });
+
+      it('tells the store to save a value conditionally based on If-None-Match', async () => {
+        await req.put('/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Authorization', 'Bearer a_token')
+          .set('If-None-Match', `"${modifiedTimestamp}"`)
+          .send('a value');
+        expect(store.put).to.have.been.called.with('zebcoe', '/locog/seats',
+          'text/plain', Buffer.from('a value'), modifiedTimestamp);
+      });
+
+      it('tells the store to create a value conditionally based on If-None-Match', async () => {
+        await req.put('/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Authorization', 'Bearer a_token')
+          .set('If-None-Match', '*')
+          .send('a value');
+        expect(store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain',
+          Buffer.from('a value'), '*');
+      });
+
+      it('tells the store to save a value conditionally based on If-Match', async () => {
+        await req.put('/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Authorization', 'Bearer a_token')
+          .set('If-Match', `"${modifiedTimestamp}"`)
+          .send('a value');
+        expect(store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain',
+          Buffer.from('a value'), modifiedTimestamp);
+      });
+
+      it('does not tell the store to save a directory', async () => {
+        await put('/storage/zebcoe/locog/seats/', 'a value');
+        expect(store.put).to.have.been.called.exactly(0);
+      });
+
+      it('does not tell the store to save to a write-unauthorized directory', async () => {
+        await put('/storage/zebcoe/books/house_of_leaves', 'a value');
+        expect(store.put).to.have.been.called.exactly(0);
+      });
+    });
+
+    describe('when an invalid access token is used', () => {
+      let put = async (path, params) => {
+        const ret = await req.put(path).buffer(true)
+          .set('Authorization', 'Bearer bad_token').send(params);
+        return ret;
+      };
+
+      it('does not tell the store to save the given value', async () => {
+        await put('/storage/zebcoe/locog/seats', 'a value');
+        expect(store.put).to.have.been.called.exactly(0);
+      });
+    });
+
+    describe('when the store says the item was created', () => {
+      before(() => {
+        store.put = () => ({ created: true, modified: 1347016875231 });
+      });
+
+      let put = async (path, params) => {
+        const ret = await req.put(path).buffer(true)
+          .set('Authorization', 'Bearer a_token').send(params);
+        return ret;
+      };
+
+      it('returns an empty 201 response', async () => {
+        const res = await put('/storage/zebcoe/locog/seats', 'a value');
+        expect(res).to.have.status(201);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('ETag', '"1347016875231"');
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    describe('when the store says the item was not created but updated', () => {
+      before(() => {
+        store.put = () => ({created: false, modified: 1347016875231});
+      });
+
+      it('returns an empty 200 response', async () => {
+        const res = await put('/storage/zebcoe/locog/seats', 'a value');
+        expect(res).to.have.status(200);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('ETag', '"1347016875231"');
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    describe('when the store says there was a version conflict', () => {
+      before(() => {
+        store.put = () => ({created: false, modified: 1347016875231, conflict: true});
+      });
+
+      it('returns an empty 412 response', async () => {
+        const res = await put('/storage/zebcoe/locog/seats', 'a value');
+        expect(res).to.have.status(412);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('ETag', '"1347016875231"');
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    describe('when the store returns an error', () => {
+      before(() => {
+        store.put = () => { throw new Error('Something is technically wrong'); };
+      });
+
+      it('returns a 500 response with the error message', async () => {
+        const res = await put('/storage/zebcoe/locog/seats', 'a value');
+        expect(res).to.have.status(500);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res.text).to.be.equal('Something is technically wrong');
+      });
+    });
+  });
+
+  describe('DELETE', () => {
+    let del = (path) => {
+      return req.delete(path).buffer(true)
+        .set('Authorization', 'Bearer a_token');
+    };
+
+    sandbox.restore();
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    beforeEach(() => {
+      sandbox.on(store, ['delete']);
+    });
+
+    it('tells the store to delete the given item', async () => {
+      await del('/storage/zebcoe/locog/seats');
+      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', null);
+    });
+
+    it('tells the store to delete an item conditionally based on If-None-Match', async () => {
+      await del('/storage/zebcoe/locog/seats')
+        .set('If-None-Match', '"' + modifiedTimestamp + '"');
+      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', modifiedTimestamp);
+    });
+
+    it('tells the store to delete an item conditionally based on If-Match', async () => {
+      await del('/storage/zebcoe/locog/seats')
+        .set('If-Match', '"' + modifiedTimestamp + '"');
+      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', modifiedTimestamp);
+    });
+
+    describe('when the store says the item was deleted', () => {
+      before(() => {
+        store.delete = () => ({ deleted: true, modified: 1358121717830 });
+      });
+
+      it('returns an empty 200 response', async () => {
+        const res = await del('/storage/zebcoe/locog/seats');
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    describe('when the store says the item was not deleted', () => {
+      before(() => {
+        store.delete = () => ({deleted: false, modified: 1358121717830});
+      });
+
+      it('returns an empty 404 response', async () => {
+        const res = await del('/storage/zebcoe/locog/seats');
+        expect(res).to.have.status(404);
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    describe('when the store says there was a version conflict', () => {
+      before(() => {
+        store.delete = () => ({deleted: false, modified: 1358121717830, conflict: true});
+      });
+
+      it('returns an empty 412 response', async () => {
+        const res = await del('/storage/zebcoe/locog/seats');
+        expect(res).to.have.status(412);
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    describe('when the store returns an error', () => {
+      before(() => {
+        store.delete = () => { throw new Error('OH NOES!'); };
+      });
+
+      it('returns a 500 response with the error message', async () => {
+        const res = await del('/storage/zebcoe/locog/seats');
+        expect(res).to.have.status(500);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res.text).to.be.equal('OH NOES!');
+      });
+    });
+  });
 });
-
-//   describe("PUT", function() { with(this) {
-//     describe("when a valid access token is used", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer a_token" )
-//       }})
-
-//       it("tells the store to save the given value", function() { with(this) {
-//         expect(store, "put").given("zebcoe", "/locog/seats", "text/plain", buffer("a value"), null).yielding([null])
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//       }})
-
-//       it("tells the store to save a public value", function() { with(this) {
-//         expect(store, "put").given("zebcoe", "/public/locog/seats", "text/plain", buffer("a value"), null).yielding([null])
-//         put( "/storage/zebcoe/public/locog/seats", "a value" )
-//       }})
-
-//       it("tells the store to save a value conditionally based on If-None-Match", function() { with(this) {
-//         expect(store, "put").given("zebcoe", "/locog/seats", "text/plain", buffer("a value"), modifiedTimestamp).yielding([null])
-//         header( "If-None-Match", '"' + modifiedTimestamp + '"' )
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//       }})
-
-//       it("tells the store to create a value conditionally based on If-None-Match", function() { with(this) {
-//         expect(store, "put").given("zebcoe", "/locog/seats", "text/plain", buffer("a value"), "*").yielding([null])
-//         header( "If-None-Match", "*" )
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//       }})
-
-//       it("tells the store to save a value conditionally based on If-Match", function() { with(this) {
-//         expect(store, "put").given("zebcoe", "/locog/seats", "text/plain", buffer("a value"), modifiedTimestamp).yielding([null])
-//         header( "If-Match", '"' + modifiedTimestamp + '"' )
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//       }})
-
-//       it("does not tell the store to save a directory", function() { with(this) {
-//         expect(store, "put").exactly(0)
-//         put( "/storage/zebcoe/locog/seats/", "a value" )
-//       }})
-
-//       it("does not tell the store to save to a write-unauthorized directory", function() { with(this) {
-//         expect(store, "put").exactly(0)
-//         put( "/storage/zebcoe/books/house_of_leaves", "a value" )
-//       }})
-//     }})
-
-//     describe("when an invalid access token is used", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer bad_token" )
-//       }})
-
-//       it("does not tell the store to save the given value", function() { with(this) {
-//         expect(store, "put").exactly(0)
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//       }})
-//     }})
-
-//     describe("when the store says the item was created", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer a_token" )
-//         stub(store, "put").yields([null, true, 1347016875231])
-//       }})
-
-//       it("returns an empty 201 response", function() { with(this) {
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//         check_status( 201 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_header( "ETag", '"1347016875231"' )
-//         check_body( "" )
-//       }})
-//     }})
-
-//     describe("when the store says the item was not created but updated", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer a_token" )
-//         stub(store, "put").yields([null, false, 1347016875231])
-//       }})
-
-//       it("returns an empty 200 response", function() { with(this) {
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//         check_status( 200 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_header( "ETag", '"1347016875231"' )
-//         check_body( "" )
-//       }})
-//     }})
-
-//     describe("when the store says there was a version conflict", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer a_token" )
-//         stub(store, "put").yields([null, false, 1347016875231, true])
-//       }})
-
-//       it("returns an empty 412 response", function() { with(this) {
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//         check_status( 412 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_header( "ETag", '"1347016875231"' )
-//         check_body( "" )
-//       }})
-//     }})
-
-//     describe("when the store returns an error", function() { with(this) {
-//       before(function() { with(this) {
-//         header( "Authorization", "Bearer a_token" )
-//         stub(store, "put").yields([new Error("Something is technically wrong")])
-//       }})
-
-//       it("returns a 500 response with the error message", function() { with(this) {
-//         put( "/storage/zebcoe/locog/seats", "a value" )
-//         check_status( 500 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_body( "Something is technically wrong" )
-//       }})
-//     }})
-//   }})
-
-//   describe("DELETE", function() { with(this) {
-//     before(function() { with(this) {
-//       header( "Authorization", "Bearer a_token" )
-//     }})
-
-//     it("tells the store to delete the given item", function() { with(this) {
-//       expect(store, "delete").given("zebcoe", "/locog/seats", null).yielding([null])
-//       this.delete( "/storage/zebcoe/locog/seats", {} )
-//     }})
-
-//     it("tells the store to delete an item conditionally based on If-None-Match", function() { with(this) {
-//       expect(store, "delete").given("zebcoe", "/locog/seats", modifiedTimestamp).yielding([null])
-//       header( "If-None-Match", '"' + modifiedTimestamp + '"' )
-//       this.delete( "/storage/zebcoe/locog/seats", {} )
-//     }})
-
-//     it("tells the store to delete an item conditionally based on If-Match", function() { with(this) {
-//       expect(store, "delete").given("zebcoe", "/locog/seats", modifiedTimestamp).yielding([null])
-//       header( "If-Match", '"' + modifiedTimestamp + '"' )
-//       this.delete( "/storage/zebcoe/locog/seats", {} )
-//     }})
-
-//     describe("when the store says the item was deleted", function() { with(this) {
-//       before(function() { with(this) {
-//         stub(store, "delete").yields([null, true, 1358121717830])
-//       }})
-
-//       it("returns an empty 200 response", function() { with(this) {
-//         this.delete( "/storage/zebcoe/locog/seats", {} )
-//         check_status( 200 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_header( "ETag", '"1358121717830"' )
-//         check_body( "" )
-//       }})
-//     }})
-
-//     describe("when the store says the item was not deleted", function() { with(this) {
-//       before(function() { with(this) {
-//         stub(store, "delete").yields([null, false, 1358121717830])
-//       }})
-
-//       it("returns an empty 404 response", function() { with(this) {
-//         this.delete( "/storage/zebcoe/locog/seats", {} )
-//         check_status( 404 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_body( "" )
-//       }})
-//     }})
-
-//     describe("when the store says there was a version conflict", function() { with(this) {
-//       before(function() { with(this) {
-//         stub(store, "delete").yields([null, false, 1358121717830, true])
-//       }})
-
-//       it("returns an empty 412 response", function() { with(this) {
-//         this.delete( "/storage/zebcoe/locog/seats", {} )
-//         check_status( 412 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_body( "" )
-//       }})
-//     }})
-
-//     describe("when the store returns an error", function() { with(this) {
-//       before(function() { with(this) {
-//         stub(store, "delete").yields([new Error("OH NOES!")])
-//       }})
-
-//       it("returns a 500 response with the error message", function() { with(this) {
-//         this.delete( "/storage/zebcoe/locog/seats", {} )
-//         check_status( 500 )
-//         check_header( "Access-Control-Allow-Origin", "*" )
-//         check_body( "OH NOES!" )
-//       }})
-//     }})
-//   }})
-// }})

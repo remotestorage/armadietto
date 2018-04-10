@@ -3,10 +3,12 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const spies = require('chai-spies');
 const expect = chai.expect;
-
+const chaiAsPromised = require('chai-as-promised');
 const Armadietto = require('../../lib/armadietto');
+const {get, subject, def} = require('bdd-lazy-var');
 
 chai.use(chaiHttp);
+chai.use(chaiAsPromised);
 chai.use(spies);
 
 // const req = chai.request('http://localhost:4568');
@@ -40,23 +42,26 @@ describe('Storage', () => {
 
   after(() => { this._server.stop(); });
   const req = chai.request('http://localhost:4567');
+  subject('req', () => req.get(get.path));
 
-  it('returns a 400 if the client uses path traversal in the path', async () => {
-    const res = await req.get('/storage/zebcoe/locog/../seats');
-    expect(res).to.have.status(400);
-    expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+  describe('when the client uses path traversal in the path', () => {
+    def('path', '/storage/zebcoe/locog/../seats/');
+    it('returns a 400', () => expect(get.req).to.eventually.have.status(400)
+      .to.eventually.have.header('Access-Control-Allow-Origin', '*'));
   });
 
-  it('returns a 400 if the client uses invalid characters in the path', async () => {
-    const res = await req.get('/storage/zebcoe/locog/$eats');
-    expect(res).to.have.status(400);
-    expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+  describe('when the client uses invalid chars in the path', () => {
+    def('path', '/storage/zebcoe/locog/$eats');
+    it('returns a 400', () => expect(get.req)
+      .to.eventually.have.status(400)
+      .to.eventually.have.header('Access-Control-Allow-Origin', '*'));
   });
 
-  it('returns a 400 if the client uses a zero-length path', async () => {
-    const res = await req.get('/storage/zebcoe');
-    expect(res).to.have.status(400);
-    expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+  describe('when the client uses a zero-length path', () => {
+    def('path', '/storage/zebcoe');
+    it('returns a 400', () => expect(get.req)
+      .to.eventually.have.status(400)
+      .to.eventually.have.header('Access-Control-Allow-Origin', '*'));
   });
 
   describe('OPTIONS', () => {

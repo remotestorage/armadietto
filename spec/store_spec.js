@@ -1,6 +1,12 @@
 /* eslint-env mocha, chai, node */
+/* eslint-disable no-unused-expressions */
+
+const fs = require('fs');
+const path = require('path');
 const chai = require('chai');
-var chaiAsPromised = require('chai-as-promised');
+const promisify = require('util').promisify;
+const readFile = promisify(fs.readFile);
+const chaiAsPromised = require('chai-as-promised');
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 const { def, get, subject, sharedExamplesFor } = require('bdd-lazy-var/getter');
@@ -8,7 +14,6 @@ const { def, get, subject, sharedExamplesFor } = require('bdd-lazy-var/getter');
 sharedExamplesFor('Stores', (store) => {
   describe('createUser', () => {
     subject('user', () => store.createUser(get.params));
-    def('params', {username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
 
     describe('with valid parameters', () => {
       def('params', {username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
@@ -34,7 +39,7 @@ sharedExamplesFor('Stores', (store) => {
     });
 
     describe('with an existing user', () => {
-      before(() => store.createUser(get.params));
+      def('params', {username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
       it('returns an error', () => expect(get.user)
         .to.be.rejectedWith('The username is already taken'));
     });
@@ -62,10 +67,10 @@ sharedExamplesFor('Stores', (store) => {
   describe('authorization methods', () => {
     def('permissions', {documents: ['w'], photos: ['r', 'w'], contacts: ['r'], 'deep/dir': ['r', 'w']});
     before(async () => {
-      await store.createUser({username: 'boris', email: 'boris@example.com', password: 'dangle'});
+      // await store.createUser({username: 'boris', email: 'boris@example.com', password: 'dangle'});
       this.accessToken = await store.authorize('www.example.com', 'boris', get.permissions);
 
-      await store.createUser({username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
+      // await store.createUser({username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
       this.rootToken = await store.authorize('admin.example.com', 'zebcoe', {'': ['r', 'w']});
     });
 
@@ -87,23 +92,43 @@ sharedExamplesFor('Stores', (store) => {
       });
     });
   });
+
+  describe('storage methods', () => {
+    def('date', Date.UTC(2012, 1, 25, 13, 37));
+    def('oldDate', Date.UTC(1984, 6, 5, 11, 11));
+    describe('put', () => {
+      before(() => store.put('boris', '/photos/election', 'image/jper', Buffer.from('hair'), null));
+      it('sets the value of an item', async () => {
+        await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'), null);
+        const {item} = await store.get('boris', '/photos/zipwire', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('vertibo'));
+      });
+
+      it('stores binary data', async () => {
+        const img = await readFile(path.join(__dirname, 'whut2.jpg'));
+        await store.put('boris', '/photos/election', 'image/jpeg',
+          img, null);
+        const {item} = await store.get('boris', '/photos/election', null);
+        expect(item.value).to.be.deep.equal(img);
+      });
+
+      it('sets the value of a public item', async () => {
+        await store.put('boris', '/public/photos/zipwire2', 'image/poster', Buffer.from('vertibo'), null);
+        let { item } = await store.get('boris', '/public/photos/zipwire2', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('vertibo'));
+        ({ item } = await store.get('boris', '/photos/zipwire2', null));
+        expect(item).to.be.null;
+      });
+
+      it('sets the value of a root item', async () => {
+        await store.put('zebcoe', '/manifesto', 'text/plain', Buffer.from('gizmos'), null);
+        const { item } = await store.get('zebcoe', '/manifesto', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
+      });
+    });
+  });
 });
 
-// });
-
-//   describe('revokeAccess', () => {
-//     before(() => {
-//       store.revokeAccess('boris', token, resume);
-//     });
-
-//     it('removes the authorization from the store', () => {
-//       store.permissions('boris', token, function (error, auths) {
-//         resume(() => {
-//           assertEqual({}, auths);
-//         });
-//       });
-//     });
-//   });
 // });
 
 // describe('storage methods', () => {
@@ -113,40 +138,6 @@ sharedExamplesFor('Stores', (store) => {
 //     stub('new', 'Date').returns({getTime: () => { return date; }});
 //     stub(Date, 'now').returns(date); // make Node 0.9 happy
 //   });
-
-//   describe('put', () => {
-//     before(() => {
-//       store.put('boris', '/photos/election', 'image/jpeg', buffer('hair'), null, () => { resume(); });
-//     });
-
-//     it('sets the value of an item', () => {
-//       store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), null, () => {
-//         store.get('boris', '/photos/zipwire', null, function (error, item) {
-//           resume(() => { assertEqual(buffer('vertibo'), item.value); });
-//         });
-//       });
-//     });
-
-//     it('stores binary data', () => {
-//       store.put('boris', '/photos/whut', 'image/jpeg', file('whut2.jpg'), null, () => {
-//         store.get('boris', '/photos/whut', null, function (error, item) {
-//           resume(() => { assertEqual(file('whut2.jpg'), item.value); });
-//         });
-//       });
-//     });
-
-//     it('sets the value of a public item', () => {
-//       store.put('boris', '/public/photos/zipwire', 'image/poster', buffer('vertibo'), null, () => {
-//         store.get('boris', '/public/photos/zipwire', null, function (error, item) {
-//           resume(() => {
-//             assertEqual(buffer('vertibo'), item.value);
-//             store.get('boris', '/photos/zipwire', null, function (error, item) {
-//               resume(() => { assertNull(item); });
-//             });
-//           });
-//         });
-//       });
-//     });
 
 //     it('sets the value of a root item', () => {
 //       store.put('zebcoe', '/manifesto', 'text/plain', buffer('gizmos'), null, () => {

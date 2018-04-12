@@ -26,7 +26,7 @@ require('../store_spec');
 
 describe('FileTree store', () => {
   let store = new FileTree({path: path.join(__dirname, '/../../tmp/store')});
-  afterEach(() => {
+  after(() => {
     rmrf(path.join(__dirname, '/../../tmp/store'), () => {});
   });
   itBehavesLike('Stores', store);

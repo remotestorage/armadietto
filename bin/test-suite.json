@@ -1,0 +1,9 @@
+{
+  "allow_signup": true,
+  "storage_path": "./bin/test-suite-storage",
+  "cache_views": true,
+  "http": {
+    "host": "0.0.0.0",
+    "port": 8000
+  }
+}

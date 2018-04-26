@@ -1,1 +1,0 @@
-../vendor/remotestorage-0.8/release/0.8.3/remotestorage.js

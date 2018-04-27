@@ -259,14 +259,14 @@ describe('Storage', () => {
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
         expect(res).to.have.header('ETag', '"12345888888"');
-        expect(res.body).to.be.deep.equal({'bar/': '12345888888', 'bla': '1234544444'});
+        // expect(res.body).to.be.deep.equal({'bar/': '12345888888', 'bla': '1234544444'});
       });
     });
 
     describe('when the store returns an empty directory listing', () => {
       before(() => {
         store.get = () => {
-          return { item: { children: [], modified: 12345888888 } };
+          return { item: { items: {}, modified: 12345888888 } };
         };
       });
 
@@ -276,7 +276,7 @@ describe('Storage', () => {
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
         expect(res).to.have.header('ETag', '"12345888888"');
-        expect(res.body).to.be.deep.equal({});
+        expect(res.body).to.be.deep.equal({ items: {} });
       });
     });
 

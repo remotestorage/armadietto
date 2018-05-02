@@ -97,7 +97,6 @@ sharedExamplesFor('Stores', (store) => {
     def('date', Date.UTC(2012, 1, 25, 13, 37));
     def('oldDate', Date.UTC(1984, 6, 5, 11, 11));
     describe('put', () => {
-      before(() => store.put('boris', '/photos/election', 'image/jper', Buffer.from('hair'), null));
       it('sets the value of an item', async () => {
         await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'), null);
         const {item} = await store.get('boris', '/photos/zipwire', null);
@@ -125,6 +124,19 @@ sharedExamplesFor('Stores', (store) => {
         const { item } = await store.get('zebcoe', '/manifesto', null);
         expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
       });
+
+      it('sets the value of a deep item', async () => {
+        await store.put('boris', '/deep/dir/secret', 'text/plain', Buffer.from('gizmos'), null);
+        const { item } = await store.get('boris', '/deep/dir/secret', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
+      });
+
+      it('returns true with a timestamp when a new item is created', async () => {
+        const before = Date.now();
+        const {created, modified} = await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('veribo'), null);
+        const after = Date.now();
+        expect(created).to.be.true;
+      });
     });
   });
 });
@@ -138,22 +150,6 @@ sharedExamplesFor('Stores', (store) => {
 //     stub('new', 'Date').returns({getTime: () => { return date; }});
 //     stub(Date, 'now').returns(date); // make Node 0.9 happy
 //   });
-
-//     it('sets the value of a root item', () => {
-//       store.put('zebcoe', '/manifesto', 'text/plain', buffer('gizmos'), null, () => {
-//         store.get('zebcoe', '/manifesto', null, function (error, item) {
-//           resume(() => { assertEqual(buffer('gizmos'), item.value); });
-//         });
-//       });
-//     });
-
-//     it('sets the value of a deep item', () => {
-//       store.put('boris', '/deep/dir/secret', 'text/plain', buffer('gizmos'), null, () => {
-//         store.get('boris', '/deep/dir/secret', null, function (error, item) {
-//           resume(() => { assertEqual(buffer('gizmos'), item.value); });
-//         });
-//       });
-//     });
 
 //     it('returns true with a timestamp when a new item is created', () => {
 //       store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), null, function (error, created, modified, conflict) {

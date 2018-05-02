@@ -32,8 +32,7 @@ let store = {
 };
 
 const sandbox = chai.spy.sandbox();
-const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37);
-
+const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37).toString();
 describe('Storage', () => {
   before(() => {
     this._server = new Armadietto({ store, http: { port: 4567 } });
@@ -72,7 +71,7 @@ describe('Storage', () => {
       expect(res).to.have.header('Access-Control-Allow-Headers', 'Authorization, Content-Length, Content-Type, If-Match, If-None-Match, Origin, X-Requested-With');
       expect(res).to.have.header('Access-Control-Allow-Methods', 'OPTIONS, GET, HEAD, PUT, DELETE');
       expect(res).to.have.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, ETag');
-      expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+      expect(res).to.have.header('Cache-Control', 'no-cache');
       expect(res.text).to.be.equal('');
     });
   });
@@ -137,8 +136,8 @@ describe('Storage', () => {
       it('ask the store for an item conditionally based on If-None-Match', async () => {
         await req.get('/storage/zebcoe/locog/seats')
           .set('Authorization', 'Bearer a_token')
-          .set('If-None-Match', modifiedTimestamp).send();
-        expect(store.get).to.have.been.called.with('zebcoe', '/locog/seats', modifiedTimestamp);
+          .set('If-None-Match', `"${modifiedTimestamp}"`).send();
+        expect(store.get).to.have.been.called.with('zebcoe', '/locog/seats', `"${modifiedTimestamp}"`);
       });
 
       it('do not ask the store for an item in an unauthorized directory', async () => {
@@ -201,14 +200,14 @@ describe('Storage', () => {
         const res = await get('/storage/zebcoe/locog/seats');
         expect(res).to.have.status(401);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
-        expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="localhost:4567" error="invalid_token"');
       });
     });
 
     const item = {
-      type: 'custom/type',
-      modified: 1330177020000,
+      'Content-Type': 'custom/type',
+      ETag: '1330177020000',
       value: 'a value'
     };
 
@@ -224,7 +223,7 @@ describe('Storage', () => {
         const res = await get('/storage/zebcoe/locog/seats');
         expect(res).to.have.status(200);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
-        expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('Content-Length', '7');
         expect(res).to.have.header('Content-Type', 'custom/type');
         expect(res).to.have.header('ETag', '"1330177020000"');
@@ -237,7 +236,7 @@ describe('Storage', () => {
 
         expect(res).to.have.status(304);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
-        expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('ETag', '"1330177020000"');
         expect(res.text).to.be.equal('');
       });
@@ -246,10 +245,10 @@ describe('Storage', () => {
     describe('when the store returns a directory listing', () => {
       before(() => {
         store.get = () => {
-          return { item: { children: [
-            {name: 'bla', modified: 1234544444},
-            {name: 'bar/', modified: 12345888888}],
-          modified: 12345888888 } };
+          return { item: { items: [
+            { 'bla': { ETag: '1234544444' } },
+            { 'bar/': { ETag: '12345888888' } }],
+          ETag: '12345888888' } };
         };
       });
 
@@ -257,7 +256,7 @@ describe('Storage', () => {
         const res = await get('/storage/zebcoe/locog/seats/');
         expect(res).to.have.status(200);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
-        expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('ETag', '"12345888888"');
         // expect(res.body).to.be.deep.equal({'bar/': '12345888888', 'bla': '1234544444'});
       });
@@ -266,7 +265,7 @@ describe('Storage', () => {
     describe('when the store returns an empty directory listing', () => {
       before(() => {
         store.get = () => {
-          return { item: { items: {}, modified: 12345888888 } };
+          return { item: { items: {}, ETag: '12345888888' } };
         };
       });
 
@@ -274,9 +273,11 @@ describe('Storage', () => {
         const res = await get('/storage/zebcoe/locog/seats/');
         expect(res).to.have.status(200);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
-        expect(res).to.have.header('Cache-Control', 'no-cache, no-store');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('ETag', '"12345888888"');
-        expect(res.body).to.be.deep.equal({ items: {} });
+        expect(res.body).to.be.deep.equal({
+          '@context': 'http://remotestorage.io/spec/folder-description',
+          items: {} });
       });
     });
 
@@ -346,7 +347,7 @@ describe('Storage', () => {
           .set('If-None-Match', `"${modifiedTimestamp}"`)
           .send('a value');
         expect(store.put).to.have.been.called.with('zebcoe', '/locog/seats',
-          'text/plain', Buffer.from('a value'), modifiedTimestamp);
+          'text/plain', Buffer.from('a value'), `"${modifiedTimestamp}"`);
       });
 
       it('tells the store to create a value conditionally based on If-None-Match', async () => {
@@ -364,7 +365,7 @@ describe('Storage', () => {
           .set('If-Match', `"${modifiedTimestamp}"`)
           .send('a value');
         expect(store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain',
-          Buffer.from('a value'), modifiedTimestamp);
+          Buffer.from('a value'), `"${modifiedTimestamp}"`);
       });
 
       it('does not tell the store to save a directory', async () => {
@@ -454,6 +455,7 @@ describe('Storage', () => {
   });
 
   describe('DELETE', () => {
+    store.delete = () => ({deleted: true});
     let del = (path) => {
       return req.delete(path).buffer(true)
         .set('Authorization', 'Bearer a_token');
@@ -475,14 +477,14 @@ describe('Storage', () => {
 
     it('tells the store to delete an item conditionally based on If-None-Match', async () => {
       await del('/storage/zebcoe/locog/seats')
-        .set('If-None-Match', '"' + modifiedTimestamp + '"');
-      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', modifiedTimestamp);
+        .set('If-None-Match', `"${modifiedTimestamp}"`);
+      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', `"${modifiedTimestamp}"`);
     });
 
     it('tells the store to delete an item conditionally based on If-Match', async () => {
       await del('/storage/zebcoe/locog/seats')
-        .set('If-Match', '"' + modifiedTimestamp + '"');
-      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', modifiedTimestamp);
+        .set('If-Match', `"${modifiedTimestamp}"`);
+      expect(store.delete).to.be.called.with('zebcoe', '/locog/seats', `"${modifiedTimestamp}"`);
     });
 
     describe('when the store says the item was deleted', () => {

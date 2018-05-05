@@ -5,6 +5,4 @@ require('./armadietto/oauth_spec');
 require('./armadietto/storage_spec');
 
 require('./stores/file_tree_spec');
-// require('./stores/redis_spec')
-
-// JS.Test.autorun()
+require('./stores/redis_spec');

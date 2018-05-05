@@ -1,24 +1,15 @@
-var Redis = require("../../lib/stores/redis"),
-    redis = require("redis"),
-    JS    = require("jstest")
+/* eslint-env mocha, chai, node */
+const Redis = require('ioredis');
+const RedisStore = require('../../lib/stores/redis');
+const { itBehavesLike } = require('bdd-lazy-var');
+require('../store_spec');
 
-JS.Test.describe("Redis store", function() { with(this) {
-  before(function() { with(this) {
-    stub(require("../../lib/stores/core"), "hashRounds", 1)
-    this.store = new Redis({
-      host:       "localhost",
-      port:       6379,
-      database:   1,
-      namespace:  String(new Date().getTime())
-    })
-  }})
-
-  after(function(resume) { with(this) {
-    var db = redis.createClient(6379, "localhost")
-    db.select(1, function() {
-      db.flushdb(function() { resume() })
-    })
-  }})
-
-  itShouldBehaveLike("storage backend")
-}})
+describe('Redis store', () => {
+  let store = new RedisStore({namespace: String(new Date().getTime())});
+  after(async () => {
+    const db = new Redis();
+    await db.select(0);
+    await db.flushdb();
+  });
+  itBehavesLike('Stores', store);
+});

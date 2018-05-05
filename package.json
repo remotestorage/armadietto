@@ -21,6 +21,7 @@
   "dependencies": {
     "argparse": "^1.0.7",
     "ejs": ">= 2.0.0",
+    "ioredis": "^3.2.2",
     "lockfile": ">= 1.0.0",
     "redis": ">= 0.8.2"
   },

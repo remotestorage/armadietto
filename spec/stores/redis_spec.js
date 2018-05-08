@@ -10,6 +10,8 @@ describe('Redis store', () => {
     const db = new Redis();
     await db.select(0);
     await db.flushdb();
+    store._redis.quit();
+    db.quit();
   });
   itBehavesLike('Stores', store);
 });

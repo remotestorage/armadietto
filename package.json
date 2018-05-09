@@ -18,7 +18,7 @@
     "node": ">=7.6.0"
   },
   "bin": {
-    "armadietto": "./bin/server.js"
+    "armadietto": "./bin/armadietto.js"
   },
   "main": "./lib/armadietto.js",
   "dependencies": {

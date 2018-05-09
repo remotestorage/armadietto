@@ -131,12 +131,12 @@ sharedExamplesFor('Stores', (store) => {
         expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
       });
 
-      it('returns true with a timestamp when a new item is created', async () => {
-        const before = Date.now();
-        const {created, modified} = await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('veribo'), null);
-        const after = Date.now();
-        expect(created).to.be.true;
-      });
+      // it('returns true with a timestamp when a new item is created', async () => {
+      //   const before = Date.now();
+      //   const {created, modified} = await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('veribo'), null);
+      //   const after = Date.now();
+      //   expect(created).to.be.true;
+      // });
     });
   });
 });

@@ -131,12 +131,34 @@ sharedExamplesFor('Stores', (store) => {
         expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
       });
 
-      // it('returns true with a timestamp when a new item is created', async () => {
-      //   const before = Date.now();
-      //   const {created, modified} = await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('veribo'), null);
-      //   const after = Date.now();
-      //   expect(created).to.be.true;
-      // });
+      it('returns true with a timestamp when a new item is created', async () => {
+        const before = new Date().getTime();
+        const {created, modified} = await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('veribo'), null);
+        const after = new Date().getTime();
+        expect(created).to.be.true;
+        expect(parseInt(modified)).to.be.lte(after).and.gte(before);
+      });
+
+      it('returns true with a timestamp when a new category is created', async () => {
+        const before = new Date().getTime();
+        const {created, modified, conflict} = await store.put('boris', '/documents/zipwire', 'image/poster', Buffer.from('vertibo'), null);
+        const after = new Date().getTime();
+        expect(created).to.be.true;
+        expect(parseInt(modified)).to.be.lte(after).and.gte(before);
+        expect(!conflict).to.be.true;
+      });
+
+      describe('for a nested document', () => {
+        before(() => {
+          store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);
+        });
+
+        it('created the parent directory', async () => {
+          const {item} = await store.get('boris', '/photos/foo/bar/', null);
+          expect(item.items.qux['Content-Length']).to.be.equal(7);
+          expect(item.items.qux['Content-Type']).to.be.equal('image/poster');
+        });
+      });
     });
   });
 });
@@ -150,39 +172,8 @@ sharedExamplesFor('Stores', (store) => {
 //     stub('new', 'Date').returns({getTime: () => { return date; }});
 //     stub(Date, 'now').returns(date); // make Node 0.9 happy
 //   });
-
-//     it('returns true with a timestamp when a new item is created', () => {
-//       store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), null, function (error, created, modified, conflict) {
-//         resume(() => {
-//           assertNull(error);
-//           assert(created);
-//           assertEqual(date, modified);
-//           assert(!conflict);
-//         });
-//       });
 //     });
 
-//     it('returns true with a timestamp when a new category is created', () => {
-//       store.put('boris', '/documents/zipwire', 'image/poster', buffer('vertibo'), null, function (error, created, modified, conflict) {
-//         resume(() => {
-//           assertNull(error);
-//           assert(created);
-//           assertEqual(date, modified);
-//           assert(!conflict);
-//         });
-//       });
-//     });
-
-//     it('returns false with a timestamp when an existing item is modified', () => {
-//       store.put('boris', '/photos/election', 'text/plain', buffer('hair'), null, function (error, created, modified, conflict) {
-//         resume(() => {
-//           assertNull(error);
-//           assert(!created);
-//           assertEqual(date, modified);
-//           assert(!conflict);
-//         });
-//       });
-//     });
 
 //     describe('for a nested document', () => {
 //       before(() => {

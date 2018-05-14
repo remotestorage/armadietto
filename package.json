@@ -22,10 +22,10 @@
   },
   "main": "./lib/armadietto.js",
   "dependencies": {
-    "argparse": "^1.0.7",
-    "ejs": ">= 2.0.0",
+    "argparse": "^1.0.10",
+    "ejs": "^2.6.1",
     "ioredis": "^3.2.2",
-    "lockfile": ">= 1.0.0",
+    "lockfile": "^1.0.4",
     "mkdirp": "^0.5.1"
   },
   "devDependencies": {
@@ -36,9 +36,9 @@
     "chai-http": "^4.0.0",
     "chai-spies": "^1.0.0",
     "eslint-config-standard": "^11.0.0",
-    "mocha": "^5.0.5",
-    "rimraf": "^2.6.2",
-    "redis": ">= 0.8.2"
+    "mocha": "^5.1.1",
+    "redis": "^2.8.0",
+    "rimraf": "^2.6.2"
   },
   "scripts": {
     "dev": "nodemon -w ./lib ./bin/armadietto.js -c ./bin/test-suite.json",

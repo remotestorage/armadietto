@@ -1,7 +1,7 @@
 
 # armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto)
 > ### :warning: WARNING
-> Please do not consider `armadietto` production ready, this project is still considered experimental. 
+> Please do not consider `armadietto` production ready, this project is still considered experimental.  
 > As with any alpha-stage storage technology, you MUST expect that it will eat
 your data and take precautions against this. You SHOULD expect that its APIs and
 storage schemas will change before it is labelled stable.
@@ -10,7 +10,7 @@ storage schemas will change before it is labelled stable.
 
 armadietto is a [RemoteStorage][1] server written for Node.js.
 
-This is a complete rewrite of [reStore](https://github.com/jcoglan/restore). 
+This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
 [1]: http://www.w3.org/community/unhosted/wiki/RemoteStorage
 
@@ -160,15 +160,13 @@ behaviour to enforce secure connections.
 
 
 ### Storage backends
-armadietto supports pluggable storage backends, and comes with two implementations
-out of the box:
+armadietto supports pluggable storage backends, and comes with a file system
+implementation out of the box (redis storage backend is on the way in `feature/redis` branch):
 
 * `Armadietto.FileTree` - Uses the filesystem hierarchy and stores each item in its
   own individual file. Content and metadata are stored in separate files so the
   content does not need base64-encoding and can be hand-edited. Must only be run
   using a single server process.
-* `Armadietto.Redis` - Stores data in a Redis database, and all stored data is
-  base64-encoded. It can be run with any number of server processes.
 
 All the backends support the same set of features, including the ability to
 store arbitrary binary data with content types and modification times.
@@ -178,14 +176,6 @@ They are configured as follows:
 ```js
 // To use the file tree store:
 const store = new Armadietto.FileTree({path: 'path/to/storage'});
-
-// To use the Redis store:
-const store = new Armadietto.Redis({
-  host:     'redis.example.com',    // default is 'localhost'
-  port:     1234,                   // default is 6379
-  database: 2,                      // default is 0
-  password: 'unhosted'              // default is no password
-});
 
 // Then create the server with your store:
 const server = new Armadietto({

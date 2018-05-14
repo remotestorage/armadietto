@@ -24,7 +24,6 @@
   "dependencies": {
     "argparse": "^1.0.10",
     "ejs": "^2.6.1",
-    "ioredis": "^3.2.2",
     "lockfile": "^1.0.4",
     "mkdirp": "^0.5.1"
   },
@@ -37,7 +36,6 @@
     "chai-spies": "^1.0.0",
     "eslint-config-standard": "^11.0.0",
     "mocha": "^5.1.1",
-    "redis": "^2.8.0",
     "rimraf": "^2.6.2"
   },
   "scripts": {

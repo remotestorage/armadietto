@@ -94,8 +94,6 @@ sharedExamplesFor('Stores', (store) => {
   });
 
   describe('storage methods', () => {
-    def('date', Date.UTC(2012, 1, 25, 13, 37));
-    def('oldDate', Date.UTC(1984, 6, 5, 11, 11));
     describe('put', () => {
       it('sets the value of an item', async () => {
         await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'), null);
@@ -133,7 +131,7 @@ sharedExamplesFor('Stores', (store) => {
 
       it('returns true with a timestamp when a new item is created', async () => {
         const before = new Date().getTime();
-        const {created, modified} = await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('veribo'), null);
+        const {created, modified} = await store.put('boris', '/photos/antani', 'image/poster', Buffer.from('veribo'), null);
         const after = new Date().getTime();
         expect(created).to.be.true;
         expect(parseInt(modified)).to.be.lte(after).and.gte(before);
@@ -149,15 +147,63 @@ sharedExamplesFor('Stores', (store) => {
       });
 
       describe('for a nested document', () => {
-        before(() => {
-          store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);
-        });
-
         it('created the parent directory', async () => {
+          await store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);
           const {item} = await store.get('boris', '/photos/foo/bar/', null);
           expect(item.items.qux['Content-Length']).to.be.equal(7);
           expect(item.items.qux['Content-Type']).to.be.equal('image/poster');
         });
+
+        it('does not create path named as already existing document', async () => {
+          const { created } = await store.put('boris', '/photos/zipwire/foo', 'image/poster', Buffer.from('vertibo'));
+          expect(created).to.be.false;
+          const { item } = await store.get('boris', '/photos/zipwire/foo');
+          expect(item).to.be.null;
+        });
+      });
+    });
+
+    describe('versioning', () => {
+      it('does not set the value if a version is given for a non-existent item', async () => {
+        await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '12345');
+        const { item } = await store.get('boris', '/photos/zipwire3');
+        expect(item).to.be.null;
+      });
+
+      it('does not set the value if * is given for a non-existent item', async () => {
+        await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '*');
+        const { item } = await store.get('boris', '/photos/zipwire3');
+        expect(item.value.toString()).to.be.equal('veribo');
+      });
+
+      it('sets the value if the given version is current', async () => {
+        const { item: oldItem } = await store.get('boris', '/photos/election');
+        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('mayor'), oldItem.ETag);
+        const { item } = await store.get('boris', '/photos/election');
+        expect(item.value.toString()).to.be.equal('mayor');
+      });
+
+      it('does not set the value if the given version is not current', async () => {
+        const { item: oldItem } = await store.get('boris', '/photos/election');
+        const version = parseInt(oldItem.ETag) + 1;
+        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('hair'), version.toString());
+        const { item } = await store.get('boris', '/photos/election');
+        expect(item.value.toString()).to.be.equal('mayor');
+      });
+
+      it('does not set the value if * is given for an existing item', async () => {
+        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('hair'), '*');
+        const { item } = await store.get('boris', '/photos/election');
+        expect(item.value.toString()).to.be.equal('mayor');
+      });
+
+      it('returns false with no conflict when the given version is current', async () => {
+        const { item } = await store.get('boris', '/photos/election');
+        const currentVersion = item.ETag;
+        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg', currentVersion);
+        expect(created).to.be.false;
+        expect(modified).not.to.be.equal(currentVersion);
+        expect(conflict).to.be.false;
       });
     });
   });
@@ -165,78 +211,7 @@ sharedExamplesFor('Stores', (store) => {
 
 // });
 
-// describe('storage methods', () => {
-//   before(() => {
-//     this.date = Date.UTC(2012, 1, 25, 13, 37);
-//     this.oldDate = Date.UTC(1984, 6, 5, 11, 11);
-//     stub('new', 'Date').returns({getTime: () => { return date; }});
-//     stub(Date, 'now').returns(date); // make Node 0.9 happy
-//   });
-//     });
-
-
-//     describe('for a nested document', () => {
-//       before(() => {
-//         store.put('boris', '/photos/foo/bar/qux', 'image/poster', buffer('vertibo'), null, resume);
-//       });
-
-//       it('creates the parent directory', () => {
-//         store.get('boris', '/photos/foo/bar/', null, function (error, items) {
-//           resume(() => {
-//             assertEqual({ children: [{name: 'qux', modified: date}], modified: date }, items);
-//           });
-//         });
-//       });
-
-//       it('creates the grandparent directory', () => {
-//         store.get('boris', '/photos/foo/', null, function (error, items) {
-//           resume(() => {
-//             assertEqual({ children: [{name: 'bar/', modified: date}], modified: date }, items);
-//           });
-//         });
-//       });
-//     });
-
 //     describe('versioning', () => {
-//       it('does not set the value if a version is given for a non-existent item', () => {
-//         store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), date, () => {
-//           store.get('boris', '/photos/zipwire', null, function (error, item) {
-//             resume(() => { assertNull(item); });
-//           });
-//         });
-//       });
-
-//       it('sets the value if * is given for a non-existent item', () => {
-//         store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), '*', () => {
-//           store.get('boris', '/photos/zipwire', null, function (error, item) {
-//             resume(() => { assertEqual(buffer('vertibo'), item.value); });
-//           });
-//         });
-//       });
-
-//       it('sets the value if the given version is current', () => {
-//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), date, () => {
-//           store.get('boris', '/photos/election', null, function (error, item) {
-//             resume(() => { assertEqual(buffer('mayor'), item.value); });
-//           });
-//         });
-//       });
-
-//       it('does not set the value if the given version is not current', () => {
-//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), oldDate, () => {
-//           store.get('boris', '/photos/election', null, function (error, item) {
-//             resume(() => { assertEqual(buffer('hair'), item.value); });
-//           });
-//         });
-//       });
-
-//       it('does not set the value if * is given for an existing item', () => {
-//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), '*', () => {
-//           store.get('boris', '/photos/election', null, function (error, item) {
-//             resume(() => { assertEqual(buffer('hair'), item.value); });
-//           });
-//         });
-//       });
 
 //       it('returns false with no conflict when the given version is current', () => {
 //         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), date, function (error, created, modified, conflict) {

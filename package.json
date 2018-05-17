@@ -13,7 +13,7 @@
     "decentralization"
   ],
   "license": "MIT",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "engines": {
     "node": ">=7.6.0"
   },

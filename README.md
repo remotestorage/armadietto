@@ -32,13 +32,13 @@ The following Node script will run a basic server:
 ```js
 process.umask(077);
 
-const Armadietto = require('armadietto'),
-    store   = new Armadietto.FileTree({path: 'path/to/storage'}),
+const Armadietto = require('armadietto');
+store   = new Armadietto.FileTree({path: 'path/to/storage'}),
 
-    server  = new Armadietto({
-                store:  store,
-                http:   {host: '127.0.0.1', port: 8000}
-              });
+server  = new Armadietto({
+  store:  store,
+  http:   {host: '127.0.0.1', port: 8000}
+});
 
 server.boot();
 ```

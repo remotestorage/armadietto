@@ -51,10 +51,10 @@ that, use the `allow.signup` option:
 
 ```js
 var server = new Armadietto({
-               store: store,
-               http:  {host: '127.0.0.1', port: 8000},
-               allow: {signup: true}
-             });
+  store: store,
+  http:  {host: '127.0.0.1', port: 8000},
+  allow: {signup: true}
+});
 ```
 
 If you navigate to `http://localhost:8000/` you should then see a sign-up link
@@ -191,7 +191,7 @@ server.boot();
 
 (The MIT License)
 
-Copyright (c) 2012-2015 James Coglan
+Copyright (c) 2012-2015 James Coglan  
 Copyright (c) 2018 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of

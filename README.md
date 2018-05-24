@@ -179,9 +179,9 @@ const store = new Armadietto.FileTree({path: 'path/to/storage'});
 
 // Then create the server with your store:
 const server = new Armadietto({
-                store:  store,
-                http:   {port: process.argv[2]}
-              });
+  store:  store,
+  http:   {port: process.argv[2]}
+});
 
 server.boot();
 ```

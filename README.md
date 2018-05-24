@@ -1,5 +1,5 @@
 
-# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
+# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0eaafdf96ebb47a9ac462bcf6a7ccb06)](https://www.codacy.com/app/lesion/armadietto?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=remotestorage/armadietto/&amp;utm_campaign=Badge_Grade)
 > ### :warning: WARNING
 > Please do not consider `armadietto` production ready, this project is still considered experimental.  
 > As with any alpha-stage storage technology, you MUST expect that it will eat

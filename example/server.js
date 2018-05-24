@@ -23,4 +23,5 @@ server = new Armadietto({
   cacheViews: false
 });
 
+console.log('LISTENING ON PORT 8080');
 server.boot();

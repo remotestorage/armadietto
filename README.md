@@ -1,5 +1,5 @@
 
-# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto)
+# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
 > ### :warning: WARNING
 > Please do not consider `armadietto` production ready, this project is still considered experimental.  
 > As with any alpha-stage storage technology, you MUST expect that it will eat

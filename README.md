@@ -116,26 +116,6 @@ const server = new Armadietto({
 });
 
 server.boot();
-` |
-
-```js
-const server = new Armadietto({
-  store:  store,
-  http:   {
-    host: '127.0.0.1',
-    port: 8000
-  },
-  https: {
-    force: true,
-    host:  '127.0.0.1',
-    port:  4343,
-    key:   'path/to/ssl.key',
-    cert:  'path/to/ssl.crt',
-    ca:    'path/to/ca.pem'    // optional
-  }
-});
-
-server.boot();
 ```
 
 The `force: true` line in the `https` section means the app will:

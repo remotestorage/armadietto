@@ -1,125 +1,156 @@
-var armadiettoSteps = require("../armadietto_steps"),
-    JS = require("jstest")
+/* eslint-env mocha, chai, node */
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const spies = require('chai-spies');
+const expect = chai.expect;
 
-JS.Test.describe("OAuth", function() { with(this) {
-  include(armadiettoSteps)
+const Armadietto = require('../../lib/armadietto');
 
-  before(function() { this.start(4567) })
-  after (function() { this.stop() })
+chai.use(chaiHttp);
+chai.use(spies);
 
-  define("store", {})
+const req = chai.request('http://localhost:4567');
+const get = async (path, params) => {
+  const ret = await req.get(path)
+    .redirects(0)
+    .query(params)
+    .send();
+  return ret;
+};
 
-  before(function() { with(this) {
+const post = async (path, params) => {
+  const ret = await req.post(path)
+    .redirects(0)
+    .type('form')
+    .send(params);
+  return ret;
+};
+
+let store = {
+  authorize (clientId, username, permissions) {
+    return 'a_token';
+  },
+  authenticate (params) {
+  }
+};
+
+const sandbox = chai.spy.sandbox();
+describe('OAuth', async () => {
+  before(() => {
+    this._server = new Armadietto({ store, http: { port: 4567 } });
+    this._server.boot();
+  });
+
+  after(() => { this._server.stop(); });
+
+  beforeEach(() => {
     this.auth_params = {
-      username:       "zebcoe",
-      password:       "locog",
-      client_id:      "the_client_id",
-      redirect_uri:   "http://example.com/cb",
-      response_type:  "token",
-      scope:          "the_scope",
-      state:          "the_state"
-    }
-  }})
+      username: 'zebcoe',
+      password: 'locog',
+      client_id: 'the_client_id',
+      redirect_uri: 'http://example.com/cb',
+      response_type: 'token',
+      scope: 'the_scope',
+      state: 'the_state'
+    };
 
-  describe("with invalid client input", function() { with(this) {
-    before(function() { delete this.auth_params.state })
+    sandbox.on(store, ['authorize', 'authenticate']);
+  });
 
-    it("returns an error if redirect_uri is missing", function() { with(this) {
-      delete auth_params.redirect_uri
-      get("/oauth/me", auth_params)
-      check_status( 400 )
-      check_body( "error=invalid_request&error_description=Required%20parameter%20%22redirect_uri%22%20is%20missing" )
-    }})
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-    it("returns an error if client_id is missing", function() { with(this) {
-      delete auth_params.client_id
-      get("/oauth/me", auth_params)
-      check_redirect( "http://example.com/cb#error=invalid_request&error_description=Required%20parameter%20%22client_id%22%20is%20missing" )
-    }})
+  describe('with invalid client input', () => {
+    beforeEach(() => {
+      delete this.auth_params.state;
+    });
 
-    it("returns an error if response_type is missing", function() { with(this) {
-      delete auth_params.response_type
-      get("/oauth/me", auth_params)
-      check_redirect( "http://example.com/cb#error=invalid_request&error_description=Required%20parameter%20%22response_type%22%20is%20missing" )
-    }})
+    it('returns an error if redirect_uri is missing', async () => {
+      delete this.auth_params.redirect_uri;
+      const res = await get('/oauth/me', this.auth_params);
+      expect(res).to.have.status(400);
+      expect(res.text).to.have.been.equal('error=invalid_request&error_description=Required%20parameter%20%22redirect_uri%22%20is%20missing');
+    });
 
-    it("returns an error if response_type is not recognized", function() { with(this) {
-      auth_params.response_type = "wrong"
-      get("/oauth/me", auth_params)
-      check_redirect( "http://example.com/cb#error=unsupported_response_type&error_description=Response%20type%20%22wrong%22%20is%20not%20supported" )
-    }})
+    it('returns an error if client_id is missing', async () => {
+      delete this.auth_params.client_id;
+      const res = await get('/oauth/me', this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=invalid_request&error_description=Required%20parameter%20%22client_id%22%20is%20missing');
+    });
 
-    it("returns an error if scope is missing", function() { with(this) {
-      delete auth_params.scope
-      get("/oauth/me", auth_params)
-      check_redirect( "http://example.com/cb#error=invalid_scope&error_description=Parameter%20%22scope%22%20is%20invalid" )
-    }})
+    it('returns an error if response_type is missing', async () => {
+      delete this.auth_params.response_type;
+      const res = await get('/oauth/me', this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=invalid_request&error_description=Required%20parameter%20%22response_type%22%20is%20missing');
+    });
 
-    it("returns an error if username is missing", function() { with(this) {
-      delete auth_params.username
-      post("/oauth", auth_params)
-      check_status(400)
-    }})
-  }})
+    it('returns an error if response_type is not recognized', async () => {
+      this.auth_params.response_type = 'wrong';
+      const res = await get('/oauth/me', this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=unsupported_response_type&error_description=Response%20type%20%22wrong%22%20is%20not%20supported');
+    });
 
-  describe("with valid login credentials", function() { with(this) {
-    before(function() { with(this) {
-      expect(store, "authenticate")
-          .given( objectIncluding({username: "zebcoe", password: "locog"}) )
-          .yielding( [null] )
-    }})
+    it('returns an error if scope is missing', async () => {
+      delete this.auth_params.scope;
+      const res = await get('/oauth/me', this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=invalid_scope&error_description=Parameter%20%22scope%22%20is%20invalid');
+    });
 
-    describe("without explicit read/write permissions", function() { with(this) {
-      before(function() { this.auth_params.scope = "the_scope" })
+    it('returns an error if username is missing', async () => {
+      delete this.auth_params.username;
+      const res = await post('/oauth', this.auth_params);
+      expect(res).to.have.status(400);
+    });
+  });
 
-      it("authorizes the client to read and write", function() { with(this) {
-        expect(store, "authorize").given("the_client_id", "zebcoe", {the_scope: ["r", "w"]}).yielding([null, "a_token"])
-        post("/oauth", auth_params)
-      }})
-    }})
+  describe('with valid login credentials', async () => {
+    describe('without explicit read/write permissions', async () => {
+      it('authorizes the client to read and write', async () => {
+        await post('/oauth', this.auth_params);
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r', 'w']});
+      });
+    });
 
-    describe("with explicit read permission", function() { with(this) {
-      before(function() { this.auth_params.scope = "the_scope:r" })
+    describe('with explicit read permission', async () => {
+      it('authorizes the client to read', async () => {
+        this.auth_params.scope = 'the_scope:r';
+        await post('/oauth', this.auth_params);
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r']});
+      });
+    });
 
-      it("authorizes the client to read", function() { with(this) {
-        expect(store, "authorize").given("the_client_id", "zebcoe", {the_scope: ["r"]}).yielding([null, "a_token"])
-        post("/oauth", auth_params)
-      }})
-    }})
+    describe('with explicit read/write permission', async () => {
+      it('authorizes the client to read and write', async () => {
+        this.auth_params.scope = 'the_scope:rw';
+        await post('/oauth', this.auth_params);
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r', 'w']});
+      });
+    });
 
-    describe("with explicit read/write permission", function() { with(this) {
-      before(function() { this.auth_params.scope = "the_scope:rw" })
+    it('redirects with an access token', async () => {
+      const res = await post('/oauth', this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#access_token=a_token&token_type=bearer&state=the_state');
+    });
+  });
 
-      it("authorizes the client to read and write", function() { with(this) {
-        expect(store, "authorize").given("the_client_id", "zebcoe", {the_scope: ["r", "w"]}).yielding([null, "a_token"])
-        post("/oauth", auth_params)
-      }})
-    }})
+  describe('with invalid login credentials', async () => {
+    it('does not authorize the client', async () => {
+      store.authenticate = (params) => {
+        throw new Error();
+      };
+      await post('/oauth', this.auth_params);
+      expect(store.authorize).to.be.called.exactly(0);
+    });
 
-    it("redirects with an access token", function() { with(this) {
-      stub(store, "authorize").yields([null, "a_token"])
-      post("/oauth", auth_params)
-      check_redirect( "http://example.com/cb#access_token=a_token&token_type=bearer&state=the_state" )
-    }})
-  }})
-
-  describe("with invalid login credentials", function() { with(this) {
-    before(function() { with(this) {
-      expect(store, "authenticate")
-          .given( objectIncluding({username: "zebcoe", password: "locog"}) )
-          .yielding( [new Error()] )
-    }})
-
-    it("does not authorize the client", function() { with(this) {
-      expect(store, "authorize").exactly(0)
-      post("/oauth", auth_params)
-    }})
-
-    it("returns a 401 response with the login form", function() { with(this) {
-      post("/oauth", auth_params)
-      check_status( 401 )
-      check_header( "Content-Type","text/html" )
-      check_body( /application <em>the_client_id<\/em> hosted/ )
-    }})
-  }})
-}})
+    it('returns a 401 response with the login form', async () => {
+      store.authenticate = (params) => {
+        throw new Error();
+      };
+      const res = await post('/oauth', this.auth_params);
+      expect(res).to.have.status(401);
+      expect(res).to.have.header('Content-Type', 'text/html');
+      expect(res.text).to.contain('application <em>the_client_id</em> hosted');
+    });
+  });
+});

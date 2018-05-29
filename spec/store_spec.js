@@ -1,536 +1,443 @@
-var fs   = require("fs"),
-    path = require("path"),
-    JS   = require("jstest")
+/* eslint-env mocha, chai, node */
+/* eslint-disable no-unused-expressions */
 
-JS.Test.describe("Stores", function() { with(this) {
-  sharedBehavior("storage backend", function() { with(this) {
-    define("buffer", function(string) {
-      var buffer = new Buffer(string)
-      buffer.equals = function(other) {
-        return other instanceof Buffer && other.toString("utf8") === string
-      }
-      return buffer
-    })
+const fs = require('fs');
+const path = require('path');
+const chai = require('chai');
+const promisify = require('util').promisify;
+const readFile = promisify(fs.readFile);
+const chaiAsPromised = require('chai-as-promised');
+const expect = chai.expect;
+chai.use(chaiAsPromised);
+const { def, get, subject, sharedExamplesFor } = require('bdd-lazy-var/getter');
 
-    define("file", function(filename) {
-      var buffer = fs.readFileSync(path.join(__dirname, filename)),
-          string = buffer.toString("hex")
+sharedExamplesFor('Stores', (store) => {
+  describe('createUser', () => {
+    subject('user', () => store.createUser(get.params));
 
-      buffer.equals = function(other) {
-        return other instanceof Buffer && other.toString("hex") === string
-      }
-      return buffer
-    })
+    describe('with valid parameters', () => {
+      def('params', {username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
+      it('returns no errors', () => expect(get.user).to.be.fulfilled);
+    });
 
-    describe("createUser", function() { with(this) {
-      before(function() { with(this) {
-        this.params = {username: "zebcoe", email: "zeb@example.com", password: "locog"}
-      }})
+    describe('with no username', () => {
+      def('params', {email: 'zeb@example.com', password: 'locog'});
+      it('returns an error', () => expect(get.user)
+        .to.be.rejectedWith('Error: Username must be at least 2 characters long'));
+    });
 
-      describe("with valid parameters", function() { with(this) {
-        it("returns no errors", function(resume) { with(this) {
-          store.createUser(params, function(error) {
-            resume(function() { assertNull( error ) })
-          })
-        }})
-      }})
+    describe('with no email', () => {
+      def('params', {username: 'zebcoe', password: 'locog'});
+      it('returns an error', () => expect(get.user)
+        .to.be.rejectedWith('Error: Email must not be blank'));
+    });
 
-      describe("with no username", function() { with(this) {
-        before(function() { delete this.params.username })
+    describe('with no password', () => {
+      def('params', {username: 'zebcoe', email: 'zeb@example.com'});
+      it('returns an error', () => expect(get.user)
+        .to.be.rejectedWith('Error: Password must not be blank'));
+    });
 
-        it("returns an error", function(resume) { with(this) {
-          store.createUser(params, function(error) {
-            resume(function() { assertEqual( "Username must be at least 2 characters long", error.message ) })
-          })
-        }})
-      }})
+    describe('with an existing user', () => {
+      def('params', {username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
+      it('returns an error', () => expect(get.user)
+        .to.be.rejectedWith('The username is already taken'));
+    });
+  });
 
-      describe("with no email", function() { with(this) {
-        before(function() { delete this.params.email })
+  describe('authenticate', () => {
+    def('params', {username: 'boris', email: 'boris@example.com', password: 'zipwire'});
+    before(() => store.createUser(get.params));
+    subject('authenticate', () => store.authenticate(get.params));
 
-        it("returns an error", function(resume) { with(this) {
-          store.createUser(params, function(error) {
-            resume(function() { assertEqual( "Email must not be blank", error.message ) })
-          })
-        }})
-      }})
+    it('returns no error for a valid username-password pairs', () =>
+      expect(get.authenticate).to.eventually.be.true);
 
-      describe("with no password", function() { with(this) {
-        before(function() { delete this.params.password })
+    it('returns an error if the password is wrong', () => {
+      get.params.password = 'bikes';
+      return expect(get.authenticate).to.be.rejectedWith('Incorrect password');
+    });
 
-        it("returns an error", function(resume) { with(this) {
-          store.createUser(params, function(error) {
-            resume(function() { assertEqual( "Password must not be blank", error.message ) })
-          })
-        }})
-      }})
+    it('returns an error if the user does not exist', () => {
+      get.params.username = 'zeb';
+      return expect(get.authenticate).to.be.rejectedWith('Username not found');
+    });
+  });
 
-      describe("with an existing user", function() { with(this) {
-        before(function(resume) { with(this) {
-          store.createUser({username: "zebcoe", email: "zeb@example.com", password: "hi"}, resume)
-        }})
+  describe('authorization methods', () => {
+    def('permissions', {documents: ['w'], photos: ['r', 'w'], contacts: ['r'], 'deep/dir': ['r', 'w']});
+    before(async () => {
+      // await store.createUser({username: 'boris', email: 'boris@example.com', password: 'dangle'});
+      this.accessToken = await store.authorize('www.example.com', 'boris', get.permissions);
 
-        it("returns an error", function(resume) { with(this) {
-          store.createUser(params, function(error) {
-            resume(function() { assertEqual( "The username is already taken", error.message ) })
-          })
-        }})
-      }})
-    }})
+      // await store.createUser({username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
+      this.rootToken = await store.authorize('admin.example.com', 'zebcoe', {'': ['r', 'w']});
+    });
 
-    describe("authenticate", function() { with(this) {
-      before(function(resume) { with(this) {
-        store.createUser({username: "boris", email: "boris@example.com", password: "zipwire"}, resume)
-      }})
+    describe('permissions', () => {
+      it('returns the users\'s authorizations', async () => {
+        const auth = await store.permissions('boris', this.accessToken);
+        expect(auth).to.be.deep.equal({ '/contacts/': ['r'],
+          '/deep/dir/': ['r', 'w'],
+          '/documents/': ['w'],
+          '/photos/': ['r', 'w'] });
+      });
+    });
 
-      it("returns no error for valid username-password pairs", function(resume) { with(this) {
-        store.authenticate({username: "boris", password: "zipwire"}, function(error) {
-          resume(function() { assertNull( error ) })
-        })
-      }})
+    describe('revokeAccess', () => {
+      it('removes the authorization from the store', async () => {
+        await store.revokeAccess('boris', this.accessToken);
+        const auth = await store.permissions('boris', this.accessToken);
+        expect(auth).to.be.deep.equal({});
+      });
+    });
+  });
 
-      it("returns an error if the password is wrong", function(resume) { with(this) {
-        store.authenticate({username: "boris", password: "bikes"}, function(error) {
-          resume(function() { assertEqual( "Incorrect password", error.message ) })
-        })
-      }})
+  describe('storage methods', () => {
+    describe('put', () => {
+      it('sets the value of an item', async () => {
+        await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'), null);
+        const {item} = await store.get('boris', '/photos/zipwire', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('vertibo'));
+      });
 
-      it("returns an error if the user does not exist", function(resume) { with(this) {
-        store.authenticate({username: "zeb", password: "zipwire"}, function(error) {
-          resume(function() { assertEqual( "Username not found", error.message ) })
-        })
-      }})
-    }})
+      it('stores binary data', async () => {
+        const img = await readFile(path.join(__dirname, 'whut2.jpg'));
+        await store.put('boris', '/photos/election', 'image/jpeg',
+          img, null);
+        const {item} = await store.get('boris', '/photos/election', null);
+        expect(item.value).to.be.deep.equal(img);
+      });
 
-    describe("authorization methods", function() { with(this) {
-      before(function(resume) { with(this) {
-        this.token = null
-        this.rootToken = null
-        var permissions = {documents: ["w"], photos: ["r","w"], contacts: ["r"], "deep/dir": ["r","w"]}
+      it('sets the value of a public item', async () => {
+        await store.put('boris', '/public/photos/zipwire2', 'image/poster', Buffer.from('vertibo'), null);
+        let { item } = await store.get('boris', '/public/photos/zipwire2', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('vertibo'));
+        ({ item } = await store.get('boris', '/photos/zipwire2', null));
+        expect(item).to.be.null;
+      });
 
-        store.createUser({username: "boris", email: "boris@example.com", password: "dangle"}, function() {
-          store.authorize("www.example.com", "boris", permissions, function(error, accessToken) {
-            token = accessToken
-            store.createUser({username: "zebcoe", email: "zeb@example.com", password: "locog"}, function() {
-              store.authorize("admin.example.com", "zebcoe", {"": ["r","w"]}, function(error, accessToken) {
-                rootToken = accessToken
-                resume()
-              })
-            })
-          })
-        })
-      }})
+      it('sets the value of a root item', async () => {
+        await store.put('zebcoe', '/manifesto', 'text/plain', Buffer.from('gizmos'), null);
+        const { item } = await store.get('zebcoe', '/manifesto', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
+      });
 
-      describe("permissions", function() { with(this) {
-        it("returns the user's authorizations", function(resume) { with(this) {
-          store.permissions("boris", token, function(error, auths) {
-            resume(function() {
-              assertEqual( {
-                  "/contacts/":   ["r"],
-                  "/deep/dir/":   ["r","w"],
-                  "/documents/":  ["w"],
-                  "/photos/":     ["r","w"]
-                }, auths )
-            })
-          })
-        }})
-      }})
+      it('sets the value of a deep item', async () => {
+        await store.put('boris', '/deep/dir/secret', 'text/plain', Buffer.from('gizmos'), null);
+        const { item } = await store.get('boris', '/deep/dir/secret', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
+      });
 
-      describe("revokeAccess", function() { with(this) {
-        before(function(resume) { with(this) {
-          store.revokeAccess("boris", token, resume)
-        }})
+      it('returns true with a timestamp when a new item is created', async () => {
+        const before = new Date().getTime();
+        const {created, modified} = await store.put('boris', '/photos/antani', 'image/poster', Buffer.from('veribo'), null);
+        const after = new Date().getTime();
+        expect(created).to.be.true;
+        expect(parseInt(modified)).to.be.lte(after).and.gte(before);
+      });
 
-        it("removes the authorization from the store", function(resume) { with(this) {
-          store.permissions("boris", token, function(error, auths) {
-            resume(function() {
-              assertEqual( {}, auths )
-            })
-          })
-        }})
-      }})
-    }})
+      it('returns true with a timestamp when a new category is created', async () => {
+        const before = new Date().getTime();
+        const {created, modified, conflict} = await store.put('boris', '/documents/zipwire', 'image/poster', Buffer.from('vertibo'), null);
+        const after = new Date().getTime();
+        expect(created).to.be.true;
+        expect(parseInt(modified)).to.be.lte(after).and.gte(before);
+        expect(!conflict).to.be.true;
+      });
 
-    describe("storage methods", function() { with(this) {
-      before(function() { with(this) {
-        this.date = Date.UTC(2012,1,25,13,37)
-        this.oldDate = Date.UTC(1984,6,5,11,11)
-        stub("new", "Date").returns({getTime: function() { return date }})
-        stub(Date, "now").returns(date) // make Node 0.9 happy
-      }})
+      describe('for a nested document', () => {
+        it('created the parent directory', async () => {
+          await store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);
+          const {item} = await store.get('boris', '/photos/foo/bar/', null);
+          expect(item.items.qux['Content-Length']).to.be.equal(7);
+          expect(item.items.qux['Content-Type']).to.be.equal('image/poster');
+        });
 
-      describe("put", function() { with(this) {
-        before(function(resume) { with(this) {
-          store.put("boris", "/photos/election", "image/jpeg", buffer("hair"), null, function() { resume() })
-        }})
+        it('does not create path named as already existing document', async () => {
+          const { created } = await store.put('boris', '/photos/zipwire/foo', 'image/poster', Buffer.from('vertibo'));
+          expect(created).to.be.false;
+          const { item } = await store.get('boris', '/photos/zipwire/foo');
+          expect(item).to.be.null;
+        });
+      });
+    });
 
-        it("sets the value of an item", function(resume) { with(this) {
-          store.put("boris", "/photos/zipwire", "image/poster", buffer("vertibo"), null, function() {
-            store.get("boris", "/photos/zipwire", null, function(error, item) {
-              resume(function() { assertEqual( buffer("vertibo"), item.value ) })
-            })
-          })
-        }})
+    describe('versioning', () => {
+      it('does not set the value if a version is given for a non-existent item', async () => {
+        await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '12345');
+        const { item } = await store.get('boris', '/photos/zipwire3');
+        expect(item).to.be.null;
+      });
 
-        it("stores binary data", function(resume) { with(this) {
-          store.put("boris", "/photos/whut", "image/jpeg", file("whut2.jpg"), null, function() {
-            store.get("boris", "/photos/whut", null, function(error, item) {
-              resume(function() { assertEqual( file("whut2.jpg"), item.value ) })
-            })
-          })
-        }})
+      it('does not set the value if * is given for a non-existent item', async () => {
+        await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '*');
+        const { item } = await store.get('boris', '/photos/zipwire3');
+        expect(item.value.toString()).to.be.equal('veribo');
+      });
 
-        it("sets the value of a public item", function(resume) { with(this) {
-          store.put("boris", "/public/photos/zipwire", "image/poster", buffer("vertibo"), null, function() {
-            store.get("boris", "/public/photos/zipwire", null, function(error, item) {
-              resume(function(resume) {
-                assertEqual( buffer("vertibo"), item.value )
-                store.get("boris", "/photos/zipwire", null, function(error, item) {
-                  resume(function() { assertNull( item ) })
-                })
-              })
-            })
-          })
-        }})
+      it('sets the value if the given version is current', async () => {
+        const { item: oldItem } = await store.get('boris', '/photos/election');
+        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('mayor'), oldItem.ETag);
+        const { item } = await store.get('boris', '/photos/election');
+        expect(item.value.toString()).to.be.equal('mayor');
+      });
 
-        it("sets the value of a root item", function(resume) { with(this) {
-          store.put("zebcoe", "/manifesto", "text/plain", buffer("gizmos"), null, function() {
-            store.get("zebcoe", "/manifesto", null, function(error, item) {
-              resume(function() { assertEqual( buffer("gizmos"), item.value ) })
-            })
-          })
-        }})
+      it('does not set the value if the given version is not current', async () => {
+        const { item: oldItem } = await store.get('boris', '/photos/election');
+        const version = parseInt(oldItem.ETag) + 1;
+        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('hair'), version.toString());
+        const { item } = await store.get('boris', '/photos/election');
+        expect(item.value.toString()).to.be.equal('mayor');
+      });
 
-        it("sets the value of a deep item", function(resume) { with(this) {
-          store.put("boris", "/deep/dir/secret", "text/plain", buffer("gizmos"), null, function() {
-            store.get("boris", "/deep/dir/secret", null, function(error, item) {
-              resume(function() { assertEqual( buffer("gizmos"), item.value ) })
-            })
-          })
-        }})
+      it('does not set the value if * is given for an existing item', async () => {
+        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('hair'), '*');
+        const { item } = await store.get('boris', '/photos/election');
+        expect(item.value.toString()).to.be.equal('mayor');
+      });
 
-        it("returns true with a timestamp when a new item is created", function(resume) { with(this) {
-          store.put("boris", "/photos/zipwire", "image/poster", buffer("vertibo"), null, function(error, created, modified, conflict) {
-            resume(function() {
-              assertNull( error )
-              assert( created )
-              assertEqual( date, modified )
-              assert( !conflict )
-            })
-          })
-        }})
+      it('returns false with no conflict when the given version is current', async () => {
+        const { item } = await store.get('boris', '/photos/election');
+        const currentVersion = item.ETag;
+        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg', currentVersion);
+        expect(created).to.be.false;
+        expect(modified).not.to.be.equal(currentVersion);
+        expect(conflict).to.be.false;
+      });
+    });
+  });
+});
 
-        it("returns true with a timestamp when a new category is created", function(resume) { with(this) {
-          store.put("boris", "/documents/zipwire", "image/poster", buffer("vertibo"), null, function(error, created, modified, conflict) {
-            resume(function() {
-              assertNull( error )
-              assert( created )
-              assertEqual( date, modified )
-              assert( !conflict )
-            })
-          })
-        }})
+// });
 
-        it("returns false with a timestamp when an existing item is modified", function(resume) { with(this) {
-          store.put("boris", "/photos/election", "text/plain", buffer("hair"), null, function(error, created, modified, conflict) {
-            resume(function() {
-              assertNull( error )
-              assert( !created )
-              assertEqual( date, modified )
-              assert( !conflict )
-            })
-          })
-        }})
+//     describe('versioning', () => {
 
-        describe("for a nested document", function() { with(this) {
-          before(function(resume) { with(this) {
-            store.put("boris", "/photos/foo/bar/qux", "image/poster", buffer("vertibo"), null, resume)
-          }})
+//       it('returns false with no conflict when the given version is current', () => {
+//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), date, function (error, created, modified, conflict) {
+//           resume(() => {
+//             assertNull(error);
+//             assert(!created);
+//             assertEqual(date, modified);
+//             assert(!conflict);
+//           });
+//         });
+//       });
 
-          it("creates the parent directory", function(resume) { with(this) {
-            store.get("boris", "/photos/foo/bar/", null, function(error, items) {
-              resume(function() {
-                assertEqual( { children: [{name: "qux", modified: date}], modified: date }, items )
-              })
-            })
-          }})
+//       it('returns false with a conflict when the given version is not current', () => {
+//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), oldDate, function (error, created, modified, conflict) {
+//           resume(() => {
+//             assertNull(error);
+//             assert(!created);
+//             assertNull(modified);
+//             assert(conflict);
+//           });
+//         });
+//       });
+//     });
+//   });
 
-          it("creates the grandparent directory", function(resume) { with(this) {
-            store.get("boris", "/photos/foo/", null, function(error, items) {
-              resume(function() {
-                assertEqual( { children: [{name: "bar/", modified: date}], modified: date }, items )
-              })
-            })
-          }})
-        }})
+//   describe('get', () => {
+//     describe('for documents', () => {
+//       before(() => {
+//         store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), null, resume);
+//       });
 
-        describe("versioning", function() { with(this) {
-          it("does not set the value if a version is given for a non-existent item", function(resume) { with(this) {
-            store.put("boris", "/photos/zipwire", "image/poster", buffer("vertibo"), date, function() {
-              store.get("boris", "/photos/zipwire", null, function(error, item) {
-                resume(function() { assertNull( item ) })
-              })
-            })
-          }})
+//       it('returns an existing resource', () => {
+//         store.get('boris', '/photos/zipwire', null, function (error, item, match) {
+//           resume(() => {
+//             assertNull(error);
+//             assertEqual({length: 7, type: 'image/poster', modified: date, value: buffer('vertibo')}, item);
+//             assert(!match);
+//           });
+//         });
+//       });
 
-          it("sets the value if * is given for a non-existent item", function(resume) { with(this) {
-            store.put("boris", "/photos/zipwire", "image/poster", buffer("vertibo"), "*", function() {
-              store.get("boris", "/photos/zipwire", null, function(error, item) {
-                resume(function() { assertEqual( buffer("vertibo"), item.value ) })
-              })
-            })
-          }})
+//       it('returns null for a non-existant key', () => {
+//         store.get('boris', '/photos/lympics', null, function (error, item, match) {
+//           resume(() => {
+//             assertNull(error);
+//             assertNull(item);
+//             assert(!match);
+//           });
+//         });
+//       });
 
-          it("sets the value if the given version is current", function(resume) { with(this) {
-            store.put("boris", "/photos/election", "image/jpeg", buffer("mayor"), date, function() {
-              store.get("boris", "/photos/election", null, function(error, item) {
-                resume(function() { assertEqual( buffer("mayor"), item.value ) })
-              })
-            })
-          }})
+//       it('returns null for a non-existant category', () => {
+//         store.get('boris', '/madeup/lympics', null, function (error, item, match) {
+//           resume(() => {
+//             assertNull(error);
+//             assertNull(item);
+//             assert(!match);
+//           });
+//         });
+//       });
 
-          it("does not set the value if the given version is not current", function(resume) { with(this) {
-            store.put("boris", "/photos/election", "image/jpeg", buffer("mayor"), oldDate, function() {
-              store.get("boris", "/photos/election", null, function(error, item) {
-                resume(function() { assertEqual( buffer("hair"), item.value ) })
-              })
-            })
-          }})
+//       describe('versioning', () => {
+//         it('returns a match if the given version is current', () => {
+//           store.get('boris', '/photos/zipwire', date, function (error, item, match) {
+//             resume(() => {
+//               assertNull(error);
+//               assertEqual({length: 7, type: 'image/poster', modified: date, value: buffer('vertibo')}, item);
+//               assert(match);
+//             });
+//           });
+//         });
 
-          it("does not set the value if * is given for an existing item", function(resume) { with(this) {
-            store.put("boris", "/photos/election", "image/jpeg", buffer("mayor"), "*", function() {
-              store.get("boris", "/photos/election", null, function(error, item) {
-                resume(function() { assertEqual( buffer("hair"), item.value ) })
-              })
-            })
-          }})
- 
-          it("returns false with no conflict when the given version is current", function(resume) { with(this) {
-            store.put("boris", "/photos/election", "image/jpeg", buffer("mayor"), date, function(error, created, modified, conflict) {
-              resume(function() {
-                assertNull( error )
-                assert( !created )
-                assertEqual( date, modified )
-                assert( !conflict )
-              })
-            })
-          }})
+//         it('returns no match if the given version is not current', () => {
+//           store.get('boris', '/photos/zipwire', oldDate, function (error, item, match) {
+//             resume(() => {
+//               assertNull(error);
+//               assertEqual({length: 7, type: 'image/poster', modified: date, value: buffer('vertibo')}, item);
+//               assert(!match);
+//             });
+//           });
+//         });
+//       });
+//     });
 
-          it("returns false with a conflict when the given version is not current", function(resume) { with(this) {
-            store.put("boris", "/photos/election", "image/jpeg", buffer("mayor"), oldDate, function(error, created, modified, conflict) {
-              resume(function() {
-                assertNull( error )
-                assert( !created )
-                assertNull( modified )
-                assert( conflict )
-              })
-            })
-          }})
-        }})
-      }})
+//     describe('for directories', () => {
+//       before(() => {
+//         // Example data taken from http://www.w3.org/community/unhosted/wiki/RemoteStorage-2012.04#GET
+//         store.put('boris', '/photos/bar/qux/boo', 'text/plain', buffer('some content'), null, () => {
+//           store.put('boris', '/photos/bla', 'application/json', buffer('{"more": "content"}'), null, () => {
+//             store.put('zebcoe', '/tv/shows', 'application/json', buffer('{"The Day": "Today"}'), null, resume);
+//           });
+//         });
+//       });
 
-      describe("get", function() { with(this) {
-        describe("for documents", function() { with(this) {
-          before(function(resume) { with(this) {
-            store.put("boris", "/photos/zipwire", "image/poster", buffer("vertibo"), null, resume)
-          }})
+//       it('returns a directory listing for a category', () => {
+//         store.get('boris', '/photos/', null, function (error, items) {
+//           resume(() => {
+//             assertNull(error);
+//             assertEqual({ children: [{name: 'bar/', modified: date}, {name: 'bla', modified: date}], modified: date }, items);
+//           });
+//         });
+//       });
 
-          it("returns an existing resource", function(resume) { with(this) {
-            store.get("boris", "/photos/zipwire", null, function(error, item, match) {
-              resume(function() {
-                assertNull( error )
-                assertEqual( {length: 7, type: "image/poster", modified: date, value: buffer("vertibo")}, item )
-                assert( !match )
-              })
-            })
-          }})
+//       it('returns a directory listing for the root category', () => {
+//         store.get('zebcoe', '/', null, function (error, items) {
+//           resume(() => {
+//             assertNull(error);
+//             assertEqual({ children: [{name: 'tv/', modified: date}], modified: date }, items);
+//           });
+//         });
+//       });
 
-          it("returns null for a non-existant key", function(resume) { with(this) {
-            store.get("boris", "/photos/lympics", null, function(error, item, match) {
-              resume(function() {
-                assertNull( error )
-                assertNull( item )
-                assert( !match )
-              })
-            })
-          }})
+//       it('returns null for a non-existant directory', () => {
+//         store.get('boris', '/photos/foo/', null, function (error, items) {
+//           resume(() => {
+//             assertNull(error);
+//             assertEqual(null, items);
+//           });
+//         });
+//       });
 
-          it("returns null for a non-existant category", function(resume) { with(this) {
-            store.get("boris", "/madeup/lympics", null, function(error, item, match) {
-              resume(function() {
-                assertNull( error )
-                assertNull( item )
-                assert( !match )
-              })
-            })
-          }})
+//       describe('with a document with the same name as a directory', () => {
+//         before(() => {
+//           store.put('boris', '/photos.d', 'application/json', buffer('{"The Day": "Today"}'), null, function (error) {
+//             resume(() => { assertNull(error); });
+//           });
+//         });
 
-          describe("versioning", function() { with(this) {
-            it("returns a match if the given version is current", function(resume) { with(this) {
-              store.get("boris", "/photos/zipwire", date, function(error, item, match) {
-                resume(function() {
-                  assertNull( error )
-                  assertEqual( {length: 7, type: "image/poster", modified: date, value: buffer("vertibo")}, item )
-                  assert( match )
-                })
-              })
-            }})
+//         it('returns a directory listing for a category', () => {
+//           store.get('boris', '/photos/', null, function (error, items) {
+//             resume(() => {
+//               assertNull(error);
+//               assertEqual({ children: [{name: 'bar/', modified: date}, {name: 'bla', modified: date}], modified: date }, items);
+//             });
+//           });
+//         });
+//       });
+//     });
+//   });
 
-            it("returns no match if the given version is not current", function(resume) { with(this) {
-              store.get("boris", "/photos/zipwire", oldDate, function(error, item, match) {
-                resume(function() {
-                  assertNull( error )
-                  assertEqual( {length: 7, type: "image/poster", modified: date, value: buffer("vertibo")}, item )
-                  assert( !match )
-                })
-              })
-            }})
-          }})
-        }})
+//   describe('delete', () => {
+//     before(() => {
+//       store.put('boris', '/photos/election', 'image/jpeg', buffer('hair'), null, () => {
+//         store.put('boris', '/photos/bar/qux/boo', 'text/plain', buffer('some content'), null, resume);
+//       });
+//     });
 
-        describe("for directories", function() { with(this) {
-          before(function(resume) { with(this) {
-            // Example data taken from http://www.w3.org/community/unhosted/wiki/RemoteStorage-2012.04#GET
-            store.put("boris", "/photos/bar/qux/boo", "text/plain", buffer("some content"), null, function() {
-              store.put("boris", "/photos/bla", "application/json", buffer('{"more": "content"}'), null, function() {
-                store.put("zebcoe", "/tv/shows", "application/json", buffer('{"The Day": "Today"}'), null, resume)
-              })
-            })
-          }})
+//     it('deletes an item', () => {
+//       store.delete('boris', '/photos/election', null, () => {
+//         store.get('boris', '/photos/election', null, function (error, item) {
+//           resume(() => { assertNull(item); });
+//         });
+//       });
+//     });
 
-          it("returns a directory listing for a category", function(resume) { with(this) {
-            store.get("boris", "/photos/", null, function(error, items) {
-              resume(function() {
-                assertNull( error )
-                assertEqual( { children: [{name: "bar/", modified: date}, {name: "bla", modified: date}], modified: date }, items )
-              })
-            })
-          }})
+//     it('removes empty directories when items are deleted', () => {
+//       store.delete('boris', '/photos/bar/qux/boo', null, () => {
+//         store.get('boris', '/photos/', null, function (error, items) {
+//           resume(() => {
+//             assertNotEqual(arrayIncluding(objectIncluding({name: 'bar/'})), items.children);
+//           });
+//         });
+//       });
+//     });
 
-          it("returns a directory listing for the root category", function(resume) { with(this) {
-            store.get("zebcoe", "/", null, function(error, items) {
-              resume(function() {
-                assertNull( error )
-                assertEqual( { children: [{name: "tv/", modified: date}], modified: date }, items )
-              })
-            })
-          }})
+//     it('returns true when an existing item is deleted', () => {
+//       store.delete('boris', '/photos/election', null, function (error, deleted, modified, conflict) {
+//         resume(() => {
+//           assertNull(error);
+//           assert(deleted);
+//           assertEqual(date, modified);
+//           assert(!conflict);
+//         });
+//       });
+//     });
 
-          it("returns null for a non-existant directory", function(resume) { with(this) {
-            store.get("boris", "/photos/foo/", null, function(error, items) {
-              resume(function() {
-                assertNull( error )
-                assertEqual( null, items )
-              })
-            })
-          }})
+//     it('returns false when a non-existant item is deleted', () => {
+//       store.delete('boris', '/photos/zipwire', null, function (error, deleted, modified, conflict) {
+//         resume(() => {
+//           assertNull(error);
+//           assert(!deleted);
+//           assertNull(modified);
+//           assert(!conflict);
+//         });
+//       });
+//     });
 
-          describe("with a document with the same name as a directory", function() { with(this) {
-            before(function(resume) { with(this) {
-              store.put("boris", "/photos.d", "application/json", buffer('{"The Day": "Today"}'), null, function(error) {
-                resume(function() { assertNull( error ) })
-              })
-            }})
+//     describe('versioning', () => {
+//       it('deletes the item if the given version is current', () => {
+//         store.delete('boris', '/photos/election', date, () => {
+//           store.get('boris', '/photos/election', null, function (error, item) {
+//             resume(() => { assertNull(item); });
+//           });
+//         });
+//       });
 
-            it("returns a directory listing for a category", function(resume) { with(this) {
-              store.get("boris", "/photos/", null, function(error, items) {
-                resume(function() {
-                  assertNull( error )
-                  assertEqual( { children: [{name: "bar/", modified: date}, {name: "bla", modified: date}], modified: date }, items )
-                })
-              })
-            }})
-          }})
-        }})
-      }})
+//       it('does not delete the item if the given version is not current', () => {
+//         store.delete('boris', '/photos/election', oldDate, () => {
+//           store.get('boris', '/photos/election', null, function (error, item) {
+//             resume(() => { assertEqual(buffer('hair'), item.value); });
+//           });
+//         });
+//       });
 
-      describe("delete", function() { with(this) {
-        before(function(resume) { with(this) {
-          store.put("boris", "/photos/election", "image/jpeg", buffer("hair"), null, function() {
-            store.put("boris", "/photos/bar/qux/boo", "text/plain", buffer("some content"), null, resume)
-          })
-        }})
+//       it('returns true with no conflict if the given version is current', () => {
+//         store.delete('boris', '/photos/election', date, function (error, deleted, modified, conflict) {
+//           resume(() => {
+//             assertNull(error);
+//             assert(deleted);
+//             assertEqual(date, modified);
+//             assert(!conflict);
+//           });
+//         });
+//       });
 
-        it("deletes an item", function(resume) { with(this) {
-          store.delete("boris", "/photos/election", null, function() {
-            store.get("boris", "/photos/election", null, function(error, item) {
-              resume(function() { assertNull( item ) })
-            })
-          })
-        }})
-
-        it("removes empty directories when items are deleted", function(resume) { with(this) {
-          store.delete("boris", "/photos/bar/qux/boo", null, function() {
-            store.get("boris", "/photos/", null, function(error, items) {
-              resume(function() {
-                assertNotEqual( arrayIncluding(objectIncluding({name: "bar/"})), items.children )
-              })
-            })
-          })
-        }})
-
-        it("returns true when an existing item is deleted", function(resume) { with(this) {
-          store.delete("boris", "/photos/election", null, function(error, deleted, modified, conflict) {
-            resume(function() {
-              assertNull( error )
-              assert( deleted )
-              assertEqual( date, modified )
-              assert( !conflict )
-            })
-          })
-        }})
-
-        it("returns false when a non-existant item is deleted", function(resume) { with(this) {
-          store.delete("boris", "/photos/zipwire", null, function(error, deleted, modified, conflict) {
-            resume(function() {
-              assertNull( error )
-              assert( !deleted )
-              assertNull( modified )
-              assert( !conflict )
-            })
-          })
-        }})
-
-        describe("versioning", function() { with(this) {
-          it("deletes the item if the given version is current", function(resume) { with(this) {
-            store.delete("boris", "/photos/election", date, function() {
-              store.get("boris", "/photos/election", null, function(error, item) {
-                resume(function() { assertNull( item ) })
-              })
-            })
-          }})
-
-          it("does not delete the item if the given version is not current", function(resume) { with(this) {
-            store.delete("boris", "/photos/election", oldDate, function() {
-              store.get("boris", "/photos/election", null, function(error, item) {
-                resume(function() { assertEqual( buffer("hair"), item.value ) })
-              })
-            })
-          }})
-
-          it("returns true with no conflict if the given version is current", function(resume) { with(this) {
-            store.delete("boris", "/photos/election", date, function(error, deleted, modified, conflict) {
-              resume(function() {
-                assertNull( error )
-                assert( deleted )
-                assertEqual( date, modified )
-                assert( !conflict )
-              })
-            })
-          }})
- 
-          it("returns false with a conflict if the given version is not current", function(resume) { with(this) {
-            store.delete("boris", "/photos/election", oldDate, function(error, deleted, modified, conflict) {
-              resume(function() {
-                assertNull( error )
-                assert( !deleted )
-                assertNull( modified )
-                assert( conflict )
-              })
-            })
-          }})
-        }})
-      }})
-    }})
-  }})
-}})
+//       it('returns false with a conflict if the given version is not current', () => {
+//         store.delete('boris', '/photos/election', oldDate, function (error, deleted, modified, conflict) {
+//           resume(() => {
+//             assertNull(error);
+//             assert(!deleted);
+//             assertNull(modified);
+//             assert(conflict);
+//           });
+//         });
+//       });
+//     });
+//   });
+// });
+// });

@@ -1,36 +1,46 @@
 {
   "name": "armadietto",
-  "description": "Simple remoteStorage server",
+  "description": "Node.js remoteStorage server",
   "homepage": "http://github.com/remotestorage/armadietto",
-  "author": "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)",
   "keywords": [
     "remoteStorage",
     "webfinger",
     "oauth",
-    "webdav"
+    "webdav",
+    "remotestorage.js",
+    "my own storage",
+    "privacy",
+    "decentralization"
   ],
   "license": "MIT",
-  "version": "0.3.0",
+  "version": "0.1.5",
   "engines": {
     "node": ">=7.6.0"
   },
   "bin": {
-    "armadietto": "./bin/server.js"
+    "armadietto": "./bin/armadietto.js"
   },
   "main": "./lib/armadietto.js",
   "dependencies": {
-    "argparse": "^1.0.7",
-    "ejs": ">= 2.0.0",
-    "lockfile": ">= 1.0.0",
-    "mkdirp": "",
-    "redis": ">= 0.8.2"
+    "argparse": "^1.0.10",
+    "ejs": "^2.6.1",
+    "lockfile": "^1.0.4",
+    "mkdirp": "^0.5.1"
   },
   "devDependencies": {
-    "jstest": "",
-    "rimraf": ""
+    "api-benchmark": "^0.5.0",
+    "bdd-lazy-var": "^2.2.3",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-http": "^4.0.0",
+    "chai-spies": "^1.0.0",
+    "eslint-config-standard": "^11.0.0",
+    "mocha": "^5.1.1",
+    "rimraf": "^2.6.2"
   },
   "scripts": {
-    "test": "node spec/runner.js"
+    "dev": "nodemon -w ./lib ./bin/armadietto.js -c ./bin/test-suite.json",
+    "test": "mocha -u bdd-lazy-var/getter  spec/runner.js"
   },
   "repository": {
     "type": "git",

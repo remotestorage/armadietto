@@ -200,244 +200,124 @@ sharedExamplesFor('Stores', (store) => {
       it('returns false with no conflict when the given version is current', async () => {
         const { item } = await store.get('boris', '/photos/election');
         const currentVersion = item.ETag;
-        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg', currentVersion);
+        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg', 
+          Buffer.from('mayor'), currentVersion);
         expect(created).to.be.false;
         expect(modified).not.to.be.equal(currentVersion);
         expect(conflict).to.be.false;
       });
+
+      it('returns false with a conflict when the given version is not current', async () => {
+        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg',
+          Buffer.from('mayor'), '123456');
+        expect(created).to.be.false;
+        expect(modified).not.to.be.ok;
+        expect(conflict).to.be.true;
+      });
+    });
+
+    describe('get', () => {
+      describe('for documents', () => {
+        it('returns an existing resource', async () => {
+          await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'));
+          const { item } = await store.get('boris', '/photos/zipwire');
+          expect(item).to.be.deep.equal({
+            'Content-Length': 7,
+            'Content-Type': 'image/poster',
+            'ETag': item.ETag,
+            value: Buffer.from('vertibo')});
+        });
+
+        it('returns null for a non-existant key', async () => {
+          const {item} = await store.get('boris', '/photos/lympics');
+          expect(item).to.be.null;
+        });
+
+        it('returns null for a non-existant category', async () => {
+          const {item} = await store.get('boris', '/madeup/lympics');
+          expect(item).to.be.null;
+        });
+
+        describe('versioning', () => {
+          it('returns a versionMatch if the given version is current', async () => {
+            const {item} = await store.get('boris', '/photos/zipwire');
+            const {versionMatch} = await store.get('boris', '/photos/zipwire', item.ETag);
+            expect(versionMatch).to.be.true;
+          });
+
+          it('returns no versionMatch if the given version is not current', async () => {
+            const {versionMatch} = await store.get('boris', '/photos/zipwire', '1234567');
+            expect(versionMatch).to.be.false;
+          });
+        });
+
+        describe('for directories', async () => {
+          it('returns a directory listing for a folder', async () => {
+            await store.put('boris', '/photos/bar/boo', 'text/plain', Buffer.from('some content'));
+            await store.put('boris', '/photos/bar/qux/boo', 'text/plain', Buffer.from('some content'));
+            const {item} = await store.get('boris', '/photos/bar/');
+            expect(Object.keys(item.items)).to.be.length(2);
+            expect(item.items['boo']).to.be.deep.equal({
+              'Content-Type': 'text/plain',
+              'Content-Length': 12,
+              'ETag': item.items.boo.ETag
+            });
+            expect(item.items['qux/']).to.be.deep.equal({
+              ETag: item.items['qux/'].ETag
+            });
+          });
+
+          it('returns null for a non-existant directory', async () => {
+            const {item} = await store.get('boris', '/photos/qux/');
+            expect(item.items).to.be.deep.equal({});
+          });
+
+          describe('with a document with the same name as a directory', () => {
+            it('returns an isDir conflict', async () => {
+              const {isDir} = await store.put('boris', '/photos/bar', 'text/plain', Buffer.from('ciao'));
+              expect(isDir).to.be.true;
+            });
+          });
+        });
+      });
+    });
+
+    describe('delete', () => {
+      it('deletes an item', async () => {
+        await store.put('boris', '/photos/election', '/image/jpeg', Buffer.from('hair'));
+        const {item: itemBefore} = await store.get('boris', '/photos/election');
+        expect(itemBefore).not.to.be.null;
+        const {deleted} = await store.delete('boris', '/photos/election');
+        expect(deleted).to.be.true;
+        const {item: itemAfter} = await store.get('boris', '/photos/election');
+        expect(itemAfter).to.be.null;
+      });
+
+      it('removes empty directories when items are deleted', async () => {
+        const {item} = await store.get('boris', '/photos/election');
+        expect(item).to.be.null;
+      });
+
+      it('returns false when a non-existant item is deleted', async () => {
+        const {deleted} = await store.delete('boris', '/photos/zipzop');
+        expect(deleted).to.be.false;
+      });
+
+      describe('versioning', () => {
+        it('deletes the item if the given version is current', async () => {
+          await store.put('boris', '/photos/election', null, Buffer.from('bar'));
+          const {item} = await store.get('boris', '/photos/election');
+          const {deleted} = await store.delete('boris', '/photos/election', item.ETag);
+          expect(deleted).to.be.true;
+        });
+
+        it('does not delete the item and returns conflict if the given version is not current', async () => {
+          await store.put('boris', '/photos/election', null, Buffer.from('bar'));
+          const {deleted, conflict} = await store.delete('boris', '/photos/election', '123456');
+          expect(deleted).to.be.false;
+          expect(conflict).to.be.true;
+        });
+      });
     });
   });
 });
-
-// });
-
-//     describe('versioning', () => {
-
-//       it('returns false with no conflict when the given version is current', () => {
-//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), date, function (error, created, modified, conflict) {
-//           resume(() => {
-//             assertNull(error);
-//             assert(!created);
-//             assertEqual(date, modified);
-//             assert(!conflict);
-//           });
-//         });
-//       });
-
-//       it('returns false with a conflict when the given version is not current', () => {
-//         store.put('boris', '/photos/election', 'image/jpeg', buffer('mayor'), oldDate, function (error, created, modified, conflict) {
-//           resume(() => {
-//             assertNull(error);
-//             assert(!created);
-//             assertNull(modified);
-//             assert(conflict);
-//           });
-//         });
-//       });
-//     });
-//   });
-
-//   describe('get', () => {
-//     describe('for documents', () => {
-//       before(() => {
-//         store.put('boris', '/photos/zipwire', 'image/poster', buffer('vertibo'), null, resume);
-//       });
-
-//       it('returns an existing resource', () => {
-//         store.get('boris', '/photos/zipwire', null, function (error, item, match) {
-//           resume(() => {
-//             assertNull(error);
-//             assertEqual({length: 7, type: 'image/poster', modified: date, value: buffer('vertibo')}, item);
-//             assert(!match);
-//           });
-//         });
-//       });
-
-//       it('returns null for a non-existant key', () => {
-//         store.get('boris', '/photos/lympics', null, function (error, item, match) {
-//           resume(() => {
-//             assertNull(error);
-//             assertNull(item);
-//             assert(!match);
-//           });
-//         });
-//       });
-
-//       it('returns null for a non-existant category', () => {
-//         store.get('boris', '/madeup/lympics', null, function (error, item, match) {
-//           resume(() => {
-//             assertNull(error);
-//             assertNull(item);
-//             assert(!match);
-//           });
-//         });
-//       });
-
-//       describe('versioning', () => {
-//         it('returns a match if the given version is current', () => {
-//           store.get('boris', '/photos/zipwire', date, function (error, item, match) {
-//             resume(() => {
-//               assertNull(error);
-//               assertEqual({length: 7, type: 'image/poster', modified: date, value: buffer('vertibo')}, item);
-//               assert(match);
-//             });
-//           });
-//         });
-
-//         it('returns no match if the given version is not current', () => {
-//           store.get('boris', '/photos/zipwire', oldDate, function (error, item, match) {
-//             resume(() => {
-//               assertNull(error);
-//               assertEqual({length: 7, type: 'image/poster', modified: date, value: buffer('vertibo')}, item);
-//               assert(!match);
-//             });
-//           });
-//         });
-//       });
-//     });
-
-//     describe('for directories', () => {
-//       before(() => {
-//         // Example data taken from http://www.w3.org/community/unhosted/wiki/RemoteStorage-2012.04#GET
-//         store.put('boris', '/photos/bar/qux/boo', 'text/plain', buffer('some content'), null, () => {
-//           store.put('boris', '/photos/bla', 'application/json', buffer('{"more": "content"}'), null, () => {
-//             store.put('zebcoe', '/tv/shows', 'application/json', buffer('{"The Day": "Today"}'), null, resume);
-//           });
-//         });
-//       });
-
-//       it('returns a directory listing for a category', () => {
-//         store.get('boris', '/photos/', null, function (error, items) {
-//           resume(() => {
-//             assertNull(error);
-//             assertEqual({ children: [{name: 'bar/', modified: date}, {name: 'bla', modified: date}], modified: date }, items);
-//           });
-//         });
-//       });
-
-//       it('returns a directory listing for the root category', () => {
-//         store.get('zebcoe', '/', null, function (error, items) {
-//           resume(() => {
-//             assertNull(error);
-//             assertEqual({ children: [{name: 'tv/', modified: date}], modified: date }, items);
-//           });
-//         });
-//       });
-
-//       it('returns null for a non-existant directory', () => {
-//         store.get('boris', '/photos/foo/', null, function (error, items) {
-//           resume(() => {
-//             assertNull(error);
-//             assertEqual(null, items);
-//           });
-//         });
-//       });
-
-//       describe('with a document with the same name as a directory', () => {
-//         before(() => {
-//           store.put('boris', '/photos.d', 'application/json', buffer('{"The Day": "Today"}'), null, function (error) {
-//             resume(() => { assertNull(error); });
-//           });
-//         });
-
-//         it('returns a directory listing for a category', () => {
-//           store.get('boris', '/photos/', null, function (error, items) {
-//             resume(() => {
-//               assertNull(error);
-//               assertEqual({ children: [{name: 'bar/', modified: date}, {name: 'bla', modified: date}], modified: date }, items);
-//             });
-//           });
-//         });
-//       });
-//     });
-//   });
-
-//   describe('delete', () => {
-//     before(() => {
-//       store.put('boris', '/photos/election', 'image/jpeg', buffer('hair'), null, () => {
-//         store.put('boris', '/photos/bar/qux/boo', 'text/plain', buffer('some content'), null, resume);
-//       });
-//     });
-
-//     it('deletes an item', () => {
-//       store.delete('boris', '/photos/election', null, () => {
-//         store.get('boris', '/photos/election', null, function (error, item) {
-//           resume(() => { assertNull(item); });
-//         });
-//       });
-//     });
-
-//     it('removes empty directories when items are deleted', () => {
-//       store.delete('boris', '/photos/bar/qux/boo', null, () => {
-//         store.get('boris', '/photos/', null, function (error, items) {
-//           resume(() => {
-//             assertNotEqual(arrayIncluding(objectIncluding({name: 'bar/'})), items.children);
-//           });
-//         });
-//       });
-//     });
-
-//     it('returns true when an existing item is deleted', () => {
-//       store.delete('boris', '/photos/election', null, function (error, deleted, modified, conflict) {
-//         resume(() => {
-//           assertNull(error);
-//           assert(deleted);
-//           assertEqual(date, modified);
-//           assert(!conflict);
-//         });
-//       });
-//     });
-
-//     it('returns false when a non-existant item is deleted', () => {
-//       store.delete('boris', '/photos/zipwire', null, function (error, deleted, modified, conflict) {
-//         resume(() => {
-//           assertNull(error);
-//           assert(!deleted);
-//           assertNull(modified);
-//           assert(!conflict);
-//         });
-//       });
-//     });
-
-//     describe('versioning', () => {
-//       it('deletes the item if the given version is current', () => {
-//         store.delete('boris', '/photos/election', date, () => {
-//           store.get('boris', '/photos/election', null, function (error, item) {
-//             resume(() => { assertNull(item); });
-//           });
-//         });
-//       });
-
-//       it('does not delete the item if the given version is not current', () => {
-//         store.delete('boris', '/photos/election', oldDate, () => {
-//           store.get('boris', '/photos/election', null, function (error, item) {
-//             resume(() => { assertEqual(buffer('hair'), item.value); });
-//           });
-//         });
-//       });
-
-//       it('returns true with no conflict if the given version is current', () => {
-//         store.delete('boris', '/photos/election', date, function (error, deleted, modified, conflict) {
-//           resume(() => {
-//             assertNull(error);
-//             assert(deleted);
-//             assertEqual(date, modified);
-//             assert(!conflict);
-//           });
-//         });
-//       });
-
-//       it('returns false with a conflict if the given version is not current', () => {
-//         store.delete('boris', '/photos/election', oldDate, function (error, deleted, modified, conflict) {
-//           resume(() => {
-//             assertNull(error);
-//             assert(!deleted);
-//             assertNull(modified);
-//             assert(conflict);
-//           });
-//         });
-//       });
-//     });
-//   });
-// });
-// });

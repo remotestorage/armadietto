@@ -1,19 +1,17 @@
-
 # armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0eaafdf96ebb47a9ac462bcf6a7ccb06)](https://www.codacy.com/app/lesion/armadietto?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=remotestorage/armadietto/&amp;utm_campaign=Badge_Grade)
+
 > ### :warning: WARNING
-> Please do not consider `armadietto` production ready, this project is still considered experimental.  
-> As with any alpha-stage storage technology, you MUST expect that it will eat
-your data and take precautions against this. You SHOULD expect that its APIs and
-storage schemas will change before it is labelled stable.
+> Please do not consider `armadietto` production ready, this project is still
+> considered experimental.  As with any alpha-stage storage technology, you
+> MUST expect that it will eat your data and take precautions against this. You
+> SHOULD expect that its APIs and storage schemas will change before it is
+> labelled stable.
 
 ## What is this?
 
-armadietto is a [RemoteStorage][1] server written for Node.js.
+Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Node.js.
 
 This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
-
-[1]: http://www.w3.org/community/unhosted/wiki/RemoteStorage
-
 
 ## Installation
 ```
@@ -60,7 +58,6 @@ var server = new Armadietto({
 If you navigate to `http://localhost:8000/` you should then see a sign-up link
 in the navigation.
 
-
 ### Storage security
 
 In production, we recommend that you restrict access to the files managed by
@@ -88,7 +85,6 @@ You should take these steps to keep your storage safe:
 
 If you're using the Redis backend, apply similar access restrictions to the
 database and to any files containing the database access credentials.
-
 
 ### Serving over HTTPS
 
@@ -125,7 +121,7 @@ The `force: true` line in the `https` section means the app will:
 * Refuse to process POST authentication requests over insecure connections
 * Block insecure storage requests and revoke the client's access
 
-armadietto considers a request to be secure if:
+Armadietto considers a request to be secure if:
 
 * armadietto itself acts as an SSL terminator and the connection to it is encrypted
 * The `X-Forwarded-SSL` header has the value `on`
@@ -138,10 +134,11 @@ setup, you can set `https.force = true` but omit `https.port`; this means
 armadietto itself will not accept encrypted connections but will apply the above
 behaviour to enforce secure connections.
 
-
 ### Storage backends
+
 armadietto supports pluggable storage backends, and comes with a file system
-implementation out of the box (redis storage backend is on the way in `feature/redis` branch):
+implementation out of the box (redis storage backend is on the way in
+`feature/redis` branch):
 
 * `Armadietto.FileTree` - Uses the filesystem hierarchy and stores each item in its
   own individual file. Content and metadata are stored in separate files so the
@@ -165,7 +162,6 @@ const server = new Armadietto({
 
 server.boot();
 ```
-
 
 ## License
 

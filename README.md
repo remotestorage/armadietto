@@ -9,11 +9,9 @@
 
 ## What is this?
 
-Armadietto is a [RemoteStorage][1] server written for Node.js.
+Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Node.js.
 
 This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
-
-[1]: http://www.w3.org/community/unhosted/wiki/RemoteStorage
 
 ## Installation
 ```

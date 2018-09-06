@@ -200,7 +200,7 @@ sharedExamplesFor('Stores', (store) => {
       it('returns false with no conflict when the given version is current', async () => {
         const { item } = await store.get('boris', '/photos/election');
         const currentVersion = item.ETag;
-        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg', 
+        const {created, modified, conflict} = await store.put('boris', '/photos/election', 'image/jpeg',
           Buffer.from('mayor'), currentVersion);
         expect(created).to.be.false;
         expect(modified).not.to.be.equal(currentVersion);

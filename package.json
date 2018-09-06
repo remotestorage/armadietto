@@ -45,10 +45,10 @@
   },
   "scripts": {
     "dev": "nodemon -w ./lib ./bin/armadietto.js -c ./bin/test-suite.json",
-    "pretest": "npm lint",
+    "pretest": "npm run lint",
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
-    "lint:fix": "npm lint --fix"
+    "lint:fix": "npm run lint --fix"
   },
   "repository": {
     "type": "git",

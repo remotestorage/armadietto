@@ -108,7 +108,7 @@ describe('OAuth', async () => {
     describe('without explicit read/write permissions', async () => {
       it('authorizes the client to read and write', async () => {
         await post('/oauth', this.auth_params);
-        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r', 'w']});
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', { the_scope: ['r', 'w'] });
       });
     });
 
@@ -116,7 +116,7 @@ describe('OAuth', async () => {
       it('authorizes the client to read', async () => {
         this.auth_params.scope = 'the_scope:r';
         await post('/oauth', this.auth_params);
-        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r']});
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', { the_scope: ['r'] });
       });
     });
 
@@ -124,7 +124,7 @@ describe('OAuth', async () => {
       it('authorizes the client to read and write', async () => {
         this.auth_params.scope = 'the_scope:rw';
         await post('/oauth', this.auth_params);
-        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', {the_scope: ['r', 'w']});
+        expect(store.authorize).to.be.called.with('the_client_id', 'zebcoe', { the_scope: ['r', 'w'] });
       });
     });
 

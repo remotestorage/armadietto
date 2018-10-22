@@ -72,8 +72,8 @@ describe('WebFinger', () => {
     expect(res).to.have.status(200);
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/jrd+json');
-    expect(res.body).to.have.deep.equal(
-      {'links': [
+    expect(res.body).to.have.deep.equal({
+      'links': [
         {
           'rel': 'remoteStorage',
           'api': 'simple',
@@ -81,7 +81,7 @@ describe('WebFinger', () => {
           'template': host + '/storage/zebcoe/{category}'
         }
       ]
-      });
+    });
   });
 
   it('returns account metadata as XML', async () => {

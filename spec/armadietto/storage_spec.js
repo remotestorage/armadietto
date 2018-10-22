@@ -5,7 +5,7 @@ const spies = require('chai-spies');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
 const Armadietto = require('../../lib/armadietto');
-const {get, subject, def} = require('bdd-lazy-var');
+const { get, subject, def } = require('bdd-lazy-var');
 
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
@@ -14,7 +14,7 @@ chai.use(spies);
 // const req = chai.request('http://localhost:4568');
 let store = {
   get (username, path) {
-    return {item: null, versionMatch: true};
+    return { item: null, versionMatch: true };
   },
   permissions (user, token) {
     if (user === 'boris' && token === 'a_token') return false;
@@ -283,7 +283,7 @@ describe('Storage', () => {
 
     describe('when the item does not exist', () => {
       before(() => {
-        store.get = () => ({item: undefined});
+        store.get = () => ({ item: undefined });
       });
 
       it('returns an empty 404 response', async () => {
@@ -311,7 +311,7 @@ describe('Storage', () => {
   describe('PUT', () => {
     before(() => {
       sandbox.restore();
-      store.put = () => ({created: true});
+      store.put = () => ({ created: true });
     });
 
     let put = async (path, params) => {
@@ -414,7 +414,7 @@ describe('Storage', () => {
 
     describe('when the store says the item was not created but updated', () => {
       before(() => {
-        store.put = () => ({created: false, modified: 1347016875231});
+        store.put = () => ({ created: false, modified: 1347016875231 });
       });
 
       it('returns an empty 200 response', async () => {
@@ -428,7 +428,7 @@ describe('Storage', () => {
 
     describe('when the store says there was a version conflict', () => {
       before(() => {
-        store.put = () => ({created: false, modified: 1347016875231, conflict: true});
+        store.put = () => ({ created: false, modified: 1347016875231, conflict: true });
       });
 
       it('returns an empty 412 response', async () => {
@@ -455,7 +455,7 @@ describe('Storage', () => {
   });
 
   describe('DELETE', () => {
-    store.delete = () => ({deleted: true});
+    store.delete = () => ({ deleted: true });
     let del = (path) => {
       return req.delete(path).buffer(true)
         .set('Authorization', 'Bearer a_token');
@@ -501,7 +501,7 @@ describe('Storage', () => {
 
     describe('when the store says the item was not deleted', () => {
       before(() => {
-        store.delete = () => ({deleted: false, modified: 1358121717830});
+        store.delete = () => ({ deleted: false, modified: 1358121717830 });
       });
 
       it('returns an empty 404 response', async () => {
@@ -513,7 +513,7 @@ describe('Storage', () => {
 
     describe('when the store says there was a version conflict', () => {
       before(() => {
-        store.delete = () => ({deleted: false, modified: 1358121717830, conflict: true});
+        store.delete = () => ({ deleted: false, modified: 1358121717830, conflict: true });
       });
 
       it('returns an empty 412 response', async () => {

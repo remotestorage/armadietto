@@ -56,7 +56,7 @@ const remoteStorageServer = {
     console.log('[INFO] Starting remoteStorage: http://' + conf.http.host + ':' + conf.http.port);
 
     process.umask(0o077);
-    const store = new Armadietto.FileTree({path: conf.storage_path});
+    const store = new Armadietto.FileTree({ path: conf.storage_path });
     const server = new Armadietto({
       basePath: conf.basePath,
       store,

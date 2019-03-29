@@ -10,8 +10,7 @@ else store = new Armadietto.FileTree({path: path.join(__dirname, 'tree')});
 
 server = new Armadietto({
   store,
-  http: {port: 8080},
-  https: {
+  http: {
     force: true,
     port: 443,
     cert: path.join(__dirname, '/ssl/server.crt'),
@@ -23,5 +22,5 @@ server = new Armadietto({
   cacheViews: false
 });
 
-console.log('LISTENING ON PORT 8080');
+console.log('LISTENING ON PORT 443');
 server.boot();

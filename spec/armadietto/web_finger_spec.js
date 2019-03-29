@@ -21,12 +21,20 @@ const get = async (path) => {
 const trim = (what) => what.replace(/\s+/gm, ' ').trim();
 
 describe('WebFinger', () => {
-  before(async () => {
-    this._server = new Armadietto({ store, http: { port: 4569 } });
-    await this._server.boot();
+  before((done) => {
+    (async () => {
+      this._server = new Armadietto({ store, http: { port: 4569 } });
+      await this._server.boot();
+      done();
+    })();
   });
 
-  after(async () => { await this._server.stop(); });
+  after((done) => {
+    (async () => {
+      await this._server.stop();
+      done();
+    })();
+  });
 
   it('returns webfinger data as JRD+JSON', async () => {
     const res = await get('/.well-known/webfinger');

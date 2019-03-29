@@ -17,6 +17,9 @@ const get = async (path) => {
   return ret;
 };
 
+// trim all whitespaces to be a single space (' ') for text compares
+const trim = (what) => what.replace(/\s+/gm, ' ').trim();
+
 describe('WebFinger', () => {
   before(async () => {
     this._server = new Armadietto({ store, http: { port: 4569 } });
@@ -60,11 +63,11 @@ describe('WebFinger', () => {
     expect(res).to.have.status(200);
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/xrd+xml');
-    expect(res.text).to.be.equal(`<?xml version="1.0" encoding="UTF-8"?>
-<XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
-  <Link rel="lrdd"
-        type="application/xrd+xml"
-        template="${host}/webfinger/xrd?resource={uri}" />\n</XRD>\n`);
+    expect(trim(res.text)).to.be.equal(trim(`
+      <?xml version="1.0" encoding="UTF-8"?>
+      <XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
+        <Link rel="lrdd" type="application/xrd+xml" template="${host}/webfinger/xrd?resource={uri}" />
+      </XRD>`));
   });
 
   it('returns account metadata as JSON', async () => {
@@ -89,12 +92,11 @@ describe('WebFinger', () => {
     expect(res).to.have.status(200);
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/xrd+xml');
-    expect(res.text).to.be.equal(`<?xml version="1.0" encoding="UTF-8"?>
-<XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
-  <Link rel="remoteStorage"
-        api="simple"
-        auth="${host}/oauth/zebcoe"
-        template="${host}/storage/zebcoe/{category}" />\n</XRD>\n`);
+    expect(trim(res.text)).to.be.equal(trim(`
+      <?xml version="1.0" encoding="UTF-8"?>
+      <XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
+        <Link rel="remoteStorage" api="simple" auth="${host}/oauth/zebcoe" template="${host}/storage/zebcoe/{category}" />
+      </XRD>`));
   });
 
   it('returns resource metadata as JSON', async () => {

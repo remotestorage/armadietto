@@ -1,0 +1,171 @@
+/**
+ * Styling for login.html markup, actually .login.ui.html markup as loaded by login.html.
+ * 
+ * Anything that's not related to demoing oh-ledgers.js but is instead of related to supporting the UX.
+ */
+
+.ui.horizontal.segments {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.ui.horizontal.segments>.segment {
+  box-shadow: none;
+  border: none;
+}
+
+div.ui.segment.v-center {
+  margin: auto !important;
+}
+
+.subdued {
+  color: grey;
+}
+
+.invisible {
+  opacity: 0 !important;
+}
+
+.ui.label {
+  width: 7em;
+}
+
+.ui.form {
+  max-width: 500px;
+  margin: auto;
+}
+
+.ui.grid {
+  margin-top: 0px;
+}
+
+#welcome {
+  padding-top: 0px;
+}
+
+#radiobuttons {
+  margin-top: 0px;
+}
+
+#radiobuttons > div.segments {
+  margin-bottom:0px;
+}
+
+#formcontainer {
+  margin-top: 0px;
+}
+
+#radiocontainer {
+  padding-bottom: 0px;
+  padding-top: 0px;
+}
+
+#getwallet, #needrinkeby, #usingwallet {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+#needrinkeby {
+  color: #9f3a38;
+}
+
+#menu {
+  max-width: 30em;
+  text-align: left;
+  margin: auto;
+}
+
+#topup {
+  width: 100px;
+}
+
+#window {
+  height: 100vh;
+  overflow: hidden;
+}
+
+#appview {
+  height: 100vh;
+  overflow: auto;
+}
+
+#logview {
+  height: 30%;
+  width: 100%;
+  background: #404040;
+  color: #66ff66;
+  overflow: auto;
+  font-family: arial, "lucida console", sans-serif;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+#logview pre {
+  font-size: smaller;
+  margin: 0px;
+  padding: 0px;
+  line-height: 1em;
+}
+
+#codeview {
+  height: 70%;
+  overflow: hidden;
+  padding-top: 1px;
+}
+
+#codeframe {
+  width: 100%;
+  height: 100%;
+  border: 0px;
+}
+
+#servicemenu {
+  width: calc(100% - 4em);
+  text-align: left;
+  margin: auto;
+}
+
+#servicenote {
+  width: calc(100% - 10em);
+}
+
+.highlight {
+  color: green;
+}
+
+pre.clickable {
+  cursor: pointer;
+}
+
+.ui.icon.message {
+  display: none;
+}
+
+@media only screen and (max-width: 991px) {
+  .ui.icon.message {
+    display: block;
+  }
+}
+
+.invisible {
+  display: none;
+}
+
+.close.icon {
+  float: right;
+  cursor: pointer;
+}
+
+span#wallet-popup {
+  position: relative;
+}
+
+span#wallet-popup > img {
+  position: absolute;
+  width: 125px;
+  left: -63px;
+  z-index: 4;
+}

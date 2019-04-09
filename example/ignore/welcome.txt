@@ -1,0 +1,56 @@
+ ______________
+||      _ [] X||       +--------------+
+||            || <=====| YOU ARE HERE |
+|| L O G I N  ||       +--------------+                 .-~~~-.
+||            ||                                .- ~ ~-( APIs  )_ _
+||____________||  <========================>  /                     ~ -.
+|______________|                             |      overhide-ledger      \
+ \\############\\                             \     overhide-ethereum   .'
+  \\############\\                             ~- . _____________ . -~
+   \      ____    \                                       /|\
+    \_____\___\____\          ____________________________/ 
+                             /
+           /\               /
+           ||              |
+           \/             \|/       
+      __________       _______
+     /__________\     /      /,                   +-------------------------+
+     |    --=-- |    / </>  //                    | images from asciiart.eu |
+     |o ======  |   /______//                     | Jussi Roine, CA15       |
+     |__________|  (______(/                      +-------------------------+
+          backend  code
+
+
+        --------------------------
+        ||    ledgers.js demo   ||
+        --------------------------
+
+  Welcome to the ledgers.js demo app.
+
+  Source: https://github.com/overhide/ledgers.js
+
+  The pane on the LEFT is the actual rendered 
+  demo application for you to interact with.
+
+  The TOP-RIGHT pane shows "logs" logged from this
+  application. 
+  
+  When this demo Web application's JavaScript 
+  calls a "log" function, the logged message 
+  appears in the TOP-RIGHT pane.
+
+  Clicking any log message will scroll the 
+  BOTTOM-RIGHT pane to the corresponding 
+  JavaScript source code where this log message 
+  occurs.
+
+  The idea being: as you interact with the app
+  you will see logs for various data setting
+  calls, state transitions, events, and
+  callbacks.  Clicking on the log will show
+  you the code.  
+
+  This way you will see how the demo app uses
+  ledgers.js on the LOGIN PAGE and how it 
+  leverages the overhide remuneration APIs on
+  the SERVICE PAGE.

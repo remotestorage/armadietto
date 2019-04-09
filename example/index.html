@@ -4,15 +4,61 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>RemoteStorage Demo</title>
-  </head>
-  <body>
-    <pre>
+    <script type="text/javascript" src="../node_modules/remotestoragejs/release/remotestorage.js"></script>
+    <script src="../node_modules/remotestorage-widget/build/widget.js"></script>
 
-    </pre>
+    <!-- ignore below :: code pane / logging  pane setup -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+    <script src="ignore/logging.js"></script> <!-- helper JS functionality to support showing source code for this file in the UI -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="ignore/styles.css">
+    <!-- ignore above :: code pane / logging  pane setup -->
+  </head>
+
+  <body>
+
+    <!-- ignore below :: code pane / logging  pane setup -->
+    <div class="ui grid">
+      <div id="window" class="row">
+        <div id="appview" class="sixteen wide eight wide computer column">
+          <div class="ui icon message">
+            <i class="info icon"></i>
+            <div class="content">
+              <div class="header">
+                This page should be seen in widescreen on a PC.
+              </div>
+              <p>This way you'll get a log pane and a code pane to review the demo.</p>
+            </div>
+          </div>
+          <!-- ignore above :: code pane / logging  pane setup -->
+
+          <!-- DEMO UI START -->
+          <h1>DEMO</h1>
+
+          <!-- DEMO UI END -->
+
+        <!-- ignore below :: code pane / logging  pane setup -->
+        </div>
+        <div class="eight wide computer only column">
+          <div id="logview">
+            <div id="logviewcontents"></div>
+          </div>
+          <div id="codeview">
+            <iframe id="codeframe" src="ignore/code.html#welcome.txt"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ignore above :: code pane / logging  pane setup -->
+
   </body>
-  <script type="text/javascript" src="../node_modules/remotestoragejs/release/remotestorage.js"></script>
-  <script src="../node_modules/remotestorage-widget/build/widget.js"></script>
   <script>
+    window.onload = function () {
+      showPostScreenSetupLogs(); // ignore above :: logging setup
+    }
+  
+    log("example demo application");
 
     function handleEvent(event) {
       console.error('HANDLE EVENT: ', event);

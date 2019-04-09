@@ -41,13 +41,14 @@
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
+    "nodemon": "1.18.10",
     "remotestoragejs": "1.2.2",
     "remotestorage-widget": "1.4.0",
     "mocha": "^5.1.1",
     "rimraf": "^2.6.2"
   },
   "scripts": {
-    "dev": "nodemon -w ./lib ./bin/armadietto.js -c ./bin/test-suite.json",
+    "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/test-suite.json",
     "pretest": "npm run lint",
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",

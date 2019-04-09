@@ -4,34 +4,37 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>RemoteStorage Demo</title>
-    <script type="text/javascript" src="/node_modules/remotestoragejs/release/remotestorage.js"></script>
-    <script src="/node_modules/remotestorage-widget/build/widget.js"></script>
-    <script>
-
-      function handleEvent(event) {
-        console.error('HANDLE EVENT: ', event);
-      }
-
-      const remoteStorage = new RemoteStorage({logging: true, cache: false});
-      remoteStorage.access.claim('myfavoritedrinks', 'rw');
-
-      document.addEventListener('DOMContentLoaded', function() {
-        const widget = new Widget(remoteStorage);
-        widget.attach();
-      });
-
-      remoteStorage.on('connected', handleEvent);
-      remoteStorage.on('network-offline', handleEvent);
-      remoteStorage.on('network-online', handleEvent);
-      remoteStorage.on('connected', handleEvent);
-
-      const client = remoteStorage.scope('/myfavoritedrinks/');
-      client.getListing('')
-        .then(listing => console.log(listing));
-
-    </script>
   </head>
   <body>
+    <pre>
 
+    </pre>
   </body>
+  <script type="text/javascript" src="../node_modules/remotestoragejs/release/remotestorage.js"></script>
+  <script src="../node_modules/remotestorage-widget/build/widget.js"></script>
+  <script>
+
+    function handleEvent(event) {
+      console.error('HANDLE EVENT: ', event);
+    }
+
+    const remoteStorage = new RemoteStorage({logging: true, cache: false});
+    remoteStorage.access.claim('myfavoritedrinks', 'rw');
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const widget = new Widget(remoteStorage);
+      widget.attach();
+    });
+
+    remoteStorage.on('connected', handleEvent);
+    remoteStorage.on('network-offline', handleEvent);
+    remoteStorage.on('network-online', handleEvent);
+    remoteStorage.on('connected', handleEvent);
+
+    const client = remoteStorage.scope('/myfavoritedrinks/');
+    client.getListing('')
+      .then(listing => console.log('LISTING :: ' + listing));
+
+  </script>
+
 </html>

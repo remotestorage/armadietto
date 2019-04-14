@@ -1,29 +1,62 @@
-## Running the examples
+# armadietto-example
 
-This repository contains examples using the `stable` and `master` branches of
-remoteStorage.js. You'll need to bind `127.0.0.1` to the host `local.dev` for
-the demo to work correctly.
+This repository contains an example using [remoteStorage.js](https://github.com/remotestorage/remotestorage.js) against the [armadietto remoteStorage server](https://github.com/remotestorage/armadietto).
 
-Run the example server:
+## Getting Started
 
-```
-$ sudo node server.js
-```
-
-Create a user:
+In a terminal:
 
 ```
-$ curl -kX POST https://local.dev/signup -d 'username=me' -d 'email=me@example.com' -d 'password=foo'
+$ cd $ARMADIETTOT_REPO/example
+$ npm install
 ```
 
-Serve the example app using Node, from `./example`:
+Where $ARMADIETTOT_REPO is the root where you synced the [armadietto repo](https://github.com/remotestorage/armadietto).
+
+To run the example server:
+
+```
+$ npm run start
+```
+
+The armadietto server starts on port 443.
+
+Leave the terminal running the server as is.
+
+In a *new* terminal host the example application:
 
 ```
 $ npm run serve 
 ```
 
-And open the example apps for each version. You may need to dismiss browser
-warnings about the self-signed certificate for `local.dev` before the clients
+The example application is now available on port 8080.
+
+And open the example appn. You may need to dismiss browser
+warnings about the self-signed certificate for `localhost` before the clients
 will connect properly.
 
-    open http://localhost:8080/example/index.html
+    open http://localhost:8080/index.html
+
+## Create a User
+
+### Using Widget
+
+The example app shows the [remotestorage-widget](https://github.com/remotestorage/remotestorage-widget) integration.
+
+The easiest way to create a user is to use the widget.  To create user 'tester' click the widget and enter:
+
+    tester@localhost:443
+
+Click `Connect`.  You'll be taken to an on-boarding site served by your localhost *armadietto*.
+
+Click `Sign Up` in upper right corner.
+
+There is no automated redirection back to the example application at this point, reload it:
+
+    open http://localhost:8080/index.html
+
+### Using Example App and API
+
+```
+$ curl -kX POST https://local.dev/signup -d 'username=me' -d 'email=me@example.com' -d 'password=foo'
+```

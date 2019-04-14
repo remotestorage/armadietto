@@ -1,95 +1,30 @@
-/**
- * Styling for login.html markup, actually .login.ui.html markup as loaded by login.html.
- * 
- * Anything that's not related to demoing oh-ledgers.js but is instead of related to supporting the UX.
- */
-
-.ui.horizontal.segments {
-  border: none;
-  box-shadow: none;
-  background: transparent;
+html, body {
+  margin: 0px;
 }
 
-.ui.horizontal.segments>.segment {
-  box-shadow: none;
-  border: none;
-}
-
-div.ui.segment.v-center {
-  margin: auto !important;
-}
-
-.subdued {
-  color: grey;
-}
-
-.invisible {
-  opacity: 0 !important;
-}
-
-.ui.label {
-  width: 7em;
-}
-
-.ui.form {
-  max-width: 500px;
-  margin: auto;
-}
-
-.ui.grid {
-  margin-top: 0px;
-}
-
-#welcome {
-  padding-top: 0px;
-}
-
-#radiobuttons {
-  margin-top: 0px;
-}
-
-#radiobuttons > div.segments {
-  margin-bottom:0px;
-}
-
-#formcontainer {
-  margin-top: 0px;
-}
-
-#radiocontainer {
-  padding-bottom: 0px;
-  padding-top: 0px;
-}
-
-#getwallet, #needrinkeby, #usingwallet {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  padding-top: 0px;
-  padding-bottom: 0px;
-}
-
-#needrinkeby {
-  color: #9f3a38;
-}
-
-#menu {
-  max-width: 30em;
-  text-align: left;
-  margin: auto;
-}
-
-#topup {
-  width: 100px;
+#getwider {
+  display: none;
 }
 
 #window {
+  margin: 0px;
   height: 100vh;
   overflow: hidden;
+  display: block;
 }
 
-#appview {
-  height: 100vh;
+#demoview {
+  float: left;
+  height: 100%;
   overflow: auto;
+  width: calc(50% - 20px);
+  padding: 10px;
+}
+
+#panes {
+  float: right;
+  height: 100%;
+  width: 50%;
 }
 
 #logview {
@@ -122,50 +57,41 @@ div.ui.segment.v-center {
   border: 0px;
 }
 
-#servicemenu {
-  width: calc(100% - 4em);
-  text-align: left;
-  margin: auto;
-}
-
-#servicenote {
-  width: calc(100% - 10em);
-}
-
-.highlight {
-  color: green;
-}
-
 pre.clickable {
   cursor: pointer;
 }
 
-.ui.icon.message {
-  display: none;
-}
-
-@media only screen and (max-width: 991px) {
-  .ui.icon.message {
+@media only screen and (max-width: 1100px) {
+  #getwider {
     display: block;
+    font-family: monospace;
+  }
+
+  #window {
+    display: none;
   }
 }
 
-.invisible {
-  display: none;
+#remotestorage-widget-anchor {
+  height: 80px;
+  width: 100%;
 }
 
-.close.icon {
-  float: right;
-  cursor: pointer;
+.uiterminal-full {
+  margin-bottom: 10px;
 }
 
-span#wallet-popup {
-  position: relative;
+.usecase {
+  color: #2196F3;
+  font-weight: bold;
+  font-size: larger;
 }
 
-span#wallet-popup > img {
-  position: absolute;
-  width: 125px;
-  left: -63px;
-  z-index: 4;
+.usecase:focus { 
+  outline: none; 
+}
+
+details > p {
+  color: grey;
+  background-image: linear-gradient(to right, yellow, white 5%);
 }

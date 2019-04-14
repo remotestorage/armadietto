@@ -29,10 +29,10 @@
         <!-- serverInfo -->
         <div class="w3-panel w3-card w3-light-grey">
           <form id="serverInfo"><p>
-            <input name="server" class="w3-input" type="text" onchange="scrubForm(event)"><label>server</label>
-            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label>user</label>
-            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label>token</label>
-            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label>scope</label>
+            <input name="server" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">server</label>
+            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">user</label>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
           </p></form>
         </div>
 
@@ -47,7 +47,7 @@
         <!-- remotestorageInfo -->
         <div class="w3-panel w3-card w3-light-grey">
           <form id="remotestorageInfo"><p>
-            <input name="remotestorageHref" class="w3-input" type="text" onchange="scrubForm(event)"><label>run remotestorageHref</label>
+            <input name="remotestorageHref" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">run remotestorageHref</label>
           </p></form>
         </div>
 
@@ -62,7 +62,7 @@
         <!-- getAccountMeta -->
         <div class="w3-panel w3-card">
           <details><summary class="usecase">GET /webfinger/jrd?resource=acct:...</summary><p>
-            Discovery endpoint; look in the log (upper right pane).  Provides auth URL for a user.  Provides storage resources template.  In this app it's just informational, use <em>GET /.well-known/webfinger</em> above to get these values.
+            Discovery endpoint; look in the log (upper right pane).  Provides auth URL for a user.  Provides storage resources template; note that {category} placeholder is <em>scope</em> in this app.  This endpoint is just informational, use <em>GET /.well-known/webfinger</em> above to get these values as per draft-dejong spec.
           </p></details>
           <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="getAccountMeta()">run getAccountMeta()</button></p>
         </div>
@@ -75,12 +75,12 @@
             Note that the widget does this for you:  this is the step where the widget takes you to the server for a login if your token is invalid.
           </p></details>
           <form id="gotoAuth"><p>
-            <input name="authDialogUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label>authDialogUrl</label>
-            <input name="redirectUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label>redirectUrl</label>
-            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label>scope</label>
-            <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label>responseType</label>
+            <input name="authDialogUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">authDialogUrl</label>
+            <input name="redirectUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">redirectUrl</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">responseType</label>
           </p></form>
-          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="gotoAuth()">gotoAuth</button></p>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="gotoAuth()">run gotoAuth()</button></p>
         </div>
 
         <!-- postOAuth -->
@@ -91,13 +91,78 @@
             Note that the widget does this for you:  this is the form submission from the server login called by the widget.
           </p></details>
           <form id="postOAuth"><p>
-            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label>user</label>
-            <input name="password" class="w3-input" type="text" onchange="scrubForm(event)"><label>password</label>
-            <input name="redirectUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label>redirectUrl</label>
-            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label>scope</label>
-            <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label>responseType</label>
+            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">user</label>
+            <input name="password" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">password</label>
+            <input name="redirectUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">redirectUrl</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">responseType</label>
           </p></form>
-          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="postOAuth()">postOAuth</button></p>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="postOAuth()">run postOAuth()</button></p>
+        </div>        
+
+        <!-- httpStorage -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">DATA over HTTP * /storage</summary><p>
+            HTTP calls to the server for <em>/storage</em>.
+            <br/><br/>
+            Use <em>widget</em> or <em>GOTO authDialogUrl (and redirect back)</em> (above) to retrieve the <em>token</em>.
+            <br/><br/>
+            Use <em>GET /.well-known/webfinger</em> above to get <em>remotestorageHref</em>.
+            <br/><br/>
+            The <em>etags versioning list</em> is a list of <em>etags</em> separated with spaces.  Grab valid <em>etags</em> from the log-pane output after successful operations.
+            <br/><br/>
+            Versioning <em>If-Match</em> is useful with PUT to prevent overwriting data unless <em>etag</em> matches: overwrite only if <em>etag</em> matches the ones listed in <em>etags versioning list</em>.
+            <br/><br/>
+            Versioning <em>If-None-Match</em> is useful with GET to prevent retrieval of same <em>etag</em>: retrieve only if different <em>etag</em> from the ones listed in <em>etags versioning list</em>.
+          </p></details>
+          <form id="httpStorage"><p>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="remotestorageHref" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">remotestorageHref</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <p><select name="httpMethod" class="w3-select" onchange="scrubForm(event)">
+              <option value="PUT" selected>PUT</option>
+              <option value="GET">GET</option>
+              <option value="DELETE">DELETE</option>
+            </select><label class="w3-text-blue">HTTP method for call</label></p>            
+            <p><select name="versioning" class="w3-select" onchange="scrubForm(event)">
+              <option value="none" selected>no versioning (etags below ignored)</option>
+              <option value="new">must not exist at all (If-None-Match: *)</option>
+              <option value="match">must exist at version (If-Match: "..", "..")</option>
+              <option value="nomatch">cannot exist at version (If-None-Match: "..", "..")</option>
+            </select><label class="w3-text-blue">etags versioning qualifier</label></p>            
+            <textarea name="etags" class="w3-input w3-border" rows="2" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">etags versioning list (space separated etags values)</label>
+            <p><input name="path" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">path</label></p>
+            <textarea name="data" class="w3-input w3-border" rows="10" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">data</label>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="httpStorage()">run httpStorage()</button></p>
+        </div>        
+
+        <!-- apiStorage -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">DATA over remoteStorage.js</summary><p>
+            <em>remoteStorage.js</em> abstracted API calls to the server.
+            <br/><br/>
+            Use <em>widget</em> or <em>GOTO authDialogUrl (and redirect back)</em> (above) to retrieve the <em>token</em>.
+            <br/><br/>
+            All <em>API call</em>s other than <em>getListing(..)</em> require a <em>path</em>.
+            <br/><br/>
+            The <em>storeFile(..)</em> <em>API call</em> requires <em>data</em> to be filled in.
+            <br/><br/>
+            Check log-pane for results.
+          </p></details>
+          <form id="apiStorage"><p>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <p><select name="apiMethod" class="w3-select" onchange="scrubForm(event)">
+              <option value="LISTING" selected>getListing(@root)</option>
+              <option value="PUT">storeFile(..,path,..)</option>
+              <option value="GET">getFile(path)</option>
+              <option value="DELETE">remove(path)</option>
+            </select><label class="w3-text-blue">API call</label></p>            
+            <p><input name="path" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">path</label></p>
+            <textarea name="data" class="w3-input w3-border" rows="10" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">data</label>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="apiStorage()">run apiStorage()</button></p>
         </div>        
 
       </div>
@@ -136,12 +201,15 @@
   
     log('initialize remoteStorage used by app: widget and non-widget');
     var remoteStorage = new RemoteStorage({logging: true, cache: false});
+    var remoteStorageConnected = false;
 
     log("initialize data -- state for use-cases -- to empty");
     var data = {
       scope: 'myfavoritedrinks:rw',
       responseType: 'token',
-      token: params.get('access_token')
+      token: params.get('access_token'),
+      httpMethod: 'PUT',
+      apiMethod: 'LISTING'
     };
     unmarshal();
     fillForms();
@@ -154,11 +222,6 @@
       log('attaching to #remotestorage-widget-anchor element');
       widget.attach('remotestorage-widget-anchor');
     });
-
-    // REMOVE?
-    // const client = remoteStorage.scope(`/${data.scope}/`);
-    // client.getListing('')
-    //   .then(listing => console.log('LISTING :: ' + listing));
 
     /* =========================================================================
                          ** Supporting Methods / Utilities **
@@ -266,12 +329,14 @@
         log(`onConnected :: set data`, {tag: tag, event: event, data: data});
         log(`onConnected :: disabling serverInfo entry`,{tag: tag, event: event});
         disableForm('serverInfo', true);
+        remoteStorageConnected = true;
       }
 
       function onNotConnected (event) {
         log(`onNotConnected :: start`, {tag: tag, event: event})
         log(`onConnected :: re-enabling serverInfo entry`, {tag: tag, event: event});
         disableForm('serverInfo', false);
+        remoteStorageConnected = false;
       }
 
       function onReady (event) {
@@ -293,8 +358,12 @@
 
     async function getWebFinger() {
       log('getWebFinger :: start');
+      if (!data.user || !data.server) {
+        log('getWebFinger :: required data properties not present, click this log to see expression', data);
+        return;
+      }
       let url = `${data.server}/.well-known/webfinger?resource=acct:${data.user}@${data.server}`;
-      log(`getWebFinger :: GET ${url}`);
+      log(`getWebFinger :: GET `,{url: url});
       let result = await fetch(url, { 
         method: "GET", 
         headers: { "Accept": "application/jrd+json, application/json" }
@@ -309,15 +378,21 @@
           authDialogUrl: hits[0].properties['http://tools.ietf.org/html/rfc6749#section-4.2'],
           redirectUrl: window.location.protocol + '//' + window.location.host + window.location.pathname
         });
-        log(`getWebFinger :: setting remoteStorageHref := ${data.remotestorageHref}`);
-        log(`getWebFinger :: setting authDialogUrl := ${data.authDialogUrl}`);
+        log(`getWebFinger :: setting remoteStorageHref, authDialogUrl`,{
+          remotestorageHref: data.remotestorageHref,
+          authDialogUrl: data.authDialogUrl
+        });
       }
     }
 
     async function getHostMeta() {
       log('getHostMeta :: start');
+      if (!data.server) {
+        log('getHostMeta :: required data properties not present, click this log to see expression', data);
+        return;
+      }
       let url = `${data.server}/.well-known/host-meta.json`;
-      log(`getHostMeta :: GET ${url}`);
+      log(`getHostMeta :: GET`,{url: url});
       let result = await fetch(url, { 
         method: "GET", 
         headers: { "Accept": "application/jrd+json, application/json" }
@@ -329,8 +404,12 @@
 
     async function getAccountMeta() {
       log('getAccountMeta :: start');
+      if (!data.user || !data.server) {
+        log('getAccountMeta :: required data properties not present, click this log to see expression', data);
+        return;
+      }
       let url = `${data.server}/webfinger/jrd?resource=acct:${data.user}@${data.server}`;
-      log(`getAccountMeta :: GET ${url}`);
+      log(`getAccountMeta :: GET`, {url: url});
       let result = await fetch(url, { 
         method: "GET", 
         headers: { "Accept": "application/jrd+json, application/json" }
@@ -341,12 +420,21 @@
     }
 
     async function gotoAuth() {
+      log('gotoAuth :: start');
+      if (!data.authDialogUrl || !data.redirectUrl || !data.scope || !data.responseType) {
+        log('gotoAuth :: required data properties not present, click this log to see expression', data);
+        return;
+      }
       remoteStorage.disconnect();
       window.location.href = `${data.authDialogUrl}?redirect_uri=${encodeURIComponent(data.redirectUrl)}&scope=${encodeURIComponent(data.scope)}&response_type=${data.responseType}&client_id=${encodeURIComponent(data.redirectUrl)}&state=${marshal()}`
     }
 
     async function postOAuth() {
       log('postOAuth :: start');
+      if (!data.server || !data.redirectUrl || !data.user || !data.responseType) {
+        log('gotoAuth :: required data properties not present, click this log to see expression', data);
+        return;
+      }
       log('postOAuth :: disconnecting current remoteStorage, if any');
       remoteStorage.disconnect();
       let url = `${data.server}/oauth`;
@@ -358,7 +446,7 @@
         username: data.user,
         allow: 'Allow'
       };
-      log(`postOAuth :: POST as Web form ${url}`);
+      log(`postOAuth :: POST as Web form`, {url: url});
       let form = document.getElementById('postOAuth');
       form.setAttribute("method", 'POST');
       form.setAttribute("action", url);
@@ -372,6 +460,113 @@
       form.submit();
     }
 
+    async function httpStorage() {
+      log('httpStorage :: start');
+      if (!data.token || !data.scope || !data.path || !data.remotestorageHref || !data.httpMethod || !data.versioning || data.httpMethod === 'PUT' && !data.data) {
+        log('httpStorage :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      const versioningHeaders = {
+        'none': (etags) => {}, 
+        'new': (etags) => {return {'If-None-Match': '*'}}, 
+        'match': (etags) => {return {'If-Match': etags}},
+        'nomatch': (etags) => {return {'If-None-Match': etags}}
+      }
+      let category = data.scope.split(':')[0]
+      let path = data.path.split('/').filter(t => t.length > 0)[0]      
+      let url = `${data.remotestorageHref}/${category}/${path}`;
+      let etags = (data.etags ? data.etags.split(/\s/).filter(t => t.length > 0) : [])
+        .map(etag => `"${etag}"`)
+        .join(', ');
+      let versioningHeader = versioningHeaders[data.versioning](etags);
+
+      let payload = {
+        method: data.httpMethod,
+        headers: {
+          "Authorization": `Bearer ${data.token}`,
+          ...versioningHeader
+        }
+      };
+
+      switch (data.httpMethod) {
+        case 'PUT': 
+          payload = {
+            ...payload, 
+            headers: {
+              ...payload.headers,
+              "Content-Type": "text/plain"
+            },
+            body: data.data
+          }
+        break;
+        case 'GET': 
+          break;
+        case 'DELETE':
+          break;
+      }
+
+      log('httpStorage :: fetching ', {url: url, payload: payload});
+      let {etag, code, result} = await fetch(url, payload)
+        .then(res => {return {etag: res.headers.get('ETag'), code: res.status, result: res.text()}})
+        .catch(error => log(`httpStorage :: error`,{error: error}));
+      result = await result;
+      switch (data.httpMethod) {
+        case 'PUT':
+          log(`httpStorage :: etag`, { headers: etag, code: code });
+          break;
+        case 'GET':
+          log('httpStorage :: data retrieved', {etag: etag, code: code, data: result})
+          break;
+        case 'DELETE':
+          log(`httpStorage :: etag`, { headers: etag, code: code });
+          break;
+      }
+    }
+
+    async function apiStorage() {
+      log('apiStorage :: start');
+      if (!data.token || !data.scope || !data.server || !data.user || !data.apiMethod || data.apiMethod !== 'LISTING' && !data.path || data.apiMethod === 'PUT' && !data.data) {
+        log('apiStorage :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      if (!remoteStorageConnected) {
+        let server = data.server.split('://').reduce((c,n) => n,'');
+        let address = `${data.user}@${server}`;
+        log('apiStorage :: connecting new remoteStorage', { address, address });
+        remoteStorage.connect(address, data.token);
+        log('apiStorage :: PLEASE RERUN :: once you see onConnected in log :: we had to re-connect');
+        return;
+      }
+      let category = data.scope.split(':')[0];
+      let client = remoteStorage.scope(`/${category}/`);
+      let path = data.path ? data.path.split('/').filter(t => t.length > 0)[0] : '';
+
+      try {
+        switch (data.apiMethod) {
+          case 'LISTING':
+            log('apiStorage :: about to LISTING');
+            let listing = await client.getListing('');
+            log('apiStorage :: LISTING', { listing: listing });
+            break;
+          case 'PUT':
+            log('apiStorage :: about to PUT');
+            let etag = await client.storeFile('text/plain', path, data.data);
+            log('apiStorage :: PUT', { etag: etag });
+            break;
+          case 'GET':
+            log('apiStorage :: about to GET');
+            let result = await client.getFile(path);
+            log('apiStorage :: GET', { data: result });
+            break;
+          case 'DELETE':
+            log('apiStorage :: about to REMOVE');
+            await client.remove(path);
+            break;
+        }
+      } catch (e) {
+        log('apiStorage :: error',{error:new String(e)});
+      }
+    }
   </script>
 
 </html>

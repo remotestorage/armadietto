@@ -2,6 +2,8 @@ dump.rdb
 example/store
 example/tree
 node_modules
+bin/test-suite-storage/rs/rs-test/.lock
+bin/test-suite-storage/rs/rs-test/.~meta
+bin/test-suite-storage/rs/rs-test/storage
 .vscode
 .idea
-bin/test-suite-storage

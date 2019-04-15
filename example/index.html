@@ -154,7 +154,7 @@
             <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
             <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
             <p><select name="apiMethod" class="w3-select" onchange="scrubForm(event)">
-              <option value="LISTING" selected>getListing(@root)</option>
+              <option value="LISTING" selected>getListing(path)</option>
               <option value="PUT">storeFile(..,path,..)</option>
               <option value="GET">getFile(path)</option>
               <option value="DELETE">remove(path)</option>
@@ -473,7 +473,7 @@
         'nomatch': (etags) => {return {'If-None-Match': etags}}
       }
       let category = data.scope.split(':')[0]
-      let path = data.path.split('/').filter(t => t.length > 0)[0]      
+      let path = data.path.split('/').filter(t => t.length > 0).join('/');
       let url = `${data.remotestorageHref}/${category}/${path}`;
       let etags = (data.etags ? data.etags.split(/\s/).filter(t => t.length > 0) : [])
         .map(etag => `"${etag}"`)
@@ -539,13 +539,13 @@
       }
       let category = data.scope.split(':')[0];
       let client = remoteStorage.scope(`/${category}/`);
-      let path = data.path ? data.path.split('/').filter(t => t.length > 0)[0] : '';
+      let path = data.path ? data.path.split('/').filter(t => t.length > 0).join('/') : '';
 
       try {
         switch (data.apiMethod) {
           case 'LISTING':
             log('apiStorage :: about to LISTING');
-            let listing = await client.getListing('');
+            let listing = await client.getListing(path + '/');
             log('apiStorage :: LISTING', { listing: listing });
             break;
           case 'PUT':

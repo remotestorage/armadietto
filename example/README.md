@@ -7,11 +7,11 @@ This repository contains an example of using both the [remotestorage HTTP APIs](
 In a terminal:
 
 ```
-$ cd $ARMADIETTOT_REPO/example
+$ cd $ARMADIETTO_REPO/example
 $ npm install
 ```
 
-Where $ARMADIETTOT_REPO is the root where you synced the [armadietto repo](https://github.com/remotestorage/armadietto).
+Where $ARMADIETTO_REPO is the root where you synced the [armadietto repo](https://github.com/remotestorage/armadietto).
 
 To run the example server:
 
@@ -35,11 +35,11 @@ Now open the example app. You may need to dismiss browser
 warnings about the self-signed certificate for `localhost` before the clients
 will connect properly.
 
-    open http://localhost:8080/index.html
+    open http://localhost:8080
 
 ## About the App Layout
 
-Please reed the text in the lower-right pane of the application.
+Please read the text in the lower-right pane of the application.
 
 The same text is available here: [ignore/welcome.txt](ignore/welcome.txt).
 
@@ -59,7 +59,7 @@ Click `Sign Up` in upper right corner.
 
 There is no automated redirection back to the example application at this point, reload it:
 
-    open http://localhost:8080/index.html
+    open http://localhost:8080
 
 ### Using "GOTO authDialogUrl (and redirect back)" Use Case
 
@@ -79,7 +79,7 @@ Click `Sign Up` in upper right corner.
 
 There is no automated redirection back to the example application at this point, reload it:
 
-    open http://localhost:8080/index.html
+    open http://localhost:8080
 
 ## Login
 

@@ -34,12 +34,21 @@ let store = {
 const sandbox = chai.spy.sandbox();
 const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37).toString();
 describe('Storage', () => {
-  before(() => {
-    this._server = new Armadietto({ store, http: { port: 4567 } });
-    this._server.boot();
+  before((done) => {
+    (async () => {
+      this._server = new Armadietto({ store, http: { port: 4567 } });
+      await this._server.boot();
+      done();
+    })();
   });
 
-  after(() => { this._server.stop(); });
+  after((done) => {
+    (async () => {
+      await this._server.stop();
+      done();
+    })();
+  });
+
   const req = chai.request('http://localhost:4567');
   subject('req', () => req.get(get.path));
 

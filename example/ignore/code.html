@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css">
+</head>
+
+<body>
+  <div id="code"></div>
+</body>
+
+<script>
+  var lines;
+
+  window.onload = function() {
+    loadFile();
+  }
+
+  function loadFile() {
+    var file_match = document.location.hash.match('([-.a-z/]+?\.?(html|txt))');
+    fetch(file_match[1]).then(res => res.text())
+    .then(code => renderCodeLineByLine(code))
+    .then(() => {
+      $('code').each(function (i, block) {
+        hljs.highlightBlock(block);
+      });
+    })
+    .then(() => {
+      gotoLineNumber();
+    });   
+  }
+
+  function gotoLineNumber() {
+    var line_match = document.location.hash.match('[.a-z/]+?\.?html/(.*)');
+    if (line_match) {
+      line_match = decodeURI(line_match[1]);
+      var line = null
+      for (var i = 0; i < lines.length; i++) {
+        if (!!lines[i].match(line_match)) {
+          line = i;
+          break;
+        }
+      }
+      if (!line) return;
+      $('html, body').scrollTop($("#line" + line).offset().top);
+      $("#line" + line).css('background-color', 'black');
+      $("#line" + line).css('color', 'white');
+    }
+  }
+
+  function renderCodeLineByLine(code) {
+    lines = code.split('\n');
+    var body = '';
+    for (var i = 0; i < lines.length; i++) {
+      body = body + '<span class="line"><span id="line'+i+'" class="num">'+i+'</span><pre><code id="code'+i+'" class="html javascript"></code></pre></span><br/>\n';    
+    }
+    $('#code').html(body);
+    for (var i = 0; i < lines.length; i++) {
+      $('#code'+i).text(lines[i]);
+    }
+  }
+</script>
+
+<style>
+  body {
+    background-color: rgb(240, 240, 240);
+  }
+
+  .line {
+    white-space: nowrap;
+  }
+
+  .num, pre, .html {
+    display: inline-block;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+
+  .num {
+    text-align: right;
+    width: 2em;
+    padding-right: 3px;
+    background: gainsboro;    
+  }
+</style>
+
+</html>

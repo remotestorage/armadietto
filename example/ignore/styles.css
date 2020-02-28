@@ -1,0 +1,97 @@
+html, body {
+  margin: 0px;
+}
+
+#getwider {
+  display: none;
+}
+
+#window {
+  margin: 0px;
+  height: 100vh;
+  overflow: hidden;
+  display: block;
+}
+
+#demoview {
+  float: left;
+  height: 100%;
+  overflow: auto;
+  width: calc(50% - 20px);
+  padding: 10px;
+}
+
+#panes {
+  float: right;
+  height: 100%;
+  width: 50%;
+}
+
+#logview {
+  height: 30%;
+  width: 100%;
+  background: #404040;
+  color: #66ff66;
+  overflow: auto;
+  font-family: arial, "lucida console", sans-serif;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+#logview pre {
+  font-size: smaller;
+  margin: 0px;
+  padding: 0px;
+  line-height: 1em;
+}
+
+#codeview {
+  height: 70%;
+  overflow: hidden;
+  padding-top: 1px;
+}
+
+#codeframe {
+  width: 100%;
+  height: 100%;
+  border: 0px;
+}
+
+pre.clickable {
+  cursor: pointer;
+}
+
+@media only screen and (max-width: 1100px) {
+  #getwider {
+    display: block;
+    font-family: monospace;
+  }
+
+  #window {
+    display: none;
+  }
+}
+
+#remotestorage-widget-anchor {
+  height: 80px;
+  width: 100%;
+}
+
+.uiterminal-full {
+  margin-bottom: 10px;
+}
+
+.usecase {
+  color: #2196F3;
+  font-weight: bold;
+  font-size: larger;
+}
+
+.usecase:focus { 
+  outline: none; 
+}
+
+details > p {
+  color: grey;
+  background-image: linear-gradient(to right, yellow, white 5%);
+}

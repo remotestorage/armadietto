@@ -4,34 +4,569 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>RemoteStorage Demo</title>
-    <script type="text/javascript" src="./node_modules/remotestoragejs/release/remotestorage.js"></script>
-    <script src="./node_modules/remotestorage-widget/build/widget.js"></script>
-    <script>
+    <script type="text/javascript" src="../node_modules/remotestoragejs/release/remotestorage.js"></script>
+    <script src="../node_modules/remotestorage-widget/build/widget.js"></script>
 
-      function handleEvent(event) {
-        console.error('HANDLE EVENT: ', event);
+    <!-- ignore below :: code pane / logging  pane setup -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> <!-- only needed for logging and code panes -->
+    <script src="ignore/logging.js"></script> <!-- helper JS functionality to support showing source code for this file in the UI -->
+    <link rel="stylesheet" type="text/css" href="ignore/styles.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <!-- ignore above :: code pane / logging  pane setup -->
+  </head>
+
+  <body>
+    <p id="getwider">  |<---->| Cannot view, screen to narrow, please revisit on a wider device.</p>
+    <div id="window">
+      <div id="demoview">
+
+        <div id="remotestorage-widget-anchor"></div>
+
+        <!--- =========================================================================
+                                              ** UI Forms **
+              ========================================================================= -->
+
+        <!-- serverInfo -->
+        <div class="w3-panel w3-card w3-light-grey">
+          <form id="serverInfo"><p>
+            <input name="server" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">server</label>
+            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">user</label>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+          </p></form>
+        </div>
+
+        <!-- getWebFinger -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">GET /.well-known/webfinger</summary><p>
+            Uses <em>user</em> and </em><em>server</em> from above to find out <em>remotestorageHref</em> &mdash; the location of user's storage.  This is <em>webfinger</em>, no need for token.  This endpoint format is per draft-dejong spec.
+          </p></details>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="getWebFinger()">run getWebFinger()</button></p>
+        </div>
+
+        <!-- remotestorageInfo -->
+        <div class="w3-panel w3-card w3-light-grey">
+          <form id="remotestorageInfo"><p>
+            <input name="remotestorageHref" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">remotestorageHref</label>
+          </p></form>
+        </div>
+
+        <!-- getHostMeta -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">GET /.well-known/host-meta.json</summary><p>
+            Discovery endpoint; look in the log (upper right pane).  Provides <em>webfinger</em> resource template for the server called. In this app it's just informational, the <em>GET /.well-known/webfinger</em> above is used as it is per draft-dejong spec; no need discover endpoint template.
+          </p></details>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="getHostMeta()">run getHostMeta()</button></p>
+        </div>
+
+        <!-- getAccountMeta -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">GET /webfinger/jrd?resource=acct:...</summary><p>
+            Discovery endpoint; look in the log (upper right pane).  Provides auth URL for a user.  Provides storage resources template; note that {category} placeholder is <em>scope</em> in this app.  This endpoint is just informational, use <em>GET /.well-known/webfinger</em> above to get these values as per draft-dejong spec.
+          </p></details>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="getAccountMeta()">run getAccountMeta()</button></p>
+        </div>
+
+        <!-- gotoAuth -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">GOTO authDialogUrl (and redirect back)</summary><p>
+            Goes to OAuth2 login page to provide password.  Use <em>GET /.well-known/webfinger</em> above to populate values below.  After providing credentials you will be redirected back here.
+            <br/><br/>
+            Note that the widget does this for you:  this is the step where the widget takes you to the server for a login if your token is invalid.
+          </p></details>
+          <form id="gotoAuth"><p>
+            <input name="authDialogUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">authDialogUrl</label>
+            <input name="redirectUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">redirectUrl</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">responseType</label>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="gotoAuth()">run gotoAuth()</button></p>
+        </div>
+
+        <!-- postOAuth -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">POST oauth</summary><p>
+            Submits credentials directly from this form.  Just for testing; don't write your login pages this way.  Use the login page served by the server as per <em>GOTO authDialogUrl (and redirect back)</em> above.
+            <br/><br/>
+            Note that the widget does this for you:  this is the form submission from the server login called by the widget.
+          </p></details>
+          <form id="postOAuth"><p>
+            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">user</label>
+            <input name="password" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">password</label>
+            <input name="redirectUrl" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">redirectUrl</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">responseType</label>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="postOAuth()">run postOAuth()</button></p>
+        </div>        
+
+        <!-- httpStorage -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">DATA over HTTP * /storage</summary><p>
+            HTTP calls to the server for <em>/storage</em>.
+            <br/><br/>
+            Use <em>widget</em> or <em>GOTO authDialogUrl (and redirect back)</em> (above) to retrieve the <em>token</em>.
+            <br/><br/>
+            Use <em>GET /.well-known/webfinger</em> above to get <em>remotestorageHref</em>.
+            <br/><br/>
+            The <em>etags versioning list</em> is a list of <em>etags</em> separated with spaces.  Grab valid <em>etags</em> from the log-pane output after successful operations.
+            <br/><br/>
+            Versioning <em>If-Match</em> is useful with PUT to prevent overwriting data unless <em>etag</em> matches: overwrite only if <em>etag</em> matches the ones listed in <em>etags versioning list</em>.
+            <br/><br/>
+            Versioning <em>If-None-Match</em> is useful with GET to prevent retrieval of same <em>etag</em>: retrieve only if different <em>etag</em> from the ones listed in <em>etags versioning list</em>.
+          </p></details>
+          <form id="httpStorage"><p>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="remotestorageHref" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">remotestorageHref</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <p><select name="httpMethod" class="w3-select" onchange="scrubForm(event)">
+              <option value="PUT" selected>PUT</option>
+              <option value="GET">GET</option>
+              <option value="DELETE">DELETE</option>
+            </select><label class="w3-text-blue">HTTP method for call</label></p>            
+            <p><select name="versioning" class="w3-select" onchange="scrubForm(event)">
+              <option value="none" selected>no versioning (etags below ignored)</option>
+              <option value="new">must not exist at all (If-None-Match: *)</option>
+              <option value="match">must exist at version (If-Match: "..", "..")</option>
+              <option value="nomatch">cannot exist at version (If-None-Match: "..", "..")</option>
+            </select><label class="w3-text-blue">etags versioning qualifier</label></p>            
+            <textarea name="etags" class="w3-input w3-border" rows="2" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">etags versioning list (space separated etags values)</label>
+            <p><input name="path" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">path</label></p>
+            <textarea name="data" class="w3-input w3-border" rows="10" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">data</label>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="httpStorage()">run httpStorage()</button></p>
+        </div>        
+
+        <!-- apiStorage -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">DATA over remoteStorage.js</summary><p>
+            <em>remoteStorage.js</em> abstracted API calls to the server.
+            <br/><br/>
+            Use <em>widget</em> or <em>GOTO authDialogUrl (and redirect back)</em> (above) to retrieve the <em>token</em>.
+            <br/><br/>
+            All <em>API call</em>s other than <em>getListing(..)</em> require a <em>path</em>.
+            <br/><br/>
+            The <em>storeFile(..)</em> <em>API call</em> requires <em>data</em> to be filled in.
+            <br/><br/>
+            Check log-pane for results.
+          </p></details>
+          <form id="apiStorage"><p>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <p><select name="apiMethod" class="w3-select" onchange="scrubForm(event)">
+              <option value="LISTING" selected>getListing(path)</option>
+              <option value="PUT">storeFile(..,path,..)</option>
+              <option value="GET">getFile(path)</option>
+              <option value="DELETE">remove(path)</option>
+            </select><label class="w3-text-blue">API call</label></p>            
+            <p><input name="path" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">path</label></p>
+            <textarea name="data" class="w3-input w3-border" rows="10" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">data</label>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="apiStorage()">run apiStorage()</button></p>
+        </div>        
+
+      </div>
+      <div id="panes">
+        <div id="logview">
+          <div id="logviewcontents"></div>
+        </div>
+        <div id="codeview">
+          <iframe id="codeframe" src="ignore/code.html#welcome.txt"></iframe>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+
+    /* =========================================================================
+                                ** Initialization **
+       ========================================================================= */
+
+    // - save off URL params from load/refresh as widget will mangle them
+    // - init logging whenever page refreshed
+    // - create a new global 'remoteStorage' instance whenever screen refreshed
+    // - re-init 'data' including any 'state' values from URL in case of manual (non-widget) oauth redirect
+    //   - see gotoAuth and postOAuth
+    // - pre-fill all forms based on loaded/default 'data'
+    // - on DOM load initialize, attach widget, starts widget event listening to global 'remoteStorage'
+    //   - if was connected in localstorage before refresh/load, global 'remoteStorage' reconnects
+    //   - if was disconnected in localstorage (e.g. calls to gotoAuth and postOAuth disconnect) before refresh/load, then global 'remoteStorage' stays disconnected
+
+    const params = (new URLSearchParams(window.location.hash.substr(1))); // extract hash as params, as per draft-dejong
+    log('loading ', {href: window.location.href, params: params.toString()});
+
+    window.onload = function () {
+      showPostScreenSetupLogs(); // ignore above :: logging setup
+    }
+  
+    log('initialize remoteStorage used by app: widget and non-widget');
+    var remoteStorage = new RemoteStorage({logging: true, cache: false});
+    var remoteStorageConnected = false;
+
+    log("initialize data -- state for use-cases -- to empty");
+    var data = {
+      scope: 'myfavoritedrinks:rw',
+      responseType: 'token',
+      token: params.get('access_token'),
+      httpMethod: 'PUT',
+      apiMethod: 'LISTING'
+    };
+    unmarshal();
+    fillForms();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      remoteStorage.access.claim(data.scope, 'rw');
+      const widget = new Widget(remoteStorage);
+      attachEvents('appStorage', remoteStorage);
+      log('in DOMContentLoaded :: attaching remoteStorage to widget');
+      log('attaching to #remotestorage-widget-anchor element');
+      widget.attach('remotestorage-widget-anchor');
+    });
+
+    /* =========================================================================
+                         ** Supporting Methods / Utilities **
+       ========================================================================= */
+
+    /**
+     * Marshall select 'data' state for URL passing
+     */ 
+    function marshal() {
+      var {server, user, remotestorageHref} = data;
+      return btoa(JSON.stringify({ server: server, user: user, remotestorageHref: remotestorageHref }));
+    }
+
+    /**
+     * Unmarshal select 'data' state from passed in URL
+     */
+    function unmarshal() {
+      if (params.has('state') && params.get('state')) {
+        var state = JSON.parse(atob(params.get('state')));
+        log(`unmarshalled 'state' from URL params`, state);
+        updateData(state);
+      }
+    }
+
+    /**
+     * Update use-case 'data' (global) with JSON passed in.
+     * 
+     * SIDE EFFECT:  refreshes all forms.
+     */ 
+    function updateData(withWhat) {
+      data = {...data, ...withWhat};
+      fillForms();
+    }
+
+    /**
+     * Scrub form fields of the caller's form into 'data'
+     * 
+     * @param {} event -- event originating from an input within a form to scrub
+     */
+    function scrubForm(event) {
+      var form = event.target.form;
+      var json = {};
+      for (element of form) {
+        json[element.name] = element.value;
+      }
+      updateData(json);
+    }
+
+    /**
+     * Fill form fields from JSON
+     * 
+     * @param {string} formId - element ID of the form to fill
+     * @param {Object} values - object to source values from by keys matching form field 'names'
+     * @param {boolean} disabled - if true, the form is disabled, default, false
+     */
+    function disableForm(formId, disabled) {
+      var form = document.getElementById(formId);
+      for (element of form) {
+        element.disabled = !!disabled;
+      }
+    }
+
+    /**
+     * Go through all forms and fill matching fields with 'data' (data attribut -> field name)
+     */
+    function fillForms() {
+      for (form of document.forms) {
+        for (element of form) {
+          if (element.name in data) {
+            element.value = data[element.name];
+          }
+        }
+      }
+    }
+
+    /* =========================================================================
+                                    ** Events **
+       ========================================================================= */
+
+    /**
+     * Handle events from remotestorage instance.
+     * 
+     * @param {String} tag -- descriptive tag for remotestorage instance
+     * @param {} rsInstance -- to handle events for
+     */
+    function attachEvents(tag, rsInstance) {
+      log('initialize remotestorage event handlers for instance :: ' + tag);
+      rsInstance.on('connected', onConnected);
+      rsInstance.on('not-connected', onNotConnected);
+      rsInstance.on('ready', onReady);
+      rsInstance.on('disconnected', onDisconnect);
+      rsInstance.on('error', onError);
+
+      function onConnected (event) {
+        log(`onConnected :: start`, {tag: tag, event: event})
+        let userLineParts = rsInstance.remote.userAddress.split('@');
+        let protocol = rsInstance.remote.href.match(/^[a-z]+:\/\//ig);
+        let scope = Object.keys(rsInstance.access.scopeModeMap)[0];
+        let token = rsInstance.remote.token;
+        updateData({
+          user: userLineParts[0], 
+          server: protocol + userLineParts[1],
+          scope: scope,
+          token: token});
+        log(`onConnected :: set data`, {tag: tag, event: event, data: data});
+        log(`onConnected :: disabling serverInfo entry`,{tag: tag, event: event});
+        disableForm('serverInfo', true);
+        remoteStorageConnected = true;
       }
 
-      const remoteStorage = new RemoteStorage({logging: true, cache: false});
-      remoteStorage.access.claim('myfavoritedrinks', 'rw');
+      function onNotConnected (event) {
+        log(`onNotConnected :: start`, {tag: tag, event: event})
+        log(`onConnected :: re-enabling serverInfo entry`, {tag: tag, event: event});
+        disableForm('serverInfo', false);
+        remoteStorageConnected = false;
+      }
 
-      document.addEventListener('DOMContentLoaded', function() {
-        const widget = new Widget(remoteStorage);
-        widget.attach();
-      });
+      function onReady (event) {
+        log(`onReady :: start`, {tag: tag, event: event})
+      }
 
-      remoteStorage.on('connected', handleEvent);
-      remoteStorage.on('network-offline', handleEvent);
-      remoteStorage.on('network-online', handleEvent);
-      remoteStorage.on('connected', handleEvent);
+      function onDisconnect (event) {
+        log(`onDisconnect :: start`, {tag: tag, event: event})
+      }
 
-      const client = remoteStorage.scope('/myfavoritedrinks/');
-      client.getListing('')
-        .then(listing => console.log(listing));
+      function onError (event) {
+        log(`onError :: start`, {tag: tag, event: event})
+      }
+    }
 
-    </script>
-  </head>
-  <body>
+    /* =========================================================================
+                          ** Form Actions / Use Case Functions **
+       ========================================================================= */
 
-  </body>
+    async function getWebFinger() {
+      log('getWebFinger :: start');
+      if (!data.user || !data.server) {
+        log('getWebFinger :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      let url = `${data.server}/.well-known/webfinger?resource=acct:${data.user}@${data.server}`;
+      log(`getWebFinger :: GET `,{url: url});
+      let result = await fetch(url, { 
+        method: "GET", 
+        headers: { "Accept": "application/jrd+json, application/json" }
+      })
+      .then(res => res.json())
+      .catch(error => log(`getWebFinger :: GET error`,{error: error}));
+      log(`getWebFinger :: result`, result);
+      let hits = result.links.filter((i) => 'rel' in i && i['rel'] == 'remotestorage');
+      if (hits) {
+        updateData({
+          remotestorageHref: hits[0].href, 
+          authDialogUrl: hits[0].properties['http://tools.ietf.org/html/rfc6749#section-4.2'],
+          redirectUrl: window.location.protocol + '//' + window.location.host + window.location.pathname
+        });
+        log(`getWebFinger :: setting remoteStorageHref, authDialogUrl`,{
+          remotestorageHref: data.remotestorageHref,
+          authDialogUrl: data.authDialogUrl
+        });
+      }
+    }
+
+    async function getHostMeta() {
+      log('getHostMeta :: start');
+      if (!data.server) {
+        log('getHostMeta :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      let url = `${data.server}/.well-known/host-meta.json`;
+      log(`getHostMeta :: GET`,{url: url});
+      let result = await fetch(url, { 
+        method: "GET", 
+        headers: { "Accept": "application/jrd+json, application/json" }
+      })
+      .then(res => res.json())
+      .catch(error => log(`getHostMeta :: GET error`,{error: error}));
+      log(`getHostMeta :: result`, result);
+    }
+
+    async function getAccountMeta() {
+      log('getAccountMeta :: start');
+      if (!data.user || !data.server) {
+        log('getAccountMeta :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      let url = `${data.server}/webfinger/jrd?resource=acct:${data.user}@${data.server}`;
+      log(`getAccountMeta :: GET`, {url: url});
+      let result = await fetch(url, { 
+        method: "GET", 
+        headers: { "Accept": "application/jrd+json, application/json" }
+      })
+      .then(res => res.json())
+      .catch(error => log(`getAccountMeta :: GET error`,{error: error}));
+      log(`getAccountMeta :: result`, result);
+    }
+
+    async function gotoAuth() {
+      log('gotoAuth :: start');
+      if (!data.authDialogUrl || !data.redirectUrl || !data.scope || !data.responseType) {
+        log('gotoAuth :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      remoteStorage.disconnect();
+      window.location.href = `${data.authDialogUrl}?redirect_uri=${encodeURIComponent(data.redirectUrl)}&scope=${encodeURIComponent(data.scope)}&response_type=${data.responseType}&client_id=${encodeURIComponent(data.redirectUrl)}&state=${marshal()}`
+    }
+
+    async function postOAuth() {
+      log('postOAuth :: start');
+      if (!data.server || !data.redirectUrl || !data.user || !data.responseType) {
+        log('gotoAuth :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      log('postOAuth :: disconnecting current remoteStorage, if any');
+      remoteStorage.disconnect();
+      let url = `${data.server}/oauth`;
+      let extraParams = {
+        client_id: data.redirectUrl,
+        redirect_uri: data.redirectUrl,
+        response_type: data.responseType,
+        state: marshal(),
+        username: data.user,
+        allow: 'Allow'
+      };
+      log(`postOAuth :: POST as Web form`, {url: url});
+      let form = document.getElementById('postOAuth');
+      form.setAttribute("method", 'POST');
+      form.setAttribute("action", url);
+      for(var param in extraParams) {
+        var field = document.createElement("input");
+        field.setAttribute("type", "hidden");
+        field.setAttribute("name", param);
+        field.setAttribute("value", extraParams[param]);
+        form.appendChild(field);
+      }
+      form.submit();
+    }
+
+    async function httpStorage() {
+      log('httpStorage :: start');
+      if (!data.token || !data.scope || !data.path || !data.remotestorageHref || !data.httpMethod || !data.versioning || data.httpMethod === 'PUT' && !data.data) {
+        log('httpStorage :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      const versioningHeaders = {
+        'none': (etags) => {}, 
+        'new': (etags) => {return {'If-None-Match': '*'}}, 
+        'match': (etags) => {return {'If-Match': etags}},
+        'nomatch': (etags) => {return {'If-None-Match': etags}}
+      }
+      let category = data.scope.split(':')[0]
+      let path = data.path.split('/').filter(t => t.length > 0).join('/');
+      let url = `${data.remotestorageHref}/${category}/${path}`;
+      let etags = (data.etags ? data.etags.split(/\s/).filter(t => t.length > 0) : [])
+        .map(etag => `"${etag}"`)
+        .join(', ');
+      let versioningHeader = versioningHeaders[data.versioning](etags);
+
+      let payload = {
+        method: data.httpMethod,
+        headers: {
+          "Authorization": `Bearer ${data.token}`,
+          ...versioningHeader
+        }
+      };
+
+      switch (data.httpMethod) {
+        case 'PUT': 
+          payload = {
+            ...payload, 
+            headers: {
+              ...payload.headers,
+              "Content-Type": "text/plain"
+            },
+            body: data.data
+          }
+        break;
+        case 'GET': 
+          break;
+        case 'DELETE':
+          break;
+      }
+
+      log('httpStorage :: fetching ', {url: url, payload: payload});
+      let {etag, code, result} = await fetch(url, payload)
+        .then(res => {return {etag: res.headers.get('ETag'), code: res.status, result: res.text()}})
+        .catch(error => log(`httpStorage :: error`,{error: error}));
+      result = await result;
+      switch (data.httpMethod) {
+        case 'PUT':
+          log(`httpStorage :: etag`, { headers: etag, code: code });
+          break;
+        case 'GET':
+          log('httpStorage :: data retrieved', {etag: etag, code: code, data: result})
+          break;
+        case 'DELETE':
+          log(`httpStorage :: etag`, { headers: etag, code: code });
+          break;
+      }
+    }
+
+    async function apiStorage() {
+      log('apiStorage :: start');
+      if (!data.token || !data.scope || !data.server || !data.user || !data.apiMethod || data.apiMethod !== 'LISTING' && !data.path || data.apiMethod === 'PUT' && !data.data) {
+        log('apiStorage :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      if (!remoteStorageConnected) {
+        let server = data.server.split('://').reduce((c,n) => n,'');
+        let address = `${data.user}@${server}`;
+        log('apiStorage :: connecting new remoteStorage', { address, address });
+        remoteStorage.connect(address, data.token);
+        log('apiStorage :: PLEASE RERUN :: once you see onConnected in log :: we had to re-connect');
+        return;
+      }
+      let category = data.scope.split(':')[0];
+      let client = remoteStorage.scope(`/${category}/`);
+      let path = data.path ? data.path.split('/').filter(t => t.length > 0).join('/') : '';
+
+      try {
+        switch (data.apiMethod) {
+          case 'LISTING':
+            log('apiStorage :: about to LISTING');
+            let listing = await client.getListing(path + '/');
+            log('apiStorage :: LISTING', { listing: listing });
+            break;
+          case 'PUT':
+            log('apiStorage :: about to PUT');
+            let etag = await client.storeFile('text/plain', path, data.data);
+            log('apiStorage :: PUT', { etag: etag });
+            break;
+          case 'GET':
+            log('apiStorage :: about to GET');
+            let result = await client.getFile(path);
+            log('apiStorage :: GET', { data: result });
+            break;
+          case 'DELETE':
+            log('apiStorage :: about to REMOVE');
+            await client.remove(path);
+            break;
+        }
+      } catch (e) {
+        log('apiStorage :: error',{error:new String(e)});
+      }
+    }
+  </script>
+
 </html>

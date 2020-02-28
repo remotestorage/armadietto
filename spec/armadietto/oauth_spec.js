@@ -36,12 +36,20 @@ let store = {
 
 const sandbox = chai.spy.sandbox();
 describe('OAuth', async () => {
-  before(() => {
-    this._server = new Armadietto({ store, http: { port: 4567 } });
-    this._server.boot();
+  before((done) => {
+    (async () => {
+      this._server = new Armadietto({ store, http: { port: 4567 } });
+      await this._server.boot();
+      done();
+    })();
   });
 
-  after(() => { this._server.stop(); });
+  after((done) => {
+    (async () => {
+      await this._server.stop();
+      done();
+    })();
+  });
 
   beforeEach(() => {
     this.auth_params = {

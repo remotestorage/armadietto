@@ -15,7 +15,6 @@ Tested services include:
 ### Garage
 
 * doesn't implement versioning (which would be nice for recovery)
-* doesn't implement If-Match for GET, which is not yet used but will be required to support Range requests
 
 ### min.io (both self-hosted and cloud)
 

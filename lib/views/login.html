@@ -1,0 +1,19 @@
+<h2>Log In</h2>
+
+<form method="post" action="<%= basePath %>/account">
+  <% if (error) { %>
+    <p class="error"><%= error.message %></p>
+  <% } %>
+
+  <table>
+    <tr>
+      <th scope="row"><label for="username">Username</label></th>
+      <td><input type="text" id="username" name="username" value="<%= params.username || '' %>"></td>
+    </tr>
+    <tr>
+      <th scope="row"><label for="password">Password</label></th>
+      <td><input type="password" id="password" name="password" value=""></td>
+    </tr>
+  </table>
+  <p><input type="submit" value="Go"></p>
+</form>

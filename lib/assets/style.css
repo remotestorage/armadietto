@@ -785,3 +785,16 @@ button[name="deny"]:focus {
 #switch.light::before {
   content: url('sprite.svg#icon-moon');
 }
+.deemphasize {
+	color: #a6a6a6;
+	font-size: 0.8em;
+}
+.favicon {
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+}
+
+.account-info td {
+	font-size: 0.8em;
+}

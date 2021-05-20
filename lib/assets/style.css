@@ -120,3 +120,16 @@ th, td {
 input {
   font: 0.8em Open Sans, FreeSans, Helvetica, Arial, sans-serif;
 }
+.deemphasize {
+	color: #a6a6a6;
+	font-size: 0.8em;
+}
+.favicon {
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+}
+
+.account-info td {
+	font-size: 0.8em;
+}

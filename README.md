@@ -28,7 +28,7 @@ See the `notes` directory for configuring a reverse proxy and other recipes.
 2. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See below for values and their meanings.
 3. Run `armadietto -c /etc/armadietto/conf`
 
-To see all options, run `armadietto -h`. Set the environment `DEBUG` to enable logging.
+To see all options, run `armadietto -h`. Set the environment `DEBUG` to log the headers of every request.
 
 ## Use as a library
 
@@ -120,7 +120,13 @@ const server = new Armadietto({
     key:   'path/to/ssl.key',
     cert:  'path/to/ssl.crt',
     ca:    'path/to/ca.pem'    // optional
+  },
+  logging: {
+    stdout: ["debug"],
+    log_files: ["error"],
+    log_dir: "./some-log-dir"
   }
+
 });
 
 server.boot();

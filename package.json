@@ -25,7 +25,8 @@
     "argparse": "^2.0.1",
     "ejs": "^3.1.6",
     "lockfile": "^1.0.4",
-    "mkdirp": "^1.0.4"
+    "mkdirp": "^1.0.4",
+    "winston": "^3.5.1"
   },
   "devDependencies": {
     "bdd-lazy-var": "^2.6.1",
@@ -45,7 +46,7 @@
     "rimraf": "^3.0.2"
   },
   "scripts": {
-    "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/test-suite.json",
+    "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/dev-conf.json",
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\""

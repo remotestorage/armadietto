@@ -24,7 +24,11 @@ const trim = (what) => what.replace(/\s+/gm, ' ').trim();
 describe('WebFinger', () => {
   before((done) => {
     (async () => {
-      this._server = new Armadietto({ store, http: { port } });
+      this._server = new Armadietto({
+        store,
+        http: { port },
+        logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
+      });
       await this._server.boot();
       done();
     })();

@@ -13,5 +13,9 @@
     "cert": "/etc/letsencrypt/live/example.com/cert.pem",
     "key": "/etc/letsencrypt/live/example.com/privkey.pem"
   },
+  "logging": {
+	  "log_dir": ".",
+	  "log_files": ["error", "combined"]
+  },
   "basePath": ""
 }

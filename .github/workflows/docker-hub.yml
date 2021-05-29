@@ -1,0 +1,23 @@
+name: Docker Image CI
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build and publish Docker image
+      run: |
+        export VERSION=$(echo $GITHUB_REF | sed -re 's/^.*\/([0-9a-zA-Z._-]+)$/\1/')
+        test "$VERSION" != "$GITHUB_REF"
+        docker build --file docker/Dockerfile --tag $DOCKER_USER/armadietto:$VERSION .
+        docker login -u $DOCKER_USER -p $DOCKER_TOKEN
+        docker push $DOCKER_USER/armadietto:$VERSION
+        docker tag $DOCKER_USER/armadietto:$VERSION $DOCKER_USER/armadietto
+        docker push $DOCKER_USER/armadietto

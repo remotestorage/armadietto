@@ -63,7 +63,6 @@ const remoteStorageServer = {
       return -1;
     }
 
-
     process.umask(0o077);
     const store = new Armadietto.FileTree({ path: conf.storage_path });
     const server = new Armadietto({

@@ -15,7 +15,8 @@
   },
   "logging": {
 	  "log_dir": ".",
-	  "log_files": ["error", "combined"]
+	  "stdout": ["debug"],
+	  "log_files": ["error"]
   },
   "basePath": ""
 }

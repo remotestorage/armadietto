@@ -35,7 +35,8 @@ const remoteStorageServer = {
   parseLogConf (rawConf) {
     const defaults = {
       log_dir: '',
-      log_files: ['error', 'combined']
+      stdout: [],
+      log_files: []
     };
 
     return Object.assign(defaults, rawConf);

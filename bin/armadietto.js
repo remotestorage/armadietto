@@ -32,6 +32,16 @@ const remoteStorageServer = {
     return parser.parseArgs();
   },
 
+  parseLogConf (rawConf) {
+    const defaults = {
+      log_dir: '',
+      stdout: [],
+      log_files: []
+    };
+
+    return Object.assign(defaults, rawConf);
+  },
+
   init () {
     const args = this.parseArgs();
     let conf = {};
@@ -53,13 +63,12 @@ const remoteStorageServer = {
       return -1;
     }
 
-    console.log('[INFO] Starting remoteStorage: http://' + conf.http.host + ':' + conf.http.port);
-
     process.umask(0o077);
     const store = new Armadietto.FileTree({ path: conf.storage_path });
     const server = new Armadietto({
       basePath: conf.basePath,
       store,
+      logging: remoteStorageServer.parseLogConf(conf.logging || {}),
       http: {
         host: conf.http.host,
         port: conf.http.port

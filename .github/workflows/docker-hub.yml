@@ -17,6 +17,7 @@ jobs:
         export VERSION=$(echo $GITHUB_REF | sed -re 's/^.*\/([0-9a-zA-Z._-]+)$/\1/')
         test "$VERSION" != "$GITHUB_REF"
         docker build --file docker/Dockerfile --tag $DOCKER_USER/armadietto:$VERSION .
+        docker run --rm  -v /var/run/docker.sock:/var/run/docker.sock -v cache:/root/.cache/ aquasec/trivy $DOCKER_USER/armadietto:$VERSION
         docker login -u $DOCKER_USER -p $DOCKER_TOKEN
         docker push $DOCKER_USER/armadietto:$VERSION
         docker tag $DOCKER_USER/armadietto:$VERSION $DOCKER_USER/armadietto

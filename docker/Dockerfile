@@ -1,8 +1,5 @@
 FROM alpine:latest as build
 
-LABEL description="Armadietto NodeJS web service (a RemoteStorageJS backend)"
-
-ARG PROJECT_NAME="armadietto"
 ARG PKG_MANAGER="yarn"
 ARG INSTALL_COMMAND="yarn install --pure-lockfile --production"
 
@@ -18,6 +15,8 @@ COPY yarn.lock ./
 RUN $INSTALL_COMMAND
 
 FROM alpine:latest
+
+LABEL description="Armadietto NodeJS web service (a RemoteStorageJS backend)"
 
 ARG CONFIG_PATH_STORAGE="/usr/share/armadietto"
 ARG PROJECT_NAME="armadietto"

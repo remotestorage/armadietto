@@ -1,0 +1,66 @@
+# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0eaafdf96ebb47a9ac462bcf6a7ccb06)](https://www.codacy.com/app/lesion/armadietto?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=remotestorage/armadietto/&amp;utm_campaign=Badge_Grade)
+
+> ### :warning: WARNING
+> Please do not consider `armadietto` production ready, this project is still
+> considered experimental.  As with any alpha-stage storage technology, you
+> MUST expect that it will eat your data and take precautions against this. You
+> SHOULD expect that its APIs and storage schemas will change before it is
+> labelled stable.
+
+## What is this?
+
+Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Node.js.
+
+This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
+
+It is also available as the
+[armadietto](https://www.npmjs.com/package/armadietto) NPM package.
+
+## Usage
+
+```
+docker run -d -p 8000:8000 remotestorage/armadietto:latest
+```
+
+The armadietto will run as the armadietto user (UID 6582) in the container.
+
+## Configuration
+
+The default configuration file for armadietto can be found in
+`/etc/armadietto.conf.json` and contains the following configuration:
+
+```json
+{
+  "allow_signup": true,
+  "storage_path": "/usr/share/armadietto",
+  "cache_views": true,
+  "http": {
+    "host": "0.0.0.0",
+    "port": 8000
+  },
+  "https": {
+    "enable": false,
+    "force": false,
+    "port": 4443,
+    "cert": "/etc/letsencrypt/live/example.com/cert.pem",
+    "key": "/etc/letsencrypt/live/example.com/privkey.pem"
+  },
+  "basePath": ""
+}
+```
+
+A custom configuration file can be used by mounting it in the container
+
+```
+docker run -d -v /my/custom/armadietto.conf.json:/etc/armadietto.conf.json:ro -p 8000:8000 remotestorage/armadietto:latest
+```
+
+A suitable data directory should also be mounted in the container to
+ensure data is persisted.
+
+```
+docker run -d -v /data/armadietto:/usr/share/armadietto -p 8000:8000 remotestorage/armadietto:latest
+```
+
+*Note:* The folder and its contents must be writable and readable by the UID
+6582.

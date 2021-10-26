@@ -16,7 +16,7 @@ RUN $INSTALL_COMMAND
 
 FROM alpine:latest
 
-LABEL description="Armadietto NodeJS web service (a RemoteStorageJS backend)"
+LABEL description="Armadietto Node.js web service (a remoteStorage server)"
 
 ARG CONFIG_PATH_STORAGE="/usr/share/armadietto"
 ARG PROJECT_NAME="armadietto"

@@ -5,19 +5,20 @@
     <p class="error"><%= error.message %></p>
   <% } %>
 
-  <table>
-    <tr>
-      <th scope="row"><label for="username">Username</label></th>
-      <td><input type="text" id="username" name="username" value="<%= params.username || '' %>"></td>
-    </tr>
-    <tr>
-      <th scope="row"><label for="email">Email</label></th>
-      <td><input type="text" id="email" name="email" value="<%= params.email || '' %>"></td>
-    </tr>
-    <tr>
-      <th scope="row"><label for="password">Password</label></th>
-      <td><input type="password" id="password" name="password" value=""></td>
-    </tr>
-  </table>
-  <p><input type="submit" value="Go"></p>
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input placeholder="Your choice" type="text" id="username" name="username" autofocus value="<%= params.username || '' %>">
+  </div>
+
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input placeholder="valid email" type="text" id="email" name="email" value="<%= params.email || '' %>">
+  </div>
+
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input placeholder="strong password is better" type="password" id="password" name="password" value="">
+  </div>
+
+  <button type="submit" value="Go">Create account</button>
 </form>

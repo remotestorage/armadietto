@@ -5,12 +5,12 @@
     --rs-brand-color: #ff4b03;
     --rs-txt-color: #222;
 
-    --body-bckgrd-color: #FFFFF2; 
+    --body-bckgrd-color: #fff; 
     --body-title-color: #ff4b03; 
     --body-txt-color: #223843ff;
     --default-link-color: var(--body-title-color);
     --default-link-color-hover: #f09138;
-    --extra-color: #69A2B0;
+    --extra-color: #69a2b0;
 }
 
 body {

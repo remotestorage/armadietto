@@ -1,4 +1,4 @@
-# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0eaafdf96ebb47a9ac462bcf6a7ccb06)](https://www.codacy.com/app/lesion/armadietto?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=remotestorage/armadietto/&amp;utm_campaign=Badge_Grade)
+# Armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
 
 > ### :warning: WARNING
 > Please do not consider `armadietto` production ready, this project is still
@@ -17,10 +17,11 @@ This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
 1. Ensure you have [a maintained version of Node](https://nodejs.org/en/about/releases/) installed.
 2. If you will be using Apache as a reverse proxy, ensure it is [version 2.4.49 or later](https://community.remotestorage.io/t/avoid-apache-as-a-basis-for-your-server/139).
-3. Run `npm -g i armadietto` 
+3. Run `npm -g i armadietto`
 
 
 ## Usage
+
 1. Run `armadietto -e` to see a sample configuration file.
 2. Create a configuration file at /etc/armadietto/conf (or elsewhere). See below for values and their meanings.
 3. Run `armadietto -c /etc/armadietto/conf`
@@ -54,8 +55,8 @@ that, use the `allow.signup` option:
 ```js
 var server = new Armadietto({
   store: store,
-  http:  {host: '127.0.0.1', port: 8000},
-  allow: {signup: true}
+  http:  { host: '127.0.0.1', port: 8000 },
+  allow: { signup: true }
 });
 ```
 
@@ -178,7 +179,7 @@ server.boot();
 
 (The MIT License)
 
-Copyright (c) 2012-2015 James Coglan  
+Copyright (c) 2012-2015 James Coglan
 Copyright (c) 2018 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of

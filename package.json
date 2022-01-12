@@ -15,7 +15,7 @@
   "license": "MIT",
   "version": "0.1.5",
   "engines": {
-    "node": ">=7.6.0"
+    "node": ">=12.x"
   },
   "bin": {
     "armadietto": "./bin/armadietto.js"

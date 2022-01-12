@@ -14,14 +14,18 @@ Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Nod
 This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
 ## Installation
-```
-$ npm -g i armadietto
-```
+
+1. Ensure you have [a maintained version of Node](https://nodejs.org/en/about/releases/) installed.
+2. If you will be using Apache as a reverse proxy, ensure it is [version 2.4.49 or later](https://community.remotestorage.io/t/avoid-apache-as-a-basis-for-your-server/139).
+3. Run `npm -g i armadietto` 
+
 
 ## Usage
-```
-$ armadietto -h
-```
+1. Run `armadietto -e` to see a sample configuration file.
+2. Create a configuration file at /etc/armadietto/conf (or elsewhere). See below for values and their meanings.
+3. Run `armadietto -c /etc/armadietto/conf`
+
+To see all options, run `armadietto -h`
 
 ## Use as a library
 
@@ -75,7 +79,7 @@ You should take these steps to keep your storage safe:
   owned by your armadietto user
 * Make sure the directory `path/to/storage` cannot be read, written or executed
   by anyone but this user:
-  `sudo chmod 0700 /path/to/storage && sudo chown armadietto /path/to/storage`
+  `sudo chmod 0700 /path/to/storage && sudo chown armadietto:armadietto /path/to/storage`
 
 * Do not run armadietto as root; if you need to bind to port 80 or 443 use a
   reverse proxy like nginx, Apache2, caddy, lighttpd or enable bind capability:
@@ -89,7 +93,7 @@ database and to any files containing the database access credentials.
 ### Serving over HTTPS
 
 Since RemoteStorage is a system for storing arbitrary user-specific data, and
-since it makes use of OAuth 2.0, we recommend you serve it over a secure
+since it makes use of OAuth 2.0, we strongly recommend you serve it over a secure
 connection. You can boot the server to listen for HTTP or HTTPS requests or
 both. This configuration boots the app on two ports, one secure and one
 plaintext:
@@ -113,6 +117,13 @@ const server = new Armadietto({
 
 server.boot();
 ```
+
+For example, if you use certficates from [Lets Encrypt](https://letsencrypt.org), you will set
+```javascript
+    cert: "/etc/letsencrypt/live/hostlabel/cert.pem",
+    key: "/etc/letsencrypt/live/hostlabel/privkey.pem"
+```
+where hostlabel is based on the DNS name of your server.
 
 The `force: true` line in the `https` section means the app will:
 

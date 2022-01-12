@@ -10,8 +10,8 @@
      //////.     */////,,//, 
  ,///    ///////////    ///,        (The MIT License)
   //////,   *///*   ,//////         
-      //////     //////             Copyright (c) Jakub Ner
-         ///////////                Copyright (c) remoteStorage contributors
+      //////     //////             Copyright (c) remoteStorage contributors
+         ///////////                
 
 
                   ,-------.

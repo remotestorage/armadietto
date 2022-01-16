@@ -35,7 +35,7 @@ h1 span {
   text-transform: uppercase;
 }
 .nav {
-  bottom: 1.7em;
+  top: 0.9ex;
   font-size: 0.6em;
   list-style: none;
   position: absolute;

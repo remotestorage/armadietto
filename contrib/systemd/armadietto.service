@@ -1,0 +1,22 @@
+[Unit]
+Description=Armadietto RemoteStorage server
+Requires=network.target
+After=network.target
+StartLimitIntervalSec=0
+Documentation=https://github.com/remotestorage/armadietto/
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=armadietto
+Group=armadietto
+Environment=
+ExecStartPre=
+ExecStart=/usr/bin/armadietto -c /etc/armadietto/conf
+ExecStartPost=
+ExecStop=
+ExecReload=
+
+[Install]
+WantedBy=multi-user.target

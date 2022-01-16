@@ -21,27 +21,12 @@ This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
 
 ## Usage
-1. [optional] Set a DNS A record for a new domain name, if Armadietto will appear as a different host than other websites served by your reverse proxy.
-2. Ensure your TLS certificate includes the domain name Armadietto be will visible as.
-3. [optional] Set up a name-based virtual server, if Armadietto will appear as a different host than other websites served by your reverse proxy.
-4. Configure your reverse proxy, and have it set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header. For Apache, the directives are `ProxyPass`, `ProxyPassReverse`, and `RequestHeader`. For Apache, a name-based virtual server and reverse proxy will resemble:
-```
-<VirtualHost *:443>
-ServerName storage.example.com
-DocumentRoot /var/www/remotestorage
-SSLEngine on
-SSLCertificateFile      /etc/letsencrypt/live/example.com/fullchain.pem
-SSLCertificateKeyFile   /etc/letsencrypt/live/example.com/privkey.pem
-SSLCertificateChainFile /etc/letsencrypt/live/example.com/fullchain.pem
 
-ProxyPass        "/"  "http://127.0.0.1:8000/" connectiontimeout=5 timeout=30
-ProxyPassReverse "/"  "http://127.0.0.1:8000/"
-RequestHeader set x-forwarded-proto "https"
-</VirtualHost>
-```
-5. Run `armadietto -e` to see a sample configuration file.
-6. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See below for values and their meanings.
-7. Run `armadietto -c /etc/armadietto/conf`
+See the `notes` directory for configuring a reverse proxy and other recipes.
+
+1. Run `armadietto -e` to see a sample configuration file.
+2. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See below for values and their meanings.
+3. Run `armadietto -c /etc/armadietto/conf`
 
 To see all options, run `armadietto -h`. Set the environment `DEBUG` to enable logging.
 
@@ -116,6 +101,7 @@ connection. You can boot the server to listen for HTTP or HTTPS requests or
 both.  
 If armadietto is behind a reverse proxy on the same machine, the proxy can handle TLS, 
 so armadietto only needs to set `enable` and `force` in the https configuration.
+The reverse proxy must set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header.
 
 This configuration boots the app on two ports, one secure and one
 plaintext:
@@ -140,7 +126,7 @@ const server = new Armadietto({
 server.boot();
 ```
 
-For example, if you use certficates from [Lets Encrypt](https://letsencrypt.org), you will set
+For example, if you use certificates from [Lets Encrypt](https://letsencrypt.org), you will set
 ```javascript
     cert: "/etc/letsencrypt/live/domainname/cert.pem",
     key: "/etc/letsencrypt/live/domainname/privkey.pem"

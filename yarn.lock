@@ -805,10 +805,10 @@
   dependencies:
     "check-error" "^1.0.2"
 
-"chai-http@^4.2.0":
-  "integrity" "sha512-5j9LC1pl9jaPanux+wDm9D/V6R2xLfpixsRQhoJHxCR0E5KaiT0aL4544pVtYXN/wTUVSDTmwye5mCXkO/8b3w=="
-  "resolved" "https://registry.npmjs.org/chai-http/-/chai-http-4.2.0.tgz"
-  "version" "4.2.0"
+"chai-http@^4.3.0":
+  "integrity" "sha512-zFTxlN7HLMv+7+SPXZdkd5wUlK+KxH6Q7bIEMiEx0FK3zuuMqL7cwICAQ0V1+yYRozBburYuxN1qZstgHpFZQg=="
+  "resolved" "https://registry.npmjs.org/chai-http/-/chai-http-4.3.0.tgz"
+  "version" "4.3.0"
   dependencies:
     "@types/chai" "4"
     "@types/superagent" "^3.8.3"
@@ -823,16 +823,16 @@
   "resolved" "https://registry.npmjs.org/chai-spies/-/chai-spies-1.0.0.tgz"
   "version" "1.0.0"
 
-"chai@*", "chai@^4.2.0", "chai@>= 2.1.2 < 5":
-  "integrity" "sha512-XQU3bhBukrOsQCuwZndwGcCVQHyZi53fQ6Ys1Fym7E4olpIqqZZhhoFJoaKVvV17lWQoXYwgWN2nF5crA8J2jw=="
-  "resolved" "https://registry.npmjs.org/chai/-/chai-4.2.0.tgz"
-  "version" "4.2.0"
+"chai@*", "chai@^4.3.4", "chai@>= 2.1.2 < 5":
+  "integrity" "sha512-yS5H68VYOCtN1cjfwumDSuzn/9c+yza4f3reKXlE5rUg7SFcCEy90gJvydNgOYtblyf4Zi6jIWRnXOgErta0KA=="
+  "resolved" "https://registry.npmjs.org/chai/-/chai-4.3.4.tgz"
+  "version" "4.3.4"
   dependencies:
     "assertion-error" "^1.1.0"
     "check-error" "^1.0.2"
     "deep-eql" "^3.0.1"
     "get-func-name" "^2.0.0"
-    "pathval" "^1.1.0"
+    "pathval" "^1.1.1"
     "type-detect" "^4.0.5"
 
 "chalk@^2.0.0", "chalk@^2.0.1", "chalk@^2.1.0", "chalk@^2.4.2":
@@ -3673,10 +3673,10 @@
   dependencies:
     "pify" "^3.0.0"
 
-"pathval@^1.1.0":
-  "integrity" "sha1-uULm1L3mUwBe9rcTYd74cn0GReA="
-  "resolved" "https://registry.npmjs.org/pathval/-/pathval-1.1.0.tgz"
-  "version" "1.1.0"
+"pathval@^1.1.1":
+  "integrity" "sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ=="
+  "resolved" "https://registry.npmjs.org/pathval/-/pathval-1.1.1.tgz"
+  "version" "1.1.1"
 
 "performance-now@^2.1.0":
   "integrity" "sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns="

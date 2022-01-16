@@ -15,7 +15,7 @@ const remoteStorageServer = {
     const ArgumentParser = require('argparse').ArgumentParser;
     const version = require(path.join(__dirname, '/../package.json')).version;
     const parser = new ArgumentParser({
-      version: version,
+      version,
       addHelp: true,
       description: 'NodeJS remoteStorage server / ' + version
     });
@@ -64,13 +64,15 @@ const remoteStorageServer = {
         host: conf.http.host,
         port: conf.http.port
       },
-      https: conf.https ? {
-        host: conf.https.host,
-        port: conf.https.enable && conf.https.port,
-        force: conf.https.force,
-        cert: conf.https.cert,
-        key: conf.https.key
-      } : {},
+      https: conf.https
+        ? {
+            host: conf.https.host,
+            port: conf.https.enable && conf.https.port,
+            force: conf.https.force,
+            cert: conf.https.cert,
+            key: conf.https.key
+          }
+        : {},
       allow: {
         signup: conf.allow_signup || false
       },

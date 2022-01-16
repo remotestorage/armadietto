@@ -26,7 +26,7 @@ const post = async (path, params) => {
   return ret;
 };
 
-let store = {
+const store = {
   authorize (clientId, username, permissions) {
     return 'a_token';
   },

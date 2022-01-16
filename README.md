@@ -22,11 +22,13 @@ This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
 ## Usage
 
+See the `notes` directory for configuring a reverse proxy and other recipes.
+
 1. Run `armadietto -e` to see a sample configuration file.
-2. Create a configuration file at /etc/armadietto/conf (or elsewhere). See below for values and their meanings.
+2. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See below for values and their meanings.
 3. Run `armadietto -c /etc/armadietto/conf`
 
-To see all options, run `armadietto -h`
+To see all options, run `armadietto -h`. Set the environment `DEBUG` to enable logging.
 
 ## Use as a library
 
@@ -96,7 +98,12 @@ database and to any files containing the database access credentials.
 Since RemoteStorage is a system for storing arbitrary user-specific data, and
 since it makes use of OAuth 2.0, we strongly recommend you serve it over a secure
 connection. You can boot the server to listen for HTTP or HTTPS requests or
-both. This configuration boots the app on two ports, one secure and one
+both.  
+If armadietto is behind a reverse proxy on the same machine, the proxy can handle TLS, 
+so armadietto only needs to set `enable` and `force` in the https configuration.
+The reverse proxy must set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header.
+
+This configuration boots the app on two ports, one secure and one
 plaintext:
 
 ```js
@@ -119,12 +126,12 @@ const server = new Armadietto({
 server.boot();
 ```
 
-For example, if you use certficates from [Lets Encrypt](https://letsencrypt.org), you will set
+For example, if you use certificates from [Lets Encrypt](https://letsencrypt.org), you will set
 ```javascript
-    cert: "/etc/letsencrypt/live/hostlabel/cert.pem",
-    key: "/etc/letsencrypt/live/hostlabel/privkey.pem"
+    cert: "/etc/letsencrypt/live/domainname/cert.pem",
+    key: "/etc/letsencrypt/live/domainname/privkey.pem"
 ```
-where hostlabel is based on the DNS name of your server.
+where domainname is (usually) the DNS name of your server.
 
 The `force: true` line in the `https` section means the app will:
 
@@ -174,6 +181,10 @@ const server = new Armadietto({
 
 server.boot();
 ```
+
+### Debugging an installation
+
+Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf`
 
 ## License
 

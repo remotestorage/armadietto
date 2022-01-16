@@ -23,12 +23,11 @@
   "main": "./lib/armadietto.js",
   "dependencies": {
     "argparse": "^1.0.10",
-    "ejs": "^2.6.1",
+    "ejs": "^3.1.6",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4"
   },
   "devDependencies": {
-    "api-benchmark": "^0.5.0",
     "bdd-lazy-var": "^2.5.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",

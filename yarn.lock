@@ -654,14 +654,10 @@
   dependencies:
     "tweetnacl" "^0.14.3"
 
-"bdd-lazy-var@^2.5.1":
-  "integrity" "sha512-SPF43iKRF2Q1QlzsTQKbNoCk/byBeuirEytFnxCpIgNrWGZigunboyZdh2mFjfWcKsl2jN38Ie7E+OVKzPonmg=="
-  "resolved" "https://registry.npmjs.org/bdd-lazy-var/-/bdd-lazy-var-2.5.1.tgz"
-  "version" "2.5.1"
-  optionalDependencies:
-    "jasmine-core" "^2.0.0 || ^3.0.0"
-    "jest" "^20.0.0 || ^22.0.0 || ^23.0.0 || ^24.0.0"
-    "mocha" "^4.0.0 || ^3.0.0 || ^2.3.0 || ^5.0.0 || ^6.0.0"
+"bdd-lazy-var@^2.6.1":
+  "integrity" "sha512-X3ADwcFji/IHIrYJhTTpaiWhoOx4pl4whdAx1dmvdeUPsMUb7fVYFvf/Q33VEAEAVkEwi5rgNSZ0Y9oOVeQV+A=="
+  "resolved" "https://registry.npmjs.org/bdd-lazy-var/-/bdd-lazy-var-2.6.1.tgz"
+  "version" "2.6.1"
 
 "binary-extensions@^2.0.0":
   "integrity" "sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA=="
@@ -2458,7 +2454,7 @@
     "filelist" "^1.0.1"
     "minimatch" "^3.0.4"
 
-"jasmine-core@^2.0.0 || ^3.0.0":
+"jasmine-core@>=2":
   "integrity" "sha512-3/xSmG/d35hf80BEN66Y6g9Ca5l/Isdeg/j6zvbTYlTzeKinzmaTM4p9am5kYqOmE05D7s1t8FGjzdSnbUbceA=="
   "resolved" "https://registry.npmjs.org/jasmine-core/-/jasmine-core-3.3.0.tgz"
   "version" "3.3.0"
@@ -2805,7 +2801,7 @@
     "merge-stream" "^1.0.1"
     "supports-color" "^6.1.0"
 
-"jest@^20.0.0 || ^22.0.0 || ^23.0.0 || ^24.0.0":
+"jest@>=20":
   "integrity" "sha512-lxL+Fq5/RH7inxxmfS2aZLCf8MsS+YCUBfeiNO6BWz/MmjhDGaIEA/2bzEf9q4Q0X+mtFHiinHFvQ0u+RvW/qQ=="
   "resolved" "https://registry.npmjs.org/jest/-/jest-24.5.0.tgz"
   "version" "24.5.0"
@@ -3279,7 +3275,7 @@
   dependencies:
     "minimist" "0.0.8"
 
-"mocha@^4.0.0 || ^3.0.0 || ^2.3.0 || ^5.0.0 || ^6.0.0", "mocha@^5.1.1":
+"mocha@^5.1.1", "mocha@>=2.3":
   "integrity" "sha512-2IUgKDhc3J7Uug+FxMXuqIyYzH7gJjXECKe/w43IGgQHTSj3InJi+yAA7T24L9bQMRKiUEHxEX37G5JpVUGLcQ=="
   "resolved" "https://registry.npmjs.org/mocha/-/mocha-5.2.0.tgz"
   "version" "5.2.0"

@@ -520,7 +520,7 @@
   dependencies:
     "default-require-extensions" "^2.0.0"
 
-"argparse@^1.0.10", "argparse@^1.0.7":
+"argparse@^1.0.7":
   "integrity" "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg=="
   "resolved" "https://registry.npmjs.org/argparse/-/argparse-1.0.10.tgz"
   "version" "1.0.10"

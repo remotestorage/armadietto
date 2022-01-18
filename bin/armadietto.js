@@ -15,21 +15,20 @@ const remoteStorageServer = {
     const ArgumentParser = require('argparse').ArgumentParser;
     const version = require(path.join(__dirname, '/../package.json')).version;
     const parser = new ArgumentParser({
-      version: version,
-      addHelp: true,
+      add_help: true,
       description: 'NodeJS remoteStorage server / ' + version
     });
 
-    parser.addArgument(['-c', '--conf'], {
+    parser.add_argument('-c', '--conf', {
       help: 'Path to configuration'
     });
 
-    parser.addArgument(['-e', '--exampleConf'], {
+    parser.add_argument('-e', '--exampleConf', {
       help: 'Print configuration example',
-      action: 'storeTrue'
+      action: 'store_true'
     });
 
-    return parser.parseArgs();
+    return parser.parse_args();
   },
 
   init () {
@@ -64,13 +63,15 @@ const remoteStorageServer = {
         host: conf.http.host,
         port: conf.http.port
       },
-      https: conf.https ? {
-        host: conf.https.host,
-        port: conf.https.enable && conf.https.port,
-        force: conf.https.force,
-        cert: conf.https.cert,
-        key: conf.https.key
-      } : {},
+      https: conf.https
+        ? {
+            host: conf.https.host,
+            port: conf.https.enable && conf.https.port,
+            force: conf.https.force,
+            cert: conf.https.cert,
+            key: conf.https.key
+          }
+        : {},
       allow: {
         signup: conf.allow_signup || false
       },

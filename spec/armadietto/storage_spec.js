@@ -12,7 +12,7 @@ chai.use(chaiAsPromised);
 chai.use(spies);
 
 // const req = chai.request('http://localhost:4568');
-let store = {
+const store = {
   get (username, path) {
     return { item: null, versionMatch: true };
   },
@@ -95,7 +95,7 @@ describe('Storage', () => {
         sandbox.on(store, ['get']);
       });
 
-      let get = async (path) => {
+      const get = async (path) => {
         const ret = await req.get(path)
           .set('Authorization', 'Bearer a_token').send();
         return ret;
@@ -184,7 +184,7 @@ describe('Storage', () => {
         sandbox.on(store, ['get']);
       });
 
-      let get = async (path) => {
+      const get = async (path) => {
         const ret = await req.get(path).buffer(true)
           .set('Authorization', 'Bearer bad_token').send();
         return ret;
@@ -220,7 +220,7 @@ describe('Storage', () => {
       value: 'a value'
     };
 
-    let get = async (path) => {
+    const get = async (path) => {
       const ret = await req.get(path).buffer(true)
         .set('Authorization', 'Bearer a_token').send();
       return ret;
@@ -254,10 +254,14 @@ describe('Storage', () => {
     describe('when the store returns a directory listing', () => {
       before(() => {
         store.get = () => {
-          return { item: { items: [
-            { 'bla': { ETag: '1234544444' } },
-            { 'bar/': { ETag: '12345888888' } }],
-          ETag: '12345888888' } };
+          return {
+            item: {
+              items: [
+                { bla: { ETag: '1234544444' } },
+                { 'bar/': { ETag: '12345888888' } }],
+              ETag: '12345888888'
+            }
+          };
         };
       });
 
@@ -286,7 +290,8 @@ describe('Storage', () => {
         expect(res).to.have.header('ETag', '"12345888888"');
         expect(res.body).to.be.deep.equal({
           '@context': 'http://remotestorage.io/spec/folder-description',
-          items: {} });
+          items: {}
+        });
       });
     });
 
@@ -323,7 +328,7 @@ describe('Storage', () => {
       store.put = () => ({ created: true });
     });
 
-    let put = async (path, params) => {
+    const put = async (path, params) => {
       const ret = await req.put(path).buffer(true).type('text/plain')
         .set('Authorization', 'Bearer a_token').send(params);
       return ret;
@@ -389,7 +394,7 @@ describe('Storage', () => {
     });
 
     describe('when an invalid access token is used', () => {
-      let put = async (path, params) => {
+      const put = async (path, params) => {
         const ret = await req.put(path).buffer(true)
           .set('Authorization', 'Bearer bad_token').send(params);
         return ret;
@@ -406,7 +411,7 @@ describe('Storage', () => {
         store.put = () => ({ created: true, modified: 1347016875231 });
       });
 
-      let put = async (path, params) => {
+      const put = async (path, params) => {
         const ret = await req.put(path).buffer(true)
           .set('Authorization', 'Bearer a_token').send(params);
         return ret;
@@ -465,7 +470,7 @@ describe('Storage', () => {
 
   describe('DELETE', () => {
     store.delete = () => ({ deleted: true });
-    let del = (path) => {
+    const del = (path) => {
       return req.delete(path).buffer(true)
         .set('Authorization', 'Bearer a_token');
     };

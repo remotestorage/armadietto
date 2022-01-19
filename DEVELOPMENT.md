@@ -10,7 +10,7 @@
 ## Development
 
 * Run `npm test` to run the automated tests. 
-* Run `npm dev` to start a server on your local machine.
+* Run `npm run dev` to start a server on your local machine, and have it automatically restart when you update a source code file in `/lib`.
 
 Set the environment `DEBUG` to enable logging.
 

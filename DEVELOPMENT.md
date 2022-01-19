@@ -12,7 +12,7 @@
 * Run `npm test` to run the automated tests. 
 * Run `npm run dev` to start a server on your local machine, and have it automatically restart when you update a source code file in `/lib`.
 
-Set the environment `DEBUG` to enable logging.
+Set the environment `DEBUG` to enable verbose logging of HTTP requests.
 
 Add automated tests for any new functionality. For bug fixes, start by writing an automated test that fails under the buggy code, but will pass when you've written a fix. Using TDD is not required, but will help you write better code.
 

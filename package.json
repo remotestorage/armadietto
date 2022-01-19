@@ -34,7 +34,7 @@
     "chai-http": "^4.3.0",
     "chai-spies": "^1.0.0",
     "eslint": "^8.7.0",
-    "eslint-config-standard": "github:standard/eslint-config-standard#v17.0.0-0",
+    "eslint-config-standard": "^17.0.0-0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-n": "^14.0.0",
     "eslint-plugin-node": "^11.1.0",

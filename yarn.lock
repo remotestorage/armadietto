@@ -1510,8 +1510,9 @@
   optionalDependencies:
     "source-map" "~0.6.1"
 
-"eslint-config-standard@github:standard/eslint-config-standard#v17.0.0-0":
-  "resolved" "git+ssh://git@github.com/standard/eslint-config-standard.git#6adbf5ffdf4d969ad935e9980ecc7166b959ee01"
+"eslint-config-standard@^17.0.0-0":
+  "integrity" "sha512-sf9udec8fkLTnH82SmhZQ3E31e4eJaMW09Mt9fbN3OccXFtvSSbGrltpQgGFVooGHoIdiMzDfp6ZNFd+I6Ob+w=="
+  "resolved" "https://registry.npmjs.org/eslint-config-standard/-/eslint-config-standard-17.0.0-0.tgz"
   "version" "17.0.0-0"
 
 "eslint-import-resolver-node@^0.3.6":

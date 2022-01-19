@@ -65,7 +65,7 @@ var server = new Armadietto({
 If you navigate to `http://localhost:8000/` you should then see a sign-up link
 in the navigation.
 
-### Storage security
+## Storage security
 
 In production, we recommend that you restrict access to the files managed by
 your armadietto server as much as possible. This is particularly true if you host
@@ -93,7 +93,7 @@ You should take these steps to keep your storage safe:
 If you're using the Redis backend, apply similar access restrictions to the
 database and to any files containing the database access credentials.
 
-### Serving over HTTPS
+## Serving over HTTPS
 
 Since RemoteStorage is a system for storing arbitrary user-specific data, and
 since it makes use of OAuth 2.0, we strongly recommend you serve it over a secure
@@ -127,7 +127,7 @@ server.boot();
 ```
 
 For example, if you use certificates from [Lets Encrypt](https://letsencrypt.org), you will set
-```javascript
+```
     cert: "/etc/letsencrypt/live/domainname/cert.pem",
     key: "/etc/letsencrypt/live/domainname/privkey.pem"
 ```
@@ -153,7 +153,7 @@ setup, you can set `https.force = true` but omit `https.port`; this means
 armadietto itself will not accept encrypted connections but will apply the above
 behaviour to enforce secure connections.
 
-### Storage backends
+## Storage backends
 
 armadietto supports pluggable storage backends, and comes with a file system
 implementation out of the box (redis storage backend is on the way in
@@ -182,9 +182,13 @@ const server = new Armadietto({
 server.boot();
 ```
 
-### Debugging an installation
+## Debugging an installation
 
 Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf`
+
+## Development
+
+See `DEVELOPMENT.md`
 
 ## License
 

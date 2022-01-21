@@ -166,7 +166,7 @@ header.topbar {
 header.topbar h1 {
 	display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: .25rem;
   padding: 0 1rem;
 	margin: 0;

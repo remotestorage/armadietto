@@ -296,23 +296,24 @@ section.hero header + p {
   line-height: 1.2;
 }
 
+@media only screen and (max-width: 600px) {
+  section.hero svg {
+    width: auto;
+    height: 120px;
+  }
 
-.rs-blurb figcaption {
-  color: var(--rs-bckgrd-color);
-  font-size: 1.75rem;
-  font-weight: 700;
-}
+  section.hero header {
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
 
-.rs-blurb img {
-	height: 3rem;
-}
+  section.hero h2 {
+    font-size: 1.5rem;
+  }
 
-.rs-blurb > span {
-  border-radius: .25rem;
-  margin-top: -.6rem;
-  color: var(--arma-extra-color, currentColor);
-  font-size: .875rem;
-  line-height: 1.4;  
+  section.hero header p {
+    line-height: 1.5;
+  }
 }
 
 /* BODY FOOTER */

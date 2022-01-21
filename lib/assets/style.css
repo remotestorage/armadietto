@@ -6,7 +6,7 @@
   --default-input-height: 3rem;
 
   /* COLORS */
-  
+
   /*  remoteStorage Colors */
   --rs-orange-color: #ff4b03;
   --rs-black-color: #222;
@@ -20,8 +20,8 @@
   --arma-orangered-color: #f07b0d;
 
   /* Default Colors */
-  --default-error-color: #aa2e2e; 
-  
+  --default-error-color: #aa2e2e;
+
   --github-sprite-url: url("./sprite.svg#icon-github-dark");
 }
 
@@ -29,7 +29,7 @@
   --rs-brand-color: var(--rs-orange-color);
   --rs-frgrd-color: var(--rs-white-color);
   --rs-bckgrd-color: var(--rs-black-color);
-  
+
   --arma-bckgrd-color:  var(--arma-whitesmoke-color);
   --arma-title-color: #0d0608;
   --arma-text-color: var(--arma-black-color);
@@ -50,7 +50,7 @@
   --default-cancel-color: #121314;
   --default-cancel-reverse-color: var(--arma-whitesmoke-color);
   --default-cancel-hover-color: var(--arma-orangered-color);
-  
+
   --default-success-color: #057013;
   --arma-focus-bckgrd-color: var(--arma-extra-color);
   --arma-focus-border-color: var(--arma-extra-color);
@@ -70,7 +70,7 @@
     --rs-brand-color: var(--rs-orange-color);
     --rs-frgrd-color: var(--rs-black-color);
     --rs-bckgrd-color: var(--rs-white-color);
-    
+
     --arma-bckgrd-color:  var(--arma-black-color);
     --arma-title-color: var(--arma-whitesmoke-color); 
     --arma-text-color: var(--arma-wheat-color);
@@ -121,7 +121,7 @@ a {
 }
 
 a:focus {
-  outline: thin dotted; 
+  outline: thin dotted;
 }
 
 p > a {
@@ -140,7 +140,6 @@ p > a:hover {
   border-color: var(--arma-link-hover-bckgrd-color);
   color: var(--arma-link-color-hover);
   text-decoration: var(--default-link-hover-decoration, none);
-  
 }
 
 ul,
@@ -249,7 +248,7 @@ header.topbar .signup::before {
   content: "\270E";
   font-size: 1.5em;
   transform: rotate(12deg);
-} 
+}
 
 header.topbar .signup:hover,
 header.topbar .signup:focus {
@@ -419,9 +418,9 @@ main .message {
 /* FORMS */
 
 form {
-  display: flex; 
+  display: flex;
   flex-direction: column;
-  align-items: flex-start; 
+  align-items: flex-start;
   gap: 1rem;
   width: 22rem;
   max-width: calc(100vw - 2rem);
@@ -445,23 +444,23 @@ label {
 input {
   display: flex;
   place-content: center;
-  box-sizing: border-box; 
+  box-sizing: border-box;
   width: 100%;
-  height: var(--default-input-height); 
+  height: var(--default-input-height);
   border: none;
   border-bottom: .125rem dotted var(--arma-extra-color);
   border-top: .125rem solid transparent;
   background-color: var(--arma-bckgrd-color);
   color: var(--arma-text-color);
-  font-size: 1.25rem; 
+  font-size: 1.25rem;
   font-weight: 600;
-  transition: all .3s linear; 
+  transition: all .3s linear;
   -webkit-appearance: none;
   filter: unset;
 }
 
 input:focus {
-  border-bottom-style: solid !important; 
+  border-bottom-style: solid !important;
   padding-left: .75rem;
   outline: 0;
   border-top: 2pt dotted var(--arma-focus-border-color);
@@ -501,24 +500,24 @@ button[type="submit"] {
   min-width: 7rem;
   min-height: 3rem;
   padding: .5rem 1.5rem;
-  margin: auto; 
-  border-radius: 1.5rem; 
+  margin: auto;
+  border-radius: 1.5rem;
   border: none;
-  background-color: var(--arma-brand-color); 
-  color: var(--arma-btn-txt-color); 
+  background-color: var(--arma-brand-color);
+  color: var(--arma-btn-txt-color);
   font-family: 'Outfit', var(--font-fallback);
   font-size: 1.3rem;
-  margin-left: auto; 
+  margin-left: auto;
   font-weight: 700;
   line-height: 1.4;
-  transition: all .3s ease; 
+  transition: all .3s ease;
   cursor: pointer;
-  -webkit-appearance: none; 
+  -webkit-appearance: none;
 }
 
 button:hover {
-  background-color: var(--arma-title-color); 
-  color: var(--arma-bckgrd-color); 
+  background-color: var(--arma-title-color);
+  color: var(--arma-bckgrd-color);
 }
 
 button[name="signup"]:focus {
@@ -561,9 +560,9 @@ button[name="signup"]:focus {
 }
 
 .oauth-form {
-  display: flex; 
+  display: flex;
   flex-direction: column;
-  align-items: flex-start; 
+  align-items: flex-start;
   gap: 1rem;
   width: 28rem;
   max-width: calc(100vw - 2rem);
@@ -756,7 +755,7 @@ button[name="deny"]:focus {
 
 /* FONTS */
 
-@font-face { 
+@font-face {
   font-family: "Outfit";
   font-weight: 100 900;
   font-style: normal;

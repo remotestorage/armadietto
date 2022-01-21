@@ -175,6 +175,12 @@ header.topbar h1 {
 	line-height: 1;
 }
 
+@media only screen and (max-width: 600px) {
+  header.topbar h1 {
+    padding-left: 0;
+  }
+}
+
 header.topbar .subtitle {
   display: flex;
   align-items: center;
@@ -290,33 +296,6 @@ section.hero header + p {
   line-height: 1.2;
 }
 
-/* RS BLURB */
-
-body > footer {
-  display: grid;
-  place-content: center;
-  margin-top: 2rem;
-}
-
-.rs-blurb {
-	display: flex;
-	align-items: center;
-	gap: 1rem 0;
-	margin: auto;
-	padding: 1.2rem 2.4rem;
-	color: var(--rs-brand-color);
-	border-radius: 4rem;
-	flex-wrap: wrap;
-	max-width: 19rem;
-	justify-content: center;
-}
-
-.rs-blurb > figure {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  margin: 0;
-}
 
 .rs-blurb figcaption {
   color: var(--rs-bckgrd-color);

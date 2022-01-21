@@ -1,5 +1,5 @@
-<h2>Sign up</h2>
-
+<h2>Sign up </h2>
+  
 <form method="post" action="<%= basePath %>/signup">
   <% if (error) { %>
     <p class="error"><%= error.message %></p>
@@ -7,18 +7,33 @@
 
   <div class="form-group">
     <label for="username">Username</label>
-    <input placeholder="Your choice" type="text" id="username" name="username" autofocus value="<%= params.username || '' %>">
+    <input placeholder="Your choice" type="text" id="username" name="username" autofocus value="<%= params.username || '' %>" required>
   </div>
 
   <div class="form-group">
     <label for="email">Email</label>
-    <input placeholder="valid email" type="text" id="email" name="email" value="<%= params.email || '' %>">
+    <input placeholder="valid email" type="text" id="email" name="email" value="<%= params.email || '' %>" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
   </div>
 
   <div class="form-group">
     <label for="password">Password</label>
-    <input placeholder="strong password is better" type="password" id="password" name="password" value="">
+    <input placeholder="Strong password's better" title="Eight or more characters" type="password" id="password" name="password" value="" required pattern=".{8,}">
+    <button id="togglePassword" class="icon-eye icon-slash" type="button" tabindex="0" alt="on/off" title="show/hide password"></button>
   </div>
 
-  <button type="submit" value="Go">Create account</button>
+  <button type="submit" name="signup" value="Go">Create account</button>
 </form>
+
+<script>
+  const togglePassword = document.querySelector("#togglePassword");
+  const password = document.querySelector("#password");
+
+  togglePassword.addEventListener("click", function () {
+      // toggle the type attribute
+      const type = password.getAttribute("type") === "password" ? "text" : "password";
+      password.setAttribute("type", type);
+      
+      // toggle the icon
+      this.classList.toggle("icon-slash");
+  });
+</script>

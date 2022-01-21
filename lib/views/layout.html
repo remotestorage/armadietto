@@ -7,65 +7,83 @@
 
     <link rel="icon" type="image/svg+xml" href="<%= basePath %>/assets/favicon.svg">
 
-    <title><%= title %></title>
+    <title><%- title || 'Welcome' %></title>
 
     <link rel="stylesheet" href="<%= basePath %>/assets/style.css">
   </head>
   <body>
 
-    <header class="topbar">
+    <header class="topbar" role="banner">
       <h1>
         <a class="server-name" href="<%= basePath %>/" title="home"><%= host %></a>
         <span class="subtitle">
           run with
           <span class="logo">
-            <svg height="250" version="1.1" viewBox="0 0 739 853" xmlns="http://www.w3.org/2000/svg">
+            <svg role="img" height="250" version="1.1" viewBox="0 0 739 853" xmlns="http://www.w3.org/2000/svg">
+              <title>armadietto logo</title>
               <path d="m370.98-2.0508-369.81 213.2 86.396 45.572 283.42-161.13 283.82 163.86v66.385l-285.3-164.72-368.38 212.69v265.38l368.38 212.69 368.38-212.69v-166.32l1.4844-0.85742v-261.38zm-1.4844 260.82 283.82 163.86v1.4082l-282.34 163.01-283.78-165.29zm-283.82 261.21 285.3 164.72 282.34-163.01v68.672l-283.82 163.86-283.82-163.86z"/>
-              <path d="m363.97 335.65 126.76 73.863-123.09 70.617 123.08-70.616zm3.675 144.48 123.09-70.617-126.76-73.864-123.54 70.876zm30.959-90.55 26.803 24.798-7.6126 4.3675c-17.993-1.7221-40.107-3.8837-59.896-5.8122-6.9104-6.3466-13.833-12.691-20.701-19.044l-5.1269 2.9414 20.779 18.999c19.914 1.9631 39.83 3.9171 59.741 5.9012l-20.354 11.677c-19.966-1.9302-39.933-3.859-59.896-5.8122-9.0103-8.2747-18.026-16.548-26.919-24.84l7.6136-4.3681 26.996 24.795 45.831 4.5184 5.2045-2.9859c-15.326-1.4944-30.654-2.9752-45.986-4.4294-7.94-7.3609-17.679-16.43-26.919-24.84l20.43-11.721c8.976 8.2682 17.987 16.531 26.996 24.795l45.716 4.4763c-6.7858-6.3256-20.469-18.961-20.469-18.961l-36.649-3.5805-6.2188-5.7952 50.636 4.9188z" fill="#ff4b03" />
             </svg> 
             Armadietto
           </span>
         </span>
-        
       </h1>
-      <% if (signup) { %>
-        <nav>
-          <ul>
+      
+      <nav role="navigation">
+        <ul>
+          <% if (signup) { %>
             <li class="login">
               <a class="signup" href="<%= basePath %>/signup">Sign up</a>
             </li>
-          </ul>
-        </nav>
-      <% } %>
+          <% } %>
+          <li>
+            <button id="switch" onclick="toggleTheme()">Switch</button>
+          </li>
+        </ul>
+      </nav>
    </header>
 
-    <main class="content">
+    <main class="content" role="main">
 
       <%- body %>
 
     </main>
 
-    <footer>
-
-        <figure>
-          <img src="<%= basePath %>/assets/icon.svg" role="presentation">
-          <figcaption>
-            <h1>remoteStorage</h1>
-            Open protocol for per-user storage on the Web</span> <br> 
-            <a title="Discover per-user services from a 'user@host' identifier">Webfinger</a> + 
-            <a title="Give an app access to certain parts of your storage account">OAuth</a> + 
-            <a title="Cross-origin AJAX requests">CORS</a> + 
-            <a title="GET, PUT and DELETE files in folders on your storage">REST</a>
-          </figcaption>
-
-        </figure>
-
+    <footer role="contentinfo">
+      <%  if ( title == 'Armadietto') { %>
+        <a class="rs-blurb" href="https://remotestorage.io" target="_blank" >
+          <figure>
+            <img src="<%= basePath %>/assets/sprite.svg#icon-rs" role="img" aria-hidden="true" alt="">
+            <figcaption>
+              remoteStorage
+            </figcaption>
+          </figure>
+          <span>Open protocol for per-user storage on the Web</span>
+        </a>
         <p>
           remoteStorage is an open protocol developed through the <a href="https://unhosted.org/">Unhosted</a> project. 
           It lets people tell web applications where to store their personal data.
         </p>
+      <%  } %>
     </footer>
 
-  </body>
+    <script>
+      // function to set a given theme/color-scheme
+      function setTheme(themeName) {
+          localStorage.setItem('theme', themeName);
+          document.documentElement.setAttribute('data-theme', themeName);
+          document.getElementById('switch').setAttribute('class', themeName);
+      }
 
+      // function to toggle between light and dark theme
+      function toggleTheme() {
+          localStorage.getItem('theme') === 'dark' ? setTheme('light') : setTheme('dark');
+      }
+
+      // Immediately invoked function to set the theme on initial load
+      (function () {
+        localStorage.getItem('theme') === 'dark' ? setTheme('dark') : setTheme('light');
+      })();
+    </script>
+
+  </body>
 </html>

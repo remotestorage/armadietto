@@ -26,13 +26,34 @@
     <input type="hidden" name="username" value="<%= username %>">
 
     <div class="form-group">
-      <label for="password">Enter the <%= username %> account's password</label>
+      <label for="password">Enter the <em><%= username %></em> account's password</label>
       <input type="password" name="password" id="password" autofocus placeholder="Password">
+      <button id="togglePassword" class="icon-eye icon-slash" type="button" tabindex="0" alt="on/off" title="show/hide password"></button>
     </div>
 
-    <fieldset class="actions">
+    <div class="actions">
       <button type="submit" name="allow" value="Allow">Allow</button>
       <button type="submit" name="deny" value="Deny">Deny</button>
-    </fieldset>
+    </div>
   </form>
 </div>
+
+<script>
+  const togglePassword = document.querySelector("#togglePassword");
+  const password = document.querySelector("#password");
+
+  togglePassword.addEventListener("click", function () {
+      // toggle the type attribute
+      const type = password.getAttribute("type") === "password" ? "text" : "password";
+      password.setAttribute("type", type);
+      
+      // toggle the icon
+      this.classList.toggle("icon-slash");
+  });
+
+  // prevent form submit
+  const form = document.querySelector("form");
+  form.addEventListener('submit', function (e) {
+      e.preventDefault();
+  });
+</script>

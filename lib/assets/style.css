@@ -1,17 +1,106 @@
 :root {
   --font-fallback: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
     "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-sans;
-    
-    --rs-brand-color: #ff4b03;
-    --rs-txt-color: #222;
 
-    --body-bckgrd-color: #fff; 
-    --body-title-color: #ff4b03; 
-    --body-txt-color: #223843ff;
-    --default-link-color: var(--body-title-color);
-    --default-link-color-hover: #f09138;
-    --extra-color: #69a2b0;
+  --default-icon-size: 2rem;
+  --default-input-height: 3rem;
+
+  /* COLORS */
+  
+  /*  remoteStorage Colors */
+  --rs-orange-color: #ff4b03;
+  --rs-black-color: #222;
+  --rs-white-color: #fefefe;
+
+  /*  Armadietto colors */
+  --arma-black-color:  #171614;
+  --arma-whitesmoke-color: #e6e2da;
+  --arma-wheat-color: #c7b9bd;
+  --arma-orange-color: #f4a903;
+  --arma-orangered-color: #f07b0d;
+
+  /* Default Colors */
+  --default-error-color: #aa2e2e; 
+  
+  --github-sprite-url: url("./sprite.svg#icon-github-dark");
 }
+
+:root[data-theme="light"] {
+  --rs-brand-color: var(--rs-orange-color);
+  --rs-frgrd-color: var(--rs-white-color);
+  --rs-bckgrd-color: var(--rs-black-color);
+  
+  --arma-bckgrd-color:  var(--arma-whitesmoke-color);
+  --arma-title-color: #0d0608;
+  --arma-text-color: var(--arma-black-color);
+  --arma-brand-color: var(--arma-orange-color);
+  --arma-extra-color: #185d6e;
+
+  --arma-link-color: var(--arma-black-color);
+  --arma-link-color-hover: var(--arma-whitesmoke-color);
+  --arma-link-bckgrd-color: var(--arma-orange-color);
+  --arma-link-hover-bckgrd-color: var(--arma-black-color);
+  --arma-link-border-width: 0 .25rem;
+
+  --arma-btn-txt-color: var(--arma-black-color);
+
+  --default-allow-color: var(--default-success-color);
+  --default-signup-color: var(--arma-brand-color);
+
+  --default-cancel-color: #121314;
+  --default-cancel-reverse-color: var(--arma-whitesmoke-color);
+  --default-cancel-hover-color: var(--arma-orangered-color);
+  
+  --default-success-color: #057013;
+  --arma-focus-bckgrd-color: var(--arma-extra-color);
+  --arma-focus-border-color: var(--arma-extra-color);
+
+  --rs-blurb-bckgrd-color: var(--rs-black-color);
+  --rs-blurb-border-color: var(--rs-black-color);
+
+  --em-form-bckgrd-color: var(--arma-orange-color);
+
+  --github-sprite-url-hover: url("./sprite.svg#icon-github-light");
+  --icon-eye-blocked: url('./sprite.svg#icon-eye-blocked-dark');
+  --icon-eye: url('./sprite.svg#icon-eye-dark');
+}
+
+/* @media (prefers-color-scheme: dark) { */
+  :root[data-theme="dark"] {
+    --rs-brand-color: var(--rs-orange-color);
+    --rs-frgrd-color: var(--rs-black-color);
+    --rs-bckgrd-color: var(--rs-white-color);
+    
+    --arma-bckgrd-color:  var(--arma-black-color);
+    --arma-title-color: var(--arma-whitesmoke-color); 
+    --arma-text-color: var(--arma-wheat-color);
+    --arma-brand-color: var(--arma-orange-color);
+    --arma-extra-color: #69a2b0;
+
+    --arma-link-color: var(--arma-black-color);
+    --arma-link-color-hover: var(--arma-black-color);
+    --arma-link-bckgrd-color: var(--arma-orange-color);
+    --arma-link-hover-bckgrd-color: var(--arma-whitesmoke-color);
+    --arma-link-border-width: 0 .25rem;
+
+    --arma-btn-txt-color: var(--arma-black-color);
+
+    --default-success-color: #3fb34f;
+    --arma-focus-bckgrd-color: hsla(0, 0%, 30%, .45);
+    --arma-focus-border-color: hsla(0, 0%, 100%, .45);
+    --default-allow-color: var(--default-success-color);
+    --default-signup-color: var(--arma-brand-color);
+
+    --default-cancel-color: var(--arma-whitesmoke-color);
+    --default-cancel-reverse-color: #121314;
+    --default-cancel-hover-color: var(--arma-orangered-color);
+
+    --icon-eye-blocked: url('./sprite.svg#icon-eye-blocked-light');
+    --icon-eye: url('./sprite.svg#icon-eye-light');
+  }
+/* } */
+
+/* GLOBALS */
 
 body {
   display: flex;
@@ -19,21 +108,39 @@ body {
   align-items: center;
   justify-content: space-between;
   min-height: 100vh;
-  background: var(--body-bckgrd-color);
+  background: var(--arma-bckgrd-color);
   background-image: var(--body-bckgrd-linear-gradient, transparent);
-  color: var(--body-txt-color);
+  color: var(--arma-text-color);
   font: normal 1rem / 1.5 "Outfit", var(--font-fallback);
   margin: 0;
   padding: 0;
 }
 
 a {
-  color: var(--default-link-color);
-  text-decoration: var(--default-link-decoration, none);
+  text-decoration: none;
 }
 
-a:hover {
-  color: var(--default-link-color-hover, #afafaf);
+a:focus {
+  outline: thin dotted; 
+}
+
+p > a {
+  border: solid var(--arma-link-bckgrd-color);
+  border-width: var(--arma-link-border-width, 0);
+  border-radius: 0.25rem;
+  background-color: var(--arma-link-bckgrd-color, transparent);
+  color: var(--arma-link-color);
+  font-weight: 600;
+  text-decoration: var(--default-link-decoration, none);
+  vertical-align: middle;
+}
+
+p > a:hover {
+  background-color: var(--arma-link-hover-bckgrd-color);
+  border-color: var(--arma-link-hover-bckgrd-color);
+  color: var(--arma-link-color-hover);
+  text-decoration: var(--default-link-hover-decoration, none);
+  
 }
 
 ul,
@@ -42,7 +149,7 @@ li {
   padding: 0;
 }
 
-/* TOPBAR */
+/* TOPBAR HEADER */
 
 header.topbar {
   display: flex;
@@ -72,7 +179,7 @@ header.topbar .subtitle {
   display: flex;
   align-items: center;
   gap: .5rem;
-  color: var(--extra-color);
+  color: var(--arma-extra-color, currentColor);
   font-size: .875rem;
   font-weight: 400;
 }
@@ -81,7 +188,7 @@ header.topbar .logo {
   display: flex;
   align-items: center;
   gap: .25rem;
-  color: var(--body-title-color);
+  color: var(--arma-title-color);
   font-weight: 3500;
 	font-size: 1rem;
   text-transform: lowercase;
@@ -89,16 +196,24 @@ header.topbar .logo {
 
 header.topbar .logo svg {
   height: 1rem;
-  fill: currentColor;
+  fill: var(--arma-brand-color);
 }
 
 header.topbar h1 a {
-	color: var(--body-txt-color, #efefef77);
+	color: var(--arma-text-color);
   font-size: 1.2rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: -.05em;
+  outline-offset: .5rem;
 }
+
+header.topbar h1 a:hover,
+header.topbar h1 a:focus {
+  color: var(--arma-brand-color);
+}
+
+/* NAV HEADER */
 
 header.topbar nav {
   align-self: flex-start;
@@ -106,6 +221,8 @@ header.topbar nav {
 }
 
 header.topbar nav ul {
+  display: flex;
+  align-items: center;
   margin: 0;
   padding: 0;
 }
@@ -114,10 +231,12 @@ header.topbar .signup {
 	display: inline-flex;
   align-items: center;
   gap: .125rem;
-	padding: 0 1rem;
-	text-decoration: none;
-	color: var(--body-txt-color, var(--rs-brand-color));
-	transition: color 0.1s linear;
+  margin: auto .75rem;
+	padding: 0 .5rem;
+	border-radius: .5rem;
+	color: var(--arma-text-color);
+	transition: all .2s linear;
+  text-decoration: none;
 }
 
 header.topbar .signup::before {
@@ -125,6 +244,12 @@ header.topbar .signup::before {
   font-size: 1.5em;
   transform: rotate(12deg);
 } 
+
+header.topbar .signup:hover,
+header.topbar .signup:focus {
+  color: var(--arma-text-color);
+  box-shadow: inset 0 0 0 .125rem var(--arma-text-color);
+}
 
 /* HERO */
 
@@ -136,9 +261,8 @@ section.hero {
 }
 
 section.hero svg {
-  fill: #223843ff;
+  fill: #f4a903;
 	font-size: 1.3rem;
-	/* text-transform: uppercase; */
 	letter-spacing: .05em;
 }
 
@@ -150,56 +274,72 @@ section.hero header {
 
 section.hero h2 {
   margin: 1.4rem auto 0;
-  color: var(--body-title-color);
+  color: var(--arma-title-color);
   font-size: 2.2rem;
   font-weight: 600;
   text-transform: uppercase;
 }
 
+section.hero header p {
+  line-height: 1.8;
+}
+
 section.hero header + p {
   font-size: 1.125rem;
   font-weight: 500;
+  line-height: 1.2;
 }
 
-/* FOOTER */
+/* RS BLURB */
 
-footer {
+body > footer {
   display: grid;
   place-content: center;
   margin-top: 2rem;
 }
 
-footer figure {
+.rs-blurb {
+	display: flex;
+	align-items: center;
+	gap: 1rem 0;
+	margin: auto;
+	padding: 1.2rem 2.4rem;
+	color: var(--rs-brand-color);
+	border-radius: 4rem;
+	flex-wrap: wrap;
+	max-width: 19rem;
+	justify-content: center;
+}
+
+.rs-blurb > figure {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin: auto;
-  padding: 1rem 1.5rem;
-  color: var(--extra-color);
-  font-size: .875em;
-  line-height: 1.4;
+  gap: .75rem;
+  margin: 0;
 }
 
-footer figure h1 {
-  margin: -.25rem 0 -.125rem;
-  color: #111;
+.rs-blurb figcaption {
+  color: var(--rs-bckgrd-color);
+  font-size: 1.75rem;
+  font-weight: 700;
 }
 
-footer figure a {
-  color: var(--rs-brand-color);
+.rs-blurb img {
+	height: 3rem;
 }
 
-footer figure a:hover {
-  color: currentColor;
-  cursor: help;
+.rs-blurb > span {
+  border-radius: .25rem;
+  margin-top: -.6rem;
+  color: var(--arma-extra-color, currentColor);
+  font-size: .875rem;
+  line-height: 1.4;  
 }
 
-footer figure img {
-  height: 4rem;
-}
+/* BODY FOOTER */
 
-footer p {
-  width: 40rem;
+body > footer > p {
+  width: 80rem;
   max-width: calc(100vw - 2rem);
   margin: 2rem auto 3rem;
   font-size: 1rem;
@@ -211,43 +351,73 @@ footer p {
 /* MISCELLANEOUS */
 
 .rs-link {
-  display: inline-flex;
-  align-items: center;
-  gap: .25rem;
-  color: var(--rs-txt-color);
+	display: inline-flex;
+	align-items: center;
+	gap: .25rem;
+	height: 2rem;
+	margin: auto .25rem;
+	padding: 0 .5rem;
+  background-color: whitesmoke;
+  border-width: 0;
+	border-radius: 1.4rem;
+	font-size: 1rem;
   font-weight: 700;
-  vertical-align: bottom;
+	vertical-align: text-bottom;
+}
+
+.rs-link:hover {
+  background-color: var(--rs-black-color);
+  color: whitesmoke;
+}
+
+.rs-link > span {
+  margin-top: -.125rem;
 }
 
 .rs-link::before {
-  content: url('/assets/icon.svg');
+  content: url('/assets/sprite.svg#icon-rs');
   display: flex;
   width: 1.5rem;
   height: 1.5rem;
-  margin-bottom: -.25rem;
 }
 
 .github-link {
   display: inline-flex;
   align-items: center;
   gap: .25rem;
-  vertical-align: bottom;
+  border: solid var(--arma-link-bckgrd-color, transparent);
+  border-width: var(--arma-link-border-width, 0);
+  border-radius: 0.25rem;
+  background-color: var(--arma-link-bckgrd-color, transparent);
+  color: var(--arma-link-color);
+  line-height: 1.4;
+}
+
+.github-link:hover {
+  background-color: var(--arma-link-hover-bckgrd-color);
+  border-color: var(--arma-link-hover-bckgrd-color);
+  text-decoration: none;
 }
 
 .github-link::after {
-  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='currentColor' viewBox='0 0 16 16'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E");
+  content: var(--github-sprite-url);
   display: flex;
   width: 1.2rem;
   height: 1.2rem;
 }
 
-/* MAIN */
+.github-link:hover::after {
+  content: var(--github-sprite-url-hover, var(--github-sprite-url));
+}
+
+/* MAIN CONTENT */
+
 main.content {
   margin: auto;
 }
 
 main.content > h2 {
-  color: var(--body-title-color);
+  color: var(--arma-title-color);
   font-size: 2rem;
   text-align: center;
   text-transform: uppercase;
@@ -255,7 +425,7 @@ main.content > h2 {
 
 main .status {
   margin-bottom: 0;
-  color: var(--body-title-color);
+  color: var(--arma-title-color);
   font-size: 8rem;
   font-weight: 700;
   text-align: center;
@@ -279,6 +449,7 @@ form {
 }
 
 .form-group {
+  position: relative;
   width: 100%;
 }
 
@@ -287,7 +458,7 @@ form {
 }
 
 label {
-  color: var(--extra-color);
+  color: var(--arma-extra-color);
   font-size: .875rem;
 }
 
@@ -296,28 +467,54 @@ input {
   place-content: center;
   box-sizing: border-box; 
   width: 100%;
-  height: 3rem; 
+  height: var(--default-input-height); 
   border: none;
-  border-bottom: .125rem solid var(--body-txt-color);
-  background-color: transparent;
-  color: #000;
-  font-size: 1rem; 
-  font-weight: 400;
+  border-bottom: .125rem dotted var(--arma-extra-color);
+  border-top: .125rem solid transparent;
+  background-color: var(--arma-bckgrd-color);
+  color: var(--arma-text-color);
+  font-size: 1.25rem; 
+  font-weight: 600;
   transition: all .3s linear; 
-  -webkit-appearance: none;  
+  -webkit-appearance: none;
+  filter: unset;
 }
 
 input:focus {
-  border-bottom-color: var(--body-title-color); 
-  outline: 0; 
+  border-bottom-style: solid !important; 
+  padding-left: .75rem;
+  outline: 0;
+  border-top: 2pt dotted var(--arma-focus-border-color);
+  background-color: rgba(125,125,125, .1);
+  appearance: none;
+  filter: unset;
+}
+
+input:valid {
+  border-bottom-color: var(--default-success-color);
+  color: var(--default-success-color);
+  filter: unset;
+}
+
+input:valid:focus {
+	outline: 0;
+  padding-left: .75rem;
+	border-top: 2pt dotted var(--arma-focus-border-color);
+  filter: unset;
 }
 
 input::placeholder {
+  color: var(--arma-text-color);
   font-style: italic;
+  font-weight: 400;
   opacity: .4;
 }
 
-button {
+input#password {
+  font-weight: 700;
+}
+
+button[type="submit"] {
   display: flex;
   place-content: center;
   width: auto;
@@ -327,42 +524,50 @@ button {
   margin: auto; 
   border-radius: 1.5rem; 
   border: none;
-  background-color: var(--rs-brand-color); 
-  color: white; 
+  background-color: var(--arma-brand-color); 
+  color: var(--arma-btn-txt-color); 
   font-family: 'Outfit', var(--font-fallback);
   font-size: 1.3rem;
   margin-left: auto; 
   font-weight: 700;
   line-height: 1.4;
   transition: all .3s ease; 
-  outline: 0; 
+  cursor: pointer;
   -webkit-appearance: none; 
 }
 
 button:hover {
-  filter: invert(1);
-  cursor: pointer;
+  background-color: var(--arma-title-color); 
+  color: var(--arma-bckgrd-color); 
+}
+
+button[name="signup"]:focus {
+  outline: 2pt dotted var(--arma-text-color);
 }
 
 .error {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  gap: .25rem;
-  width: auto;
+  gap: .75rem;
+  width: 100%;
   max-width: 100%;
   margin: auto;
-  padding: .25rem .75rem .25rem .35rem;
-  border: .125rem solid crimson;
-  color: crimson;
+  padding: .5rem .65rem .65rem .875rem;
+  border-radius: .25rem;
+  background-color: var(--default-error-color);
+  color: var(--arma-whitesmoke-color);
   font-weight: 600;
   line-height: 1.2;
+  font-size: .9375rem;
 }
 
 .error::before {
-  content: '\26A0';
+  content: url('./sprite.svg#icon-warning');
+  display: flex;
   align-self: center;
-  font-size: 2.2rem;
+  min-width: var(--default-icon-size);
+  height: var(--default-icon-size);
 }
 
 .success {
@@ -389,9 +594,9 @@ button:hover {
 }
 
 .oauth-form p em {
-  color: var(--body-title-color);
+  color: var(--arma-extra-color);
   font-style: normal;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .oauth-form ul {
@@ -400,7 +605,9 @@ button:hover {
   padding: 0;
   width: 22rem;
   max-width: 100%;
-  border: 1px solid lavender;
+  border: 1px solid var(--arma-extra-color);
+  border-radius: .125rem;
+  overflow: hidden;
 }
 
 .oauth-form ul li {
@@ -416,30 +623,42 @@ button:hover {
 }
 
 .oauth-form ul li:nth-child(odd) {
-  background-color: white;
+  background-color: var(--arma-extra-color);
 }
 
 .oauth-form ul li:nth-child(even) {
-  background-color: aliceblue;
+  background-color: var(--arma-text-color);
 }
 
 .oauth-form ul li > em:first-child {
   place-self: self-start;
-  color: var(--rs-brand-color);
+  color: var(--arma-bckgrd-color);
 }
 
 .oauth-form ul li > span {
   place-self: center;
+  padding: 0 .25rem;
+  color: var(--arma-bckgrd-color);
+	line-height: 1.1;
+	font-weight: 600;
+	font-size: .875rem;
 }
 
 .oauth-form ul li > em:last-child {
   place-self: self-end;
-  color: var(--rs-txt-color);
+  color: var(--rs-frgrd-color);
 }
 
 .oauth-form label {
-  color: var(--body-title-color);
-  font-size: 1rem;
+  margin-bottom: .5rem;
+  color: var(--arma-title-color);
+  font-size: 1.25rem;
+}
+
+.oauth-form label em {
+  color: var(--arma-text-color);
+  font-weight: 700;
+  font-style: normal;
 }
 
 .oauth-form .form-group,
@@ -447,7 +666,7 @@ button:hover {
   text-align: center;
 }
 
-fieldset.actions {
+div.actions {
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -460,11 +679,99 @@ fieldset.actions {
 }
 
 button[name="allow"] {
-  background-color: #3fb34f;
+  background-color: var(--default-success-color);
+  color: var(--arma-bckgrd-color);
+}
+
+button[name="allow"]:hover {
+  background-color: var(--arma-brand-color);
+  color: var(--arma-black-color);
 }
 
 button[name="deny"] {
-  background-color: var(--rs-txt-color);
+  background-color: var(--default-cancel-color);
+  color: var(--default-cancel-reverse-color);
+}
+
+button[name="deny"]:hover {
+  background-color: var(--default-cancel-hover-color);
+  color: var(--default-cancel-color);
+}
+
+button[name="allow"]:focus,
+button[name="deny"]:focus {
+  outline: 2px dotted var(--arma-text-color);
+}
+
+#togglePassword {
+  position: absolute;
+  right: .75rem;
+  bottom: calc((var(--default-input-height) / 2) - (var(--default-icon-size) / 2));
+  outline-offset: .125rem;
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+#togglePassword.icon-eye.icon-slash::before {
+  content: var(--icon-eye-blocked);
+  cursor: pointer;
+}
+
+#togglePassword.icon-eye::before {
+  content: var(--icon-eye);
+  cursor: pointer;
+}
+
+#togglePassword:focus-visible {
+  outline: 2pt dotted var(--arma-focus-border-color);
+}
+
+
+/* ICONS */
+
+[class^="icon-"] {
+  display: inline-flex;
+  width: var(--default-icon-size);
+  height: var(--default-icon-size);
+  border: 0;
+  padding: .25rem;
+}
+
+[class^="icon-"]::before {
+  content: '';
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+
+/* SWITCH */
+#switch {
+  display: flex;
+  width: var(--default-icon-size);
+  height: var(--default-icon-size);
+  background-color: transparent;
+  border-radius: 50%;
+  border: none;
+  color: var(--arma-text-color);
+  font-size: 0;
+  cursor: pointer;
+}
+
+#switch::before {
+  content:'on/off';
+  display: flex;
+  place-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+#switch.dark::before {
+  content: url('./sprite.svg#icon-sun');
+}
+
+#switch.light::before {
+  content: url('./sprite.svg#icon-moon');
 }
 
 /* FONTS */

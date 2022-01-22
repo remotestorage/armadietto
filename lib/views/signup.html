@@ -1,5 +1,5 @@
 <h2>Sign up </h2>
-  
+
 <form method="post" action="<%= basePath %>/signup">
   <% if (error) { %>
     <p class="error"><%= error.message %></p>
@@ -17,7 +17,7 @@
 
   <div class="form-group">
     <label for="password">Password</label>
-    <input placeholder="Strong password's better" title="Eight or more characters" type="password" id="password" name="password" value="" required pattern=".{8,}">
+    <input placeholder="Strong password's better" title="Eight or more characters" type="password" id="password" name="password" value="" required pattern=".{8,}" autocomplete="new-password">
     <button id="togglePassword" class="icon-eye icon-slash" type="button" tabindex="0" alt="on/off" title="show/hide password"></button>
   </div>
 
@@ -32,7 +32,7 @@
       // toggle the type attribute
       const type = password.getAttribute("type") === "password" ? "text" : "password";
       password.setAttribute("type", type);
-      
+
       // toggle the icon
       this.classList.toggle("icon-slash");
   });

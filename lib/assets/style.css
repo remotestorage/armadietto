@@ -72,7 +72,7 @@
     --rs-bckgrd-color: var(--rs-white-color);
 
     --arma-bckgrd-color:  var(--arma-black-color);
-    --arma-title-color: var(--arma-whitesmoke-color); 
+    --arma-title-color: var(--arma-whitesmoke-color);
     --arma-text-color: var(--arma-wheat-color);
     --arma-brand-color: var(--arma-orange-color);
     --arma-extra-color: #69a2b0;
@@ -402,7 +402,13 @@ main.content > h2 {
   text-transform: uppercase;
 }
 
+main.content > p {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
 main .status {
+  margin-top: 1rem;
   margin-bottom: 0;
   color: var(--arma-title-color);
   font-size: 8rem;

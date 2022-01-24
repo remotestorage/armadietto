@@ -157,7 +157,7 @@ describe('OAuth', async () => {
       };
       const res = await post('/oauth', this.auth_params);
       expect(res).to.have.status(401);
-      expect(res).to.have.header('Content-Type', 'text/html');
+      expect(res).to.have.header('Content-Type', 'text/html; charset=utf8');
       expect(res.text).to.contain('application <em>the_client_id</em> hosted');
     });
   });

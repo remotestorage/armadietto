@@ -231,6 +231,7 @@ header.topbar h1 a:focus {
 
 header.topbar nav ul {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   margin: 0;
   padding: 0;
@@ -265,8 +266,13 @@ header.topbar .signup:focus {
 section.hero {
   width: 50rem;
   max-width: calc(100vw - 2rem);
-  margin: 2rem auto;
   text-align: center;
+}
+
+@media only screen and (min-width: 601px) {
+  section.hero {
+    margin: 2rem auto;
+  }
 }
 
 section.hero svg {
@@ -358,7 +364,7 @@ body > footer > p {
 }
 
 .rs-link::before {
-  content: url('/assets/sprite.svg#icon-rs');
+  content: url('./sprite.svg#icon-rs');
   display: flex;
   width: 1.5rem;
   height: 1.5rem;

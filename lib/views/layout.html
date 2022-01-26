@@ -10,6 +10,8 @@
     <title><%= title %> — Armadietto</title>
 
     <link rel="stylesheet" href="<%= basePath %>/assets/style.css">
+
+    <script defer src="<%= basePath %>/assets/armadietto-utilities.js"></script>
   </head>
   <body>
 
@@ -36,7 +38,7 @@
             </li>
           <% } %>
           <li>
-            <button id="switch" onclick="toggleTheme()">Switch</button>
+            <button id="switch">Switch</button>
           </li>
         </ul>
       </nav>
@@ -47,25 +49,6 @@
       <%- body %>
 
     </main>
-
-    <script>
-      // function to set a given theme/color-scheme
-      function setTheme(themeName) {
-          localStorage.setItem('theme', themeName);
-          document.documentElement.setAttribute('data-theme', themeName);
-          document.getElementById('switch').setAttribute('class', themeName);
-      }
-
-      // function to toggle between light and dark theme
-      function toggleTheme() {
-          localStorage.getItem('theme') === 'dark' ? setTheme('light') : setTheme('dark');
-      }
-
-      // Immediately invoked function to set the theme on initial load
-      (function () {
-        localStorage.getItem('theme') === 'dark' ? setTheme('dark') : setTheme('light');
-      })();
-    </script>
 
   </body>
 </html>

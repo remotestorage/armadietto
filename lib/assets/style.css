@@ -31,7 +31,7 @@
   /* Default Colors */
   --default-error-color: #aa2e2e;
 
-  --github-sprite-url: url("./sprite.svg#icon-github-dark");
+  --github-sprite-url: url("sprite.svg#icon-github-dark");
 }
 
 :root[data-theme="light"] {
@@ -69,9 +69,9 @@
 
   --em-form-bckgrd-color: var(--arma-orange-color);
 
-  --github-sprite-url-hover: url("./sprite.svg#icon-github-light");
-  --icon-eye-blocked: url('./sprite.svg#icon-eye-blocked-dark');
-  --icon-eye: url('./sprite.svg#icon-eye-dark');
+  --github-sprite-url-hover: url("sprite.svg#icon-github-light");
+  --icon-eye-blocked: url('sprite.svg#icon-eye-blocked-dark');
+  --icon-eye: url('sprite.svg#icon-eye-dark');
 }
 
 /* @media (prefers-color-scheme: dark) { */
@@ -104,8 +104,8 @@
     --default-cancel-reverse-color: #121314;
     --default-cancel-hover-color: var(--arma-orangered-color);
 
-    --icon-eye-blocked: url('./sprite.svg#icon-eye-blocked-light');
-    --icon-eye: url('./sprite.svg#icon-eye-light');
+    --icon-eye-blocked: url('sprite.svg#icon-eye-blocked-light');
+    --icon-eye: url('sprite.svg#icon-eye-light');
   }
 /* } */
 
@@ -175,7 +175,7 @@ header.topbar h1 {
   flex-direction: column;
   align-items: flex-start;
   gap: .25rem;
-  padding: 0 1rem;
+  padding: 0;
 	margin: 0;
   color: #7c7777;
   font-size: 1.5rem;
@@ -186,8 +186,13 @@ header.topbar h1 {
   header.topbar {
     flex-direction: column;
   }
+
   header.topbar h1 {
-    padding-left: 0;
+    padding: 0;
+  }
+
+  header.topbar h1 a {
+    margin: auto;
   }
 }
 
@@ -240,8 +245,9 @@ header.topbar h1 a:focus {
 
 header.topbar nav ul {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
   margin: 0;
   padding: 0;
 }
@@ -250,7 +256,7 @@ header.topbar .signup {
 	display: inline-flex;
   align-items: center;
   gap: .125rem;
-  margin: auto .75rem;
+  margin: auto;
 	padding: 0 .5rem;
 	border-radius: .5rem;
 	color: var(--arma-text-color);
@@ -305,13 +311,12 @@ section.hero h2 {
 }
 
 section.hero header p {
-  line-height: 1.8;
+  line-height: 1.5;
 }
 
 section.hero header + p {
   font-size: 1.125rem;
   font-weight: 500;
-  line-height: 1.2;
 }
 
 @media only screen and (max-width: 600px) {
@@ -327,10 +332,6 @@ section.hero header + p {
 
   section.hero h2 {
     font-size: 1.5rem;
-  }
-
-  section.hero header p {
-    line-height: 1.5;
   }
 }
 
@@ -360,7 +361,6 @@ body > footer > p {
 	border-radius: 1.4rem;
 	font-size: 1rem;
   font-weight: 700;
-	vertical-align: text-bottom;
 }
 
 .rs-link:hover {
@@ -373,10 +373,11 @@ body > footer > p {
 }
 
 .rs-link::before {
-  content: url('./sprite.svg#icon-rs');
-  display: flex;
+  content: url('sprite.svg#icon-rs');
+  display: inline-block;
   width: 1.5rem;
   height: 1.5rem;
+  margin: auto;
 }
 
 .github-link {
@@ -399,9 +400,10 @@ body > footer > p {
 
 .github-link::after {
   content: var(--github-sprite-url);
-  display: flex;
+  display: inline-block;
   width: 1.2rem;
   height: 1.2rem;
+  margin: auto;
 }
 
 .github-link:hover::after {
@@ -567,7 +569,7 @@ button[name="signup"]:focus {
 }
 
 .error::before {
-  content: url('./sprite.svg#icon-warning');
+  content: url('sprite.svg#icon-warning');
   display: flex;
   align-self: center;
   min-width: var(--default-icon-size);
@@ -743,9 +745,9 @@ button[name="deny"]:focus {
 
 [class^="icon-"]::before {
   content: '';
-  display: flex;
+  display: inline-block;
   width: 100%;
-  height: 100%;
+  margin: auto;
 }
 
 
@@ -763,17 +765,17 @@ button[name="deny"]:focus {
 }
 
 #switch::before {
-  content:'on/off';
-  display: flex;
+  content: '';
+  display: inline-block;
   place-content: center;
-  width: 100%;
-  height: 100%;
+  width: var(--default-icon-size);
+  margin: auto;
 }
 
 #switch.dark::before {
-  content: url('./sprite.svg#icon-sun');
+  content: url('sprite.svg#icon-sun');
 }
 
 #switch.light::before {
-  content: url('./sprite.svg#icon-moon');
+  content: url('sprite.svg#icon-moon');
 }

@@ -1,7 +1,7 @@
 {
   "name": "armadietto",
   "description": "Node.js remoteStorage server",
-  "homepage": "http://github.com/remotestorage/armadietto",
+  "homepage": "https://github.com/remotestorage/armadietto",
   "keywords": [
     "remoteStorage",
     "webfinger",
@@ -55,6 +55,6 @@
     "url": "git://github.com/remotestorage/armadietto.git"
   },
   "bugs": {
-    "url": "http://github.com/remotestorage/armadietto/issues"
+    "url": "https://github.com/remotestorage/armadietto/issues"
   }
 }

@@ -49,6 +49,6 @@ VOLUME $CONFIG_PATH_STORAGE
 EXPOSE $PORT
 USER $PROJECT_NAME
 
-CMD $PROJECT_NAME -c /etc/armadietto.conf.json
+CMD /opt/armadietto/bin/armadietto.js -c /etc/armadietto.conf.json
 
 HEALTHCHECK --start-period=10s CMD wget -q -O /dev/null http://127.0.0.1:$PORT/

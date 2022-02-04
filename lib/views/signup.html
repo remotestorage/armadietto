@@ -1,23 +1,25 @@
-<h2>Sign up</h2>
+<h2>Sign up </h2>
 
 <form method="post" action="<%= basePath %>/signup">
   <% if (error) { %>
     <p class="error"><%= error.message %></p>
   <% } %>
 
-  <table>
-    <tr>
-      <th scope="row"><label for="username">Username</label></th>
-      <td><input type="text" id="username" name="username" value="<%= params.username || '' %>"></td>
-    </tr>
-    <tr>
-      <th scope="row"><label for="email">Email</label></th>
-      <td><input type="text" id="email" name="email" value="<%= params.email || '' %>"></td>
-    </tr>
-    <tr>
-      <th scope="row"><label for="password">Password</label></th>
-      <td><input type="password" id="password" name="password" value=""></td>
-    </tr>
-  </table>
-  <p><input type="submit" value="Go"></p>
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input placeholder="Your choice" type="text" id="username" name="username" autofocus value="<%= params.username || '' %>" required>
+  </div>
+
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input placeholder="valid email" type="text" id="email" name="email" value="<%= params.email || '' %>" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+  </div>
+
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input placeholder="Strong password's better" title="Eight or more characters" type="password" id="password" name="password" value="" required pattern=".{8,}" autocomplete="new-password">
+    <button id="togglePassword" class="icon-eye icon-slash" type="button" tabindex="0" alt="on/off" title="show/hide password"></button>
+  </div>
+
+  <button type="submit" name="signup" value="Go">Create account</button>
 </form>

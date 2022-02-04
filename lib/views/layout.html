@@ -1,32 +1,54 @@
-<!doctype html>
-
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <link href="<%= basePath %>/assets/fonts.css" rel="stylesheet" type="text/css">
-    <title><%= title %></title>
-    <link rel="stylesheet" type="text/css" href="<%= basePath %>/assets/style.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/svg+xml" href="<%= basePath %>/assets/favicon.svg">
+
+    <title><%= title %> — Armadietto</title>
+
+    <link rel="stylesheet" href="<%= basePath %>/assets/style.css">
+
+    <script defer src="<%= basePath %>/assets/armadietto-utilities.js"></script>
   </head>
   <body>
 
-    <div class="header">
-      <div class="sub">
-        <h1><span>Remote Storage</span> <a href="/"><%= host %></a></h1>
+    <header class="topbar" role="banner">
+      <h1>
+        <a class="server-name" href="<%= basePath %>/" title="home"><%= host %></a>
+        <span class="subtitle">
+          run with
+          <span class="logo">
+            <svg role="img" height="250" version="1.1" viewBox="0 0 739 853" xmlns="http://www.w3.org/2000/svg">
+              <title>armadietto logo</title>
+              <path d="m370.98-2.0508-369.81 213.2 86.396 45.572 283.42-161.13 283.82 163.86v66.385l-285.3-164.72-368.38 212.69v265.38l368.38 212.69 368.38-212.69v-166.32l1.4844-0.85742v-261.38zm-1.4844 260.82 283.82 163.86v1.4082l-282.34 163.01-283.78-165.29zm-283.82 261.21 285.3 164.72 282.34-163.01v68.672l-283.82 163.86-283.82-163.86z"/>
+            </svg>
+            Armadietto
+          </span>
+        </span>
+      </h1>
 
-        <ul class="nav">
-          <li><a href="<%= basePath %>/">Home</a></li>
-          <% if (signup) { %><li><a href="<%= basePath %>/signup">Sign up</a></li><% } %>
+      <nav role="navigation">
+        <ul>
+          <% if (signup) { %>
+            <li class="login">
+              <a class="signup" href="<%= basePath %>/signup">Sign up</a>
+            </li>
+          <% } %>
+          <li>
+            <button id="switch">Switch</button>
+          </li>
         </ul>
-      </div>
-    </div>
+      </nav>
+   </header>
 
-    <div class="content">
-      <div class="sub">
+    <main class="content" role="main">
 
-        <%- body %>
+      <%- body %>
 
-      </div>
-    </div>
+    </main>
 
   </body>
 </html>

@@ -1,14 +1,15 @@
 <h2>Authorize</h2>
 
-<div class="form">
+<div class="oauth-form">
   <p>The application <em><%= client_id %></em> hosted at
     <em><%= client_host %></em> wants to access these resources for user
-    <em><%= username %></em>:</p>
+    <em><%= username %></em>:
+  </p>
 
   <ul>
     <% for (var path in permissions) { %>
       <% var flags = permissions[path].join('') %>
-      <li><em><%= access_strings[flags] %></em> access to <em><%= path.replace(/^\/*/, '/') %></em></li>
+      <li><em><%= access_strings[flags] %></em> <span>access to</span> <em><%= path.replace(/^\/*/, '/') %></em></li>
     <% } %>
   </ul>
 
@@ -24,14 +25,15 @@
     <input type="hidden" name="state" value="<%= state %>">
     <input type="hidden" name="username" value="<%= username %>">
 
-    <p>
-      <label for="password">Password</label>:
-      <input type="password" name="password" id="password">
-    </p>
+    <div class="form-group">
+      <label for="password">Enter the <em><%= username %></em> account's password</label>
+      <input type="password" name="password" id="password" autofocus placeholder="Password" autocomplete="current-password">
+      <button id="togglePassword" class="icon-eye icon-slash" type="button" tabindex="0" alt="on/off" title="show/hide password"></button>
+    </div>
 
-    <p>
-      <input type="submit" name="allow" value="Allow">
-      <input type="submit" name="deny" value="Deny">
-    </p>
+    <div class="actions">
+      <button type="submit" name="allow" value="Allow">Allow</button>
+      <button type="submit" name="deny" value="Deny">Deny</button>
+    </div>
   </form>
 </div>

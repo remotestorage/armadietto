@@ -134,6 +134,8 @@ a:focus {
 }
 
 p > a {
+  display: inline-block;
+  line-height: 1.5em;
   border: solid var(--arma-link-bckgrd-color);
   border-width: var(--arma-link-border-width, 0);
   border-radius: 0.25rem;
@@ -155,6 +157,10 @@ ul,
 li {
   list-style: none;
   padding: 0;
+}
+
+.text-center {
+  text-align: center;
 }
 
 /* TOPBAR HEADER */

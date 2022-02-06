@@ -24,6 +24,24 @@ docker run -d -p 8000:8000 remotestorage/armadietto:latest
 
 The armadietto will run as the armadietto user (UID 6582) in the container.
 
+### Behind a Proxy
+
+To use armadietto behind a proxy, ensure the `X-Forwarded-Host` header is
+passed to armadietto to ensure it works correctly.
+
+Exmaple nginx config extract
+```
+...
+  location / {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Scheme $scheme;
+    proxy_pass http://localhost:8000;
+    proxy_redirect off;
+  }
+...
+```
+
 ## Configuration
 
 The default configuration file for armadietto can be found in

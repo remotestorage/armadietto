@@ -1,4 +1,4 @@
-# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0eaafdf96ebb47a9ac462bcf6a7ccb06)](https://www.codacy.com/app/lesion/armadietto?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=remotestorage/armadietto/&amp;utm_campaign=Badge_Grade)
+# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
 
 > ### :warning: WARNING
 > Please do not consider `armadietto` production ready, this project is still
@@ -64,3 +64,18 @@ docker run -d -v /data/armadietto:/usr/share/armadietto -p 8000:8000 remotestora
 
 *Note:* The folder and its contents must be writable and readable by the UID
 6582.
+
+## Development
+
+The armadietto docker image is built off the
+[armadietto](https://github.com/remotestorage/armadietto) git repository
+using the [`docker/Dockerfile`](https://github.com/remotestorage/armadietto/blob/master/docker/Dockerfile)
+[Dockerfile](https://docs.docker.com/engine/reference/builder/). To build
+the image yourself, clone the git repository and use the
+[`docker build`](https://docs.docker.com/engine/reference/commandline/build/) command.
+
+```
+git clone https://github.com/remotestorage/armadietto
+cd armadietto
+docker build -t remotestorage/armadietto -f docker/Dockerfile .
+```

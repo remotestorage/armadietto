@@ -48,6 +48,7 @@
   "scripts": {
     "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/dev-conf.json",
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
+    "stresstest": "mocha -u bdd-lazy-var/getter  spec/stress_runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\""
   },

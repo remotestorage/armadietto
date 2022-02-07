@@ -38,7 +38,11 @@ const sandbox = chai.spy.sandbox();
 describe('OAuth', async () => {
   before((done) => {
     (async () => {
-      this._server = new Armadietto({ store, http: { port: 4567 } });
+      this._server = new Armadietto({
+        store,
+        http: { port: 4567 },
+        logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
+      });
       await this._server.boot();
       done();
     })();

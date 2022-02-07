@@ -1,0 +1,44 @@
+name: Publish
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 This job was triggered by a “${{ github.event_name }}” event on “${{ github.ref }}”."
+
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - run: npm ci
+      - run: npm run lint
+
+  Automated-Tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Support LTS versions based on https://nodejs.org/en/about/releases/
+        node-version: ['12', '14', '16']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test
+
+  Conditional-Publish-to-NPM:
+    needs: [Lint, Automated-Tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: JS-DevTools/npm-publish@0f451a94170d1699fd50710966d48fb26194d939
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+
+      - if: steps.publish.outputs.type != 'none'
+        run: |
+          echo "NPM ${{steps.publish.outputs.type}} version changed: ${{ steps.publish.outputs.old-version }} => ${{ steps.publish.outputs.version }}"

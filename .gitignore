@@ -10,6 +10,7 @@ logs/*
 test-log
 dev-log
 dev-storage
+stress-log
 .vscode
 .idea
 .DS_Store

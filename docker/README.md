@@ -1,6 +1,6 @@
 # armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
 
-> ### :warning: WARNING
+> ### WARNING
 > Please do not consider `armadietto` production ready, this project is still
 > considered experimental.  As with any alpha-stage storage technology, you
 > MUST expect that it will eat your data and take precautions against this. You
@@ -22,30 +22,11 @@ It is also available as the
 docker run -d -p 8000:8000 remotestorage/armadietto:latest
 ```
 
-The armadietto will run as the armadietto user (UID 6582) in the container.
+### Configuration
 
-### Behind a Proxy
-
-To use armadietto behind a proxy, ensure the `X-Forwarded-Host` header is
-passed to armadietto to ensure it works correctly.
-
-Exmaple nginx config extract
-```
-...
-  location / {
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-Forwarded-Scheme $scheme;
-    proxy_pass http://localhost:8000;
-    proxy_redirect off;
-  }
-...
-```
-
-## Configuration
-
-The default configuration file for armadietto can be found in
-`/etc/armadietto.conf.json` and contains the following configuration:
+The default configuration file for armadietto can be found within the docker
+container in `/etc/armadietto.conf.json` and contains the following
+configuration:
 
 ```json
 {
@@ -80,14 +61,22 @@ ensure data is persisted.
 docker run -d -v /data/armadietto:/usr/share/armadietto -p 8000:8000 remotestorage/armadietto:latest
 ```
 
-*Note:* The folder and its contents must be writable and readable by the UID
-6582.
+*Note:* The folder and its contents must be writable and readable by the
+container user, which is by default the `armadietto` user (UID 6582).
+
+### Behind a Proxy
+
+To use armadietto behind a proxy, ensure the `X-Forwarded-Host` and
+`X-Forwareded-Proto` headers are passed to armadietto to ensure it uses the
+correct address. For more information, see the
+[notes](https://github.com/remotestorage/armadietto/tree/master/notes)
+folder in the armadietto git repository.
 
 ## Development
 
-The armadietto docker image is built off the
+The armadietto docker image is built using the
 [armadietto](https://github.com/remotestorage/armadietto) git repository
-using the [`docker/Dockerfile`](https://github.com/remotestorage/armadietto/blob/master/docker/Dockerfile)
+and the [`docker/Dockerfile`](https://github.com/remotestorage/armadietto/blob/master/docker/Dockerfile)
 [Dockerfile](https://docs.docker.com/engine/reference/builder/). To build
 the image yourself, clone the git repository and use the
 [`docker build`](https://docs.docker.com/engine/reference/commandline/build/) command.
@@ -97,3 +86,7 @@ git clone https://github.com/remotestorage/armadietto
 cd armadietto
 docker build -t remotestorage/armadietto -f docker/Dockerfile .
 ```
+
+Further information about the development of armadietto can be found in the
+[DEVELOPMENT.md](https://github.com/remotestorage/armadietto/blob/master/DEVELOPMENT.md)
+file in git repository.

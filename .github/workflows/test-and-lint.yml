@@ -6,7 +6,7 @@ on:
     branches: [ master, stress-test ]
 jobs:
   Lint:
-    name: node.js
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,7 +20,7 @@ jobs:
         run: npm run lint
 
   Automated-Tests:
-    name: node.js
+    name: Automated-Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,4 +37,4 @@ jobs:
       - name: Run tests
         run: npm test
       - name: Run stress tests
-        run: npm stresstest
+        run: npm run stresstest

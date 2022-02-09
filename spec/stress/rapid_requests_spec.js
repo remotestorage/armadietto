@@ -51,8 +51,10 @@ describe('Rapid requests', function () {
     });
   });
 
+  /* This serves as a performance floor. As long as it passes in GitHub automation, we're okay.
+   * On slow machines, the expectations might fail */
   it('serves a burst of many puts or gets without error', async function () {
-    const delayMs = 1; const num = 1000;
+    const delayMs = 2; const num = 1000;
     const puts = []; const gets = [];
     for (let i = 0; i < num; ++i) {
       const data = 'ABC' + String(1000 + i);
@@ -90,6 +92,8 @@ describe('Rapid requests', function () {
     }
   });
 
+  /* This is a functional test, that the server behaves correctly when overloaded.
+   * It must pass on every machine. If no 429s are returned, increase `num` to make the test harder. */
   it('returns "429 Too Many Requests" when a burst of puts or gets continues too long', async function () {
     const delayMs = 1; const num = 3000;
     const puts = []; const gets = [];
@@ -143,7 +147,8 @@ describe('Rapid requests', function () {
     expect(getStatusCodes).to.include(429);
   });
 
-  // This only needs to be tested on systems with slow storage.
+  /* This serves as a performance floor. As long as it passes in GitHub automation, we're okay.
+   * If the expectations fail, the storage on that system is probably too slow for Armadietto. */
   it('handles rapid large puts without error', async function () {
     const article1 = 'All human beings are born free and equal in dignity and rights. They are endowed with reason and conscience and should act towards one another in a spirit of brotherhood.';
 
@@ -151,13 +156,13 @@ describe('Rapid requests', function () {
 
     const path1 = `/storage/${username}/big/1`;
     const request1 = req.put(path1).set('Authorization', 'Bearer ' + this.token).type('text/plain');
-    for (let i = 0; i < 500_000_000 / article1.length; ++i) {
+    for (let i = 0; i < 200_000_000 / article1.length; ++i) {
       request1.send(article1);
     }
 
     const path2 = `/storage/${username}/big/2`;
     const request2 = req.put(path2).set('Authorization', 'Bearer ' + this.token).type('text/plain');
-    for (let i = 0; i < 500_000_000 / article2.length; ++i) {
+    for (let i = 0; i < 200_000_000 / article2.length; ++i) {
       request2.send(article2);
     }
 

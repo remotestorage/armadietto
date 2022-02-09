@@ -3,7 +3,6 @@ on:
   push:
     branches: [ master, stress-test ]
   pull_request:
-    branches: [ master, stress-test ]
 jobs:
   Lint:
     name: Lint

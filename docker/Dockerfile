@@ -1,7 +1,7 @@
 FROM alpine:latest as build
 
 ARG PKG_MANAGER="npm"
-ARG INSTALL_COMMAND="npm install --production"
+ARG INSTALL_COMMAND="npm ci --production"
 
 RUN mkdir /opt/armadietto
 WORKDIR /opt/armadietto

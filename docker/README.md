@@ -44,6 +44,11 @@ configuration:
     "cert": "/etc/letsencrypt/live/example.com/cert.pem",
     "key": "/etc/letsencrypt/live/example.com/privkey.pem"
   },
+  "logging": {
+	  "log_dir": "logs",
+	  "stdout": ["info"],
+	  "log_files": ["error"]
+  },
   "basePath": ""
 }
 ```
@@ -61,8 +66,9 @@ ensure data is persisted.
 docker run -d -v /data/armadietto:/usr/share/armadietto -p 8000:8000 remotestorage/armadietto:latest
 ```
 
-*Note:* The folder and its contents must be writable and readable by the
-container user, which is by default the `armadietto` user (UID 6582).
+*Note:* The data and log folders and their contents must be writable and
+readable by the container user, which is by default the `armadietto` user
+(UID 6582).
 
 ### Behind a Proxy
 

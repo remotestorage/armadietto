@@ -26,7 +26,7 @@ const post = async (path, params) => {
   return ret;
 };
 
-let store = {
+const store = {
   authorize (clientId, username, permissions) {
     return 'a_token';
   },
@@ -38,7 +38,11 @@ const sandbox = chai.spy.sandbox();
 describe('OAuth', async () => {
   before((done) => {
     (async () => {
-      this._server = new Armadietto({ store, http: { port: 4567 } });
+      this._server = new Armadietto({
+        store,
+        http: { port: 4567 },
+        logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
+      });
       await this._server.boot();
       done();
     })();
@@ -157,7 +161,10 @@ describe('OAuth', async () => {
       };
       const res = await post('/oauth', this.auth_params);
       expect(res).to.have.status(401);
-      expect(res).to.have.header('Content-Type', 'text/html');
+      expect(res).to.have.header('Content-Type', 'text/html; charset=utf8');
+      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+      expect(res).to.have.header('Referrer-Policy', 'no-referrer');
+      expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
       expect(res.text).to.contain('application <em>the_client_id</em> hosted');
     });
   });

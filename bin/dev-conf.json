@@ -1,0 +1,15 @@
+{
+  "basePath": "",
+  "allow_signup": true,
+  "storage_path": "./dev-storage",
+  "cache_views": true,
+  "http": {
+    "host": "127.0.0.1",
+    "port": 8000
+  },
+  "logging": {
+    "log_dir": "./dev-log",
+    "stdout": ["debug"],
+    "log_files": ["error"]
+  }
+}

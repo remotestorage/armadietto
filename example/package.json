@@ -9,8 +9,8 @@
   "author": "remoteStorage contributors",
   "license": "MIT",
   "dependencies": {
-    "http-server": "0.11.1",
-    "remotestoragejs": "^1.2.2",
-    "remotestorage-widget": "^1.4.0"
+    "http-server": "14.1.0",
+    "remotestoragejs": "^2.0.0-beta.1",
+    "remotestorage-widget": "^1.5.4"
   }
 }

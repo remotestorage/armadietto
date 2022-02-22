@@ -8,7 +8,7 @@ const Armadietto = require('../../lib/armadietto');
 
 chai.use(chaiHttp);
 chai.use(spies);
-let store = {};
+const store = {};
 const port = '4569';
 const host = `http://localhost:${port}`;
 const req = chai.request(host);
@@ -24,7 +24,11 @@ const trim = (what) => what.replace(/\s+/gm, ' ').trim();
 describe('WebFinger', () => {
   before((done) => {
     (async () => {
-      this._server = new Armadietto({ store, http: { port: port } });
+      this._server = new Armadietto({
+        store,
+        http: { port },
+        logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
+      });
       await this._server.boot();
       done();
     })();
@@ -43,10 +47,10 @@ describe('WebFinger', () => {
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/jrd+json');
     expect(res.body).to.be.deep.equal({
-      'links': [
+      links: [
         {
-          'rel': 'lrdd',
-          'template': host + '/webfinger/jrd?resource={uri}'
+          rel: 'lrdd',
+          template: host + '/webfinger/jrd?resource={uri}'
         }
       ]
     });
@@ -58,10 +62,10 @@ describe('WebFinger', () => {
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/json');
     expect(res.body).to.be.deep.equal({
-      'links': [
+      links: [
         {
-          'rel': 'lrdd',
-          'template': host + '/webfinger/jrd?resource={uri}'
+          rel: 'lrdd',
+          template: host + '/webfinger/jrd?resource={uri}'
         }
       ]
     });
@@ -85,12 +89,12 @@ describe('WebFinger', () => {
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.have.header('Content-Type', 'application/jrd+json');
     expect(res.body).to.have.deep.equal({
-      'links': [
+      links: [
         {
-          'rel': 'remoteStorage',
-          'api': 'simple',
-          'auth': host + '/oauth/zebcoe',
-          'template': host + '/storage/zebcoe/{category}'
+          rel: 'remoteStorage',
+          api: 'simple',
+          auth: host + '/oauth/zebcoe',
+          template: host + '/storage/zebcoe/{category}'
         }
       ]
     });
@@ -117,12 +121,12 @@ describe('WebFinger', () => {
     //     check_header( "Access-Control-Allow-Origin", "*" )
     //     check_header( "Content-Type", "application/json" )
     expect(res.body).to.have.deep.equal({
-      'links': [
+      links: [
         {
-          'href': host + '/storage/zebcoe',
-          'rel': 'remotestorage',
-          'type': 'draft-dejong-remotestorage-01',
-          'properties': {
+          href: host + '/storage/zebcoe',
+          rel: 'remotestorage',
+          type: 'draft-dejong-remotestorage-01',
+          properties: {
             'auth-method': 'http://tools.ietf.org/html/rfc6749#section-4.2',
             'auth-endpoint': host + '/oauth/zebcoe',
             'http://remotestorage.io/spec/version': 'draft-dejong-remotestorage-01',

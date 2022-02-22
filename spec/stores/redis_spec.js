@@ -5,7 +5,7 @@ const { itBehavesLike } = require('bdd-lazy-var');
 require('../store_spec');
 
 describe('Redis store', () => {
-  let store = new RedisStore({ namespace: String(new Date().getTime()) });
+  const store = new RedisStore({ namespace: String(new Date().getTime()) });
   after(async () => {
     const db = new Redis();
     await db.select(0);

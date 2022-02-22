@@ -1,4 +1,4 @@
-# armadietto [![Build Status](https://secure.travis-ci.org/remotestorage/armadietto.svg)](http://travis-ci.org/remotestorage/armadietto) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0eaafdf96ebb47a9ac462bcf6a7ccb06)](https://www.codacy.com/app/lesion/armadietto?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=remotestorage/armadietto/&amp;utm_campaign=Badge_Grade)
+# Armadietto [![npm](https://img.shields.io/npm/v/armadietto)](https://www.npmjs.com/package/armadietto) [![Build Status](https://github.com/remotestorage/armadietto/actions/workflows/test-and-lint.yml/badge.svg)](https://github.com/remotestorage/armadietto/actions/workflows/test-and-lint.yml?query=branch%3Amaster)
 
 > ### :warning: WARNING
 > Please do not consider `armadietto` production ready, this project is still
@@ -14,14 +14,21 @@ Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Nod
 This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
 ## Installation
-```
-$ npm -g i armadietto
-```
+
+1. Ensure you have [a maintained version of Node](https://nodejs.org/en/about/releases/) installed.
+2. If you will be using Apache as a reverse proxy, ensure it is [version 2.4.49 or later](https://community.remotestorage.io/t/avoid-apache-as-a-basis-for-your-server/139).
+3. Run `npm -g i armadietto`
+
 
 ## Usage
-```
-$ armadietto -h
-```
+
+See the `notes` directory for configuring a reverse proxy and other recipes.
+
+1. Run `armadietto -e` to see a sample configuration file.
+2. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See below for values and their meanings.
+3. Run `armadietto -c /etc/armadietto/conf`
+
+To see all options, run `armadietto -h`. Set the environment `DEBUG` to log the headers of every request.
 
 ## Use as a library
 
@@ -50,15 +57,15 @@ that, use the `allow.signup` option:
 ```js
 var server = new Armadietto({
   store: store,
-  http:  {host: '127.0.0.1', port: 8000},
-  allow: {signup: true}
+  http:  { host: '127.0.0.1', port: 8000 },
+  allow: { signup: true }
 });
 ```
 
 If you navigate to `http://localhost:8000/` you should then see a sign-up link
 in the navigation.
 
-### Storage security
+## Storage security
 
 In production, we recommend that you restrict access to the files managed by
 your armadietto server as much as possible. This is particularly true if you host
@@ -75,7 +82,7 @@ You should take these steps to keep your storage safe:
   owned by your armadietto user
 * Make sure the directory `path/to/storage` cannot be read, written or executed
   by anyone but this user:
-  `sudo chmod 0700 /path/to/storage && sudo chown armadietto /path/to/storage`
+  `sudo chmod 0700 /path/to/storage && sudo chown armadietto:armadietto /path/to/storage`
 
 * Do not run armadietto as root; if you need to bind to port 80 or 443 use a
   reverse proxy like nginx, Apache2, caddy, lighttpd or enable bind capability:
@@ -86,12 +93,17 @@ You should take these steps to keep your storage safe:
 If you're using the Redis backend, apply similar access restrictions to the
 database and to any files containing the database access credentials.
 
-### Serving over HTTPS
+## Serving over HTTPS
 
 Since RemoteStorage is a system for storing arbitrary user-specific data, and
-since it makes use of OAuth 2.0, we recommend you serve it over a secure
+since it makes use of OAuth 2.0, we strongly recommend you serve it over a secure
 connection. You can boot the server to listen for HTTP or HTTPS requests or
-both. This configuration boots the app on two ports, one secure and one
+both.  
+If armadietto is behind a reverse proxy on the same machine, the proxy can handle TLS, 
+so armadietto only needs to set `enable` and `force` in the https configuration.
+The reverse proxy must set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header.
+
+This configuration boots the app on two ports, one secure and one
 plaintext:
 
 ```js
@@ -108,11 +120,24 @@ const server = new Armadietto({
     key:   'path/to/ssl.key',
     cert:  'path/to/ssl.crt',
     ca:    'path/to/ca.pem'    // optional
+  },
+  logging: {
+    stdout: ["debug"],
+    log_files: ["error"],
+    log_dir: "./some-log-dir"
   }
+
 });
 
 server.boot();
 ```
+
+For example, if you use certificates from [Lets Encrypt](https://letsencrypt.org), you will set
+```
+    cert: "/etc/letsencrypt/live/domainname/cert.pem",
+    key: "/etc/letsencrypt/live/domainname/privkey.pem"
+```
+where domainname is (usually) the DNS name of your server.
 
 The `force: true` line in the `https` section means the app will:
 
@@ -134,7 +159,7 @@ setup, you can set `https.force = true` but omit `https.port`; this means
 armadietto itself will not accept encrypted connections but will apply the above
 behaviour to enforce secure connections.
 
-### Storage backends
+## Storage backends
 
 armadietto supports pluggable storage backends, and comes with a file system
 implementation out of the box (redis storage backend is on the way in
@@ -162,6 +187,14 @@ const server = new Armadietto({
 
 server.boot();
 ```
+
+## Debugging an installation
+
+Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf`
+
+## Development
+
+See `DEVELOPMENT.md`
 
 ## License
 

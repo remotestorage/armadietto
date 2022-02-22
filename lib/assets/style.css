@@ -1,122 +1,787 @@
+/* FONTS */
+@font-face {
+  font-family: "Outfit";
+  font-weight: 100 900;
+  font-style: normal;
+  src: url('outfit-variablefont_wght.woff2') format('woff2');
+}
+
+/* VARIABLES */
+:root {
+  --font-fallback: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-sans;
+
+  --default-icon-size: 2rem;
+  --default-input-height: 3rem;
+
+  /* COLORS */
+
+  /*  remoteStorage Colors */
+  --rs-orange-color: #ff4b03;
+  --rs-black-color: #222;
+  --rs-white-color: #fefefe;
+
+  /*  Armadietto colors */
+  --arma-black-color:  #171614;
+  --arma-whitesmoke-color: #e6e2da;
+  --arma-wheat-color: #c7b9bd;
+  --arma-orange-color: #f4a903;
+  --arma-orangered-color: #f07b0d;
+
+  /* Default Colors */
+  --default-error-color: #aa2e2e;
+
+  --github-sprite-url: url("sprite.svg#icon-github-dark");
+}
+
+:root[data-theme="light"] {
+  --rs-brand-color: var(--rs-orange-color);
+  --rs-frgrd-color: var(--rs-white-color);
+  --rs-bckgrd-color: var(--rs-black-color);
+
+  --arma-bckgrd-color:  var(--arma-whitesmoke-color);
+  --arma-title-color: #0d0608;
+  --arma-text-color: var(--arma-black-color);
+  --arma-brand-color: var(--arma-orange-color);
+  --arma-extra-color: #185d6e;
+
+  --arma-link-color: var(--arma-black-color);
+  --arma-link-color-hover: var(--arma-whitesmoke-color);
+  --arma-link-bckgrd-color: var(--arma-orange-color);
+  --arma-link-hover-bckgrd-color: var(--arma-black-color);
+  --arma-link-border-width: 0 .25rem;
+
+  --arma-btn-txt-color: var(--arma-black-color);
+
+  --default-allow-color: var(--default-success-color);
+  --default-signup-color: var(--arma-brand-color);
+
+  --default-cancel-color: #121314;
+  --default-cancel-reverse-color: var(--arma-whitesmoke-color);
+  --default-cancel-hover-color: var(--arma-orangered-color);
+
+  --default-success-color: #057013;
+  --arma-focus-bckgrd-color: var(--arma-extra-color);
+  --arma-focus-border-color: var(--arma-extra-color);
+
+  --rs-blurb-bckgrd-color: var(--rs-black-color);
+  --rs-blurb-border-color: var(--rs-black-color);
+
+  --em-form-bckgrd-color: var(--arma-orange-color);
+
+  --github-sprite-url-hover: url("sprite.svg#icon-github-light");
+  --icon-eye-blocked: url('sprite.svg#icon-eye-blocked-dark');
+  --icon-eye: url('sprite.svg#icon-eye-dark');
+}
+
+/* @media (prefers-color-scheme: dark) { */
+  :root[data-theme="dark"] {
+    --rs-brand-color: var(--rs-orange-color);
+    --rs-frgrd-color: var(--rs-black-color);
+    --rs-bckgrd-color: var(--rs-white-color);
+
+    --arma-bckgrd-color:  var(--arma-black-color);
+    --arma-title-color: var(--arma-whitesmoke-color);
+    --arma-text-color: var(--arma-wheat-color);
+    --arma-brand-color: var(--arma-orange-color);
+    --arma-extra-color: #69a2b0;
+
+    --arma-link-color: var(--arma-black-color);
+    --arma-link-color-hover: var(--arma-black-color);
+    --arma-link-bckgrd-color: var(--arma-orange-color);
+    --arma-link-hover-bckgrd-color: var(--arma-whitesmoke-color);
+    --arma-link-border-width: 0 .25rem;
+
+    --arma-btn-txt-color: var(--arma-black-color);
+
+    --default-success-color: #3fb34f;
+    --arma-focus-bckgrd-color: hsla(0, 0%, 30%, .45);
+    --arma-focus-border-color: hsla(0, 0%, 100%, .45);
+    --default-allow-color: var(--default-success-color);
+    --default-signup-color: var(--arma-brand-color);
+
+    --default-cancel-color: var(--arma-whitesmoke-color);
+    --default-cancel-reverse-color: #121314;
+    --default-cancel-hover-color: var(--arma-orangered-color);
+
+    --icon-eye-blocked: url('sprite.svg#icon-eye-blocked-light');
+    --icon-eye: url('sprite.svg#icon-eye-light');
+  }
+/* } */
+
+/* GLOBALS */
+
 body {
-  background: #fff;
-  color: #464646;
-  font: 24px/1.5 Open Sans, FreeSans, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 100vh;
+  background: var(--arma-bckgrd-color);
+  background-image: var(--body-bckgrd-linear-gradient, transparent);
+  color: var(--arma-text-color);
+  font: normal 1rem / 1.5 "Outfit", var(--font-fallback);
   margin: 0;
-  padding: 0 0 4em;
-}
-
-.sub {
-  margin: 0 auto;
-  position: relative;
-  width: 600px;
-}
-
-.header {
-  background: #3c3c40;
-  border-bottom: 4px solid #c6c6c6;
-  position: relative;
-}
-h1 {
-  color: #fff;
-  font-size: 2em;
-  font-weight: normal;
-  margin: 0;
-  padding: 0.5em 0;
-}
-h1 a {
-  color: #fff;
-  font-weight: normal;
-}
-h1 span {
-  color: #c6c6c6;
-  display: block;
-  font-size: 0.3em;
-  text-transform: uppercase;
-}
-.nav {
-  bottom: 1.7em;
-  font-size: 0.6em;
-  list-style: none;
-  position: absolute;
-  right: 0;
-}
-.nav li {
-  display: inline;
-  margin: 0 0 0 1.2em;
-}
-.nav a {
-  font-weight: normal;
-  text-decoration: none;
-}
-.nav a:hover {
-  text-decoration: underline;
-}
-
-h2 {
-  color: #999;
-  font-size: 1.5em;
-  font-weight: normal;
-  margin: 1em 0 0.5em;
-}
-p, .content ul, form {
-  margin: 1em auto;
   padding: 0;
-}
-.content ul {
-  border: 1px solid #d4d4d4;
-  border-left: none;
-  border-right: none;
-  padding: 1em 0;
 }
 
 a {
-  color: #f4a903;
-  font-weight: bold;
   text-decoration: none;
 }
 
-em {
-  font-style: normal;
-  font-weight: bold;
+a:focus {
+  outline: thin dotted;
 }
 
-.status {
-  color: #ccc;
-  font-size: 10em;
-  font-weight: bold;
-  margin: 0;
-  text-align: center;
-}
-.message {
-  border-top: 1px solid #ccc;
-  margin: 0;
-  padding: 1em 0 0;
-  text-align: center;
-}
-.error {
-  color: #c93600;
-  font-weight: bold;
+p > a {
+  display: inline-block;
+  line-height: 1.5em;
+  border: solid var(--arma-link-bckgrd-color);
+  border-width: var(--arma-link-border-width, 0);
+  border-radius: 0.25rem;
+  background-color: var(--arma-link-bckgrd-color, transparent);
+  color: var(--arma-link-color);
+  font-weight: 600;
+  text-decoration: var(--default-link-decoration, none);
+  vertical-align: middle;
 }
 
-table {
-  border-collapse: collapse;
+p > a:hover {
+  background-color: var(--arma-link-hover-bckgrd-color);
+  border-color: var(--arma-link-hover-bckgrd-color);
+  color: var(--arma-link-color-hover);
+  text-decoration: var(--default-link-hover-decoration, none);
+}
+
+ul,
+li {
+  list-style: none;
+  padding: 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* TOPBAR HEADER */
+
+header.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: calc(100vw - 2rem);
+  min-height: 3rem;
+  margin: 1rem 0;
+}
+
+header.topbar h1 {
+	display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .25rem;
+  padding: 0;
+	margin: 0;
+  color: #7c7777;
+  font-size: 1.5rem;
+	line-height: 1;
+}
+
+@media only screen and (max-width: 600px) {
+  header.topbar {
+    flex-direction: column;
+  }
+
+  header.topbar h1 {
+    padding: 0;
+  }
+
+  header.topbar h1 a {
+    margin: auto;
+  }
+}
+
+header.topbar .subtitle {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--arma-extra-color, currentColor);
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+header.topbar .logo {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  color: var(--arma-title-color);
+  font-weight: 3500;
+	font-size: 1rem;
+  text-transform: lowercase;
+}
+
+header.topbar .logo svg {
+  height: 1rem;
+  fill: var(--arma-brand-color);
+}
+
+header.topbar h1 a {
+	color: var(--arma-text-color);
+  font-size: 1.2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -.05em;
+  outline-offset: .5rem;
+}
+
+header.topbar h1 a:hover,
+header.topbar h1 a:focus {
+  color: var(--arma-brand-color);
+}
+
+/* NAV HEADER */
+
+@media only screen and (min-width: 601px) {
+  header.topbar nav {
+    align-self: flex-start;
+    margin-left: auto;
+  }
+}
+
+header.topbar nav ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+}
+
+header.topbar .signup {
+	display: inline-flex;
+  align-items: center;
+  gap: .125rem;
+  margin: auto;
+	padding: 0 .5rem;
+	border-radius: .5rem;
+	color: var(--arma-text-color);
+	transition: all .2s linear;
+  text-decoration: none;
+}
+
+header.topbar .signup::before {
+  content: "\270E";
+  font-size: 1.5em;
+  transform: rotate(12deg);
+}
+
+header.topbar .signup:hover,
+header.topbar .signup:focus {
+  color: var(--arma-text-color);
+  box-shadow: inset 0 0 0 .125rem var(--arma-text-color);
+}
+
+/* HERO */
+
+section.hero {
+  width: 50rem;
+  max-width: calc(100vw - 2rem);
+  text-align: center;
+}
+
+@media only screen and (min-width: 601px) {
+  section.hero {
+    margin: 2rem auto;
+  }
+}
+
+section.hero svg {
+  fill: #f4a903;
+	font-size: 1.3rem;
+	letter-spacing: .05em;
+}
+
+section.hero header {
+  font-size: 1.5rem;
+  font-weight: 200;
+  line-height: 1.2;
+}
+
+section.hero h2 {
+  margin: 1.4rem auto 0;
+  color: var(--arma-title-color);
+  font-size: 2.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+section.hero header p {
+  line-height: 1.5;
+}
+
+section.hero header + p {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+@media only screen and (max-width: 600px) {
+  section.hero svg {
+    width: auto;
+    height: 120px;
+  }
+
+  section.hero header {
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+
+  section.hero h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* BODY FOOTER */
+
+body > footer > p {
+  width: 80rem;
+  max-width: calc(100vw - 2rem);
+  margin: 2rem auto 3rem;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* MISCELLANEOUS */
+
+.rs-link {
+	display: inline-flex;
+	align-items: center;
+	gap: .25rem;
+	height: 2rem;
+	margin: auto .25rem;
+	padding: 0 .5rem;
+  background-color: whitesmoke;
+  border-width: 0;
+	border-radius: 1.4rem;
+	font-size: 1rem;
+  font-weight: 700;
+}
+
+.rs-link:hover {
+  background-color: var(--rs-black-color);
+  color: whitesmoke;
+}
+
+.rs-link > span {
+  margin-top: -.125rem;
+}
+
+.rs-link::before {
+  content: url('sprite.svg#icon-rs');
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: auto;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  border: solid var(--arma-link-bckgrd-color, transparent);
+  border-width: var(--arma-link-border-width, 0);
+  border-radius: 0.25rem;
+  background-color: var(--arma-link-bckgrd-color, transparent);
+  color: var(--arma-link-color);
+  line-height: 1.4;
+}
+
+.github-link:hover {
+  background-color: var(--arma-link-hover-bckgrd-color);
+  border-color: var(--arma-link-hover-bckgrd-color);
+  text-decoration: none;
+}
+
+.github-link::after {
+  content: var(--github-sprite-url);
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin: auto;
+}
+
+.github-link:hover::after {
+  content: var(--github-sprite-url-hover, var(--github-sprite-url));
+}
+
+/* MAIN CONTENT */
+
+main.content {
+  margin: auto;
+}
+
+main.content > h2 {
+  color: var(--arma-title-color);
+  font-size: 2rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+main.content > p {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+main .status {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  color: var(--arma-title-color);
+  font-size: 8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+main .message {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+/* FORMS */
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  margin: auto;
+}
+
+.form-group {
+  position: relative;
   width: 100%;
 }
-tr {
-  border: 1px solid #ccc;
-  border-left: none;
-  border-right: none;
+
+.form-group:last-of-type {
+  margin-bottom: 1rem;
 }
-th {
-  font-size: 0.8em;
-  font-weight: normal;
-  text-align: left;
-}
-th, td {
-  padding: 0.4em 1em;
+
+label {
+  color: var(--arma-extra-color);
+  font-size: .875rem;
 }
 
 input {
-  font: 0.8em Open Sans, FreeSans, Helvetica, Arial, sans-serif;
+  display: flex;
+  place-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--default-input-height);
+  border: none;
+  border-bottom: .125rem dotted var(--arma-extra-color);
+  border-top: .125rem solid transparent;
+  background-color: var(--arma-bckgrd-color);
+  color: var(--arma-text-color);
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: all .3s linear;
+  -webkit-appearance: none;
+  filter: unset;
+}
+
+input:focus {
+  border-bottom-style: solid !important;
+  padding-left: .75rem;
+  outline: 0;
+  border-top: 2pt dotted var(--arma-focus-border-color);
+  background-color: rgba(125,125,125, .1);
+  appearance: none;
+  filter: unset;
+}
+
+input:valid {
+  border-bottom-color: var(--default-success-color);
+  color: var(--default-success-color);
+  filter: unset;
+}
+
+input:valid:focus {
+	outline: 0;
+  padding-left: .75rem;
+	border-top: 2pt dotted var(--arma-focus-border-color);
+  filter: unset;
+}
+
+input::placeholder {
+  color: var(--arma-text-color);
+  font-style: italic;
+  font-weight: 400;
+  opacity: .4;
+}
+
+input#password {
+  font-weight: 700;
+}
+
+button[type="submit"] {
+  display: flex;
+  place-content: center;
+  width: auto;
+  min-width: 7rem;
+  min-height: 3rem;
+  padding: .5rem 1.5rem;
+  margin: auto;
+  border-radius: 1.5rem;
+  border: none;
+  background-color: var(--arma-brand-color);
+  color: var(--arma-btn-txt-color);
+  font-family: 'Outfit', var(--font-fallback);
+  font-size: 1.3rem;
+  margin-left: auto;
+  font-weight: 700;
+  line-height: 1.4;
+  transition: all .3s ease;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+button:hover {
+  background-color: var(--arma-title-color);
+  color: var(--arma-bckgrd-color);
+}
+
+button[name="signup"]:focus {
+  outline: 2pt dotted var(--arma-text-color);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  gap: .75rem;
+  width: 100%;
+  max-width: 100%;
+  margin: auto;
+  padding: .5rem .65rem .65rem .875rem;
+  border-radius: .25rem;
+  background-color: var(--default-error-color);
+  color: var(--arma-whitesmoke-color);
+  font-weight: 600;
+  line-height: 1.2;
+  font-size: .9375rem;
+}
+
+.error::before {
+  content: url('sprite.svg#icon-warning');
+  display: flex;
+  align-self: center;
+  min-width: var(--default-icon-size);
+  height: var(--default-icon-size);
+}
+
+.success {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.success em {
+  font-weight: 700;
+  font-style: normal;
+}
+
+.oauth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 28rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.oauth-form p {
+  text-align: center;
+}
+
+.oauth-form p em {
+  color: var(--arma-extra-color);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.oauth-form ul {
+  box-sizing: border-box;
+  margin: 0 auto 2rem;
+  padding: 0;
+  width: 22rem;
+  max-width: 100%;
+  border: 1px solid var(--arma-extra-color);
+  border-radius: .125rem;
+  overflow: hidden;
+}
+
+.oauth-form ul li {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: .25rem .75rem;
+  font-size: .875rem;
+}
+
+.oauth-form ul li em {
+  font-weight: 600;
+  font-style: normal;
+}
+
+.oauth-form ul li:nth-child(odd) {
+  background-color: var(--arma-extra-color);
+}
+
+.oauth-form ul li:nth-child(even) {
+  background-color: var(--arma-text-color);
+}
+
+.oauth-form ul li > em:first-child {
+  place-self: self-start;
+  color: var(--arma-bckgrd-color);
+}
+
+.oauth-form ul li > span {
+  place-self: center;
+  padding: 0 .25rem;
+  color: var(--arma-bckgrd-color);
+	line-height: 1.1;
+	font-weight: 600;
+	font-size: .875rem;
+}
+
+.oauth-form ul li > em:last-child {
+  place-self: self-end;
+  color: var(--rs-frgrd-color);
+}
+
+.oauth-form label {
+  margin-bottom: .5rem;
+  color: var(--arma-title-color);
+  font-size: 1.25rem;
+}
+
+.oauth-form label em {
+  color: var(--arma-text-color);
+  font-weight: 700;
+  font-style: normal;
+}
+
+.oauth-form .form-group,
+.oauth-form input {
+  text-align: center;
+}
+
+div.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 1rem;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+button[name="allow"] {
+  background-color: var(--default-success-color);
+  color: var(--arma-bckgrd-color);
+}
+
+button[name="allow"]:hover {
+  background-color: var(--arma-brand-color);
+  color: var(--arma-black-color);
+}
+
+button[name="deny"] {
+  background-color: var(--default-cancel-color);
+  color: var(--default-cancel-reverse-color);
+}
+
+button[name="deny"]:hover {
+  background-color: var(--default-cancel-hover-color);
+  color: var(--default-cancel-color);
+}
+
+button[name="allow"]:focus,
+button[name="deny"]:focus {
+  outline: 2px dotted var(--arma-text-color);
+}
+
+#togglePassword {
+  position: absolute;
+  right: .75rem;
+  bottom: calc((var(--default-input-height) / 2) - (var(--default-icon-size) / 2));
+  outline-offset: .125rem;
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+#togglePassword.icon-eye.icon-slash::before {
+  content: var(--icon-eye-blocked);
+  cursor: pointer;
+}
+
+#togglePassword.icon-eye::before {
+  content: var(--icon-eye);
+  cursor: pointer;
+}
+
+#togglePassword:focus-visible {
+  outline: 2pt dotted var(--arma-focus-border-color);
+}
+
+
+/* ICONS */
+
+[class^="icon-"] {
+  display: inline-flex;
+  width: var(--default-icon-size);
+  height: var(--default-icon-size);
+  border: 0;
+  padding: .25rem;
+}
+
+[class^="icon-"]::before {
+  content: '';
+  display: inline-block;
+  width: 100%;
+  margin: auto;
+}
+
+
+/* SWITCH */
+#switch {
+  display: flex;
+  width: var(--default-icon-size);
+  height: var(--default-icon-size);
+  background-color: transparent;
+  border-radius: 50%;
+  border: none;
+  color: var(--arma-text-color);
+  font-size: 0;
+  cursor: pointer;
+}
+
+#switch::before {
+  content: '';
+  display: inline-block;
+  place-content: center;
+  width: var(--default-icon-size);
+  margin: auto;
+}
+
+#switch.dark::before {
+  content: url('sprite.svg#icon-sun');
+}
+
+#switch.light::before {
+  content: url('sprite.svg#icon-moon');
 }

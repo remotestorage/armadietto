@@ -205,7 +205,7 @@
 
     log("initialize data -- state for use-cases -- to empty");
     var data = {
-      scope: 'myfavoritedrinks:rw',
+      scope: 'armadietto.example:rw',
       responseType: 'token',
       token: params.get('access_token'),
       httpMethod: 'PUT',
@@ -216,7 +216,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       remoteStorage.access.claim(data.scope, 'rw');
-      const widget = new Widget(remoteStorage);
+      const widget = new Widget(remoteStorage, { leaveOpen:true });
       attachEvents('appStorage', remoteStorage);
       log('in DOMContentLoaded :: attaching remoteStorage to widget');
       log('attaching to #remotestorage-widget-anchor element');
@@ -525,7 +525,7 @@
 
     async function apiStorage() {
       log('apiStorage :: start');
-      if (!data.token || !data.scope || !data.server || !data.user || !data.apiMethod || data.apiMethod !== 'LISTING' && !data.path || data.apiMethod === 'PUT' && !data.data) {
+      if (!data.token || !data.scope || !data.user || !data.server || !data.apiMethod || data.apiMethod !== 'LISTING' && !data.path || data.apiMethod === 'PUT' && !data.data) {
         log('apiStorage :: required data properties not present, click this log to see expression', data);
         return;
       }

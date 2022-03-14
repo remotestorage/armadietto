@@ -54,9 +54,15 @@ const remoteStorageServer = {
 
     process.umask(0o077);
     const store = new Armadietto.FileTree({ path: conf.storage_path });
+    const middleware = [ // order matters:  on each request middleware called in order defined below
+      require('../lib/extensions/liveness_probe/liveness_probe'),
+      require('../lib/extensions/rate_limiter/rate_limiter'),
+      require('../lib/extensions/storage_allowance/storage_allowance'),
+    ];
     const server = new Armadietto({
       basePath: conf.basePath,
       store,
+      middleware,
       logging: conf.logging,
       http: {
         host: conf.http.host,
@@ -74,7 +80,8 @@ const remoteStorageServer = {
       allow: {
         signup: conf.allow_signup || false
       },
-      cacheViews: conf.cache_views || false
+      cacheViews: conf.cache_views || false,
+      extensions: conf.extensions
     });
 
     server.boot();

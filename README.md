@@ -188,6 +188,94 @@ const server = new Armadietto({
 server.boot();
 ```
 
+## Middleware
+
+Armadietto is extensible through middleware.  Middleware is dependency injected in the same manner as switchable storage:  by defining  the `middleware` array in [./bin/armadietto.js](./bin/armadietto.js)' `init()`.
+
+Middleware is configurable in the usual way via the server's configuration JSON, such as the default [./bin/dev-conf.json](./bin/dev-conf.json): see `extensions` key.
+
+For examples of middleware configuration and use study [./spec/armadietto/middleware_spec.js](./spec/armadietto/middleware_spec.js).  The test file explains the expected interface for middleware classes and has a couple examples.
+
+Available middleware extensions are touched upon below.
+
+#### storage_allowance
+
+The `storage_allowance` middleware limits each user's storage allowance as per the configuration.  The middleware embellishes the returned token to do its checks.  
+
+User's storage capacity is checked only on authorization, not each request.  If a user is over-capacity, all writes will fail with HTTP 507/INSUFFICENT STORAGE until the user cleans up storage and re-authorizes.
+
+The configuration:
+
+``` 
+  "extensions": {
+    ...
+    "storage_allowance": {
+      "enabled": true,
+      "max_bytes": 10485760,
+      "salt": "c0c0nut"
+    },
+    ...
+  }
+```
+
+- `enabled` flags whether this extension is enabled
+- `max_bytes` is the maximum size of a user's storage
+- `salt` is your own secret key to salt the claim in the token
+
+#### liveness_probe
+
+The `liveness_probe` middleware allows a liveness check that exercises the storage layer.
+
+The liveness user and file are created if they do not exist.  Ensure to exercise the liveness endpoint at least once to reserve the user name for your liveness probe needs.
+
+The configuration:
+
+``` 
+  "extensions": {
+    ...
+    "liveness_probe": {
+      "enabled": true,
+      "user": "sysop",
+      "file_path": "/status.txt",
+      "file_size_bytes": 64,
+      "url_path": "status.txt"
+    },
+    ...
+  }
+```
+
+- `enabled` flags whether this extension is enabled
+- `user` is the user account under which the liveness probe file is created if it doesn't exist
+- `file_path` is the path to the file in the user's storage
+- `file_size_bytes` is the size of the file if newly created
+- `url_path` is the URL path of the liveness probe, if it's `status.txt` then you can test liveness with `http://localhost:8000/status.txt`
+
+#### rate_limiter
+
+The `rate_limiter` middleware throttles requests from a single IP.
+
+Throttling state is handled by [redis](https://redis.com) to enable clustered Armadietto deployments.
+
+The configuration:
+
+``` 
+  "extensions": {
+	...
+    "rate_limiter": {
+      "enabled": true,
+      "requests_per_window": 20,
+      "limiting_window_seconds": 10,
+      "redis_url": "redis://localhost:6379"
+    },
+    ...
+  }
+```
+
+- `enabled` flags whether this extension is enabled
+- `requests_per_window` is the number of requests from a single IP are allowed per window
+- `limiting_window_seconds` is the accounting time window period
+- `redis_url` is the [redis](https://redis.com) url as per `[redis[s]:]//[[user][:password@]][host][:port][/db-number][?db=db-number[&password=bar[&option=value]]]`
+
 ## Debugging an installation
 
 Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf`

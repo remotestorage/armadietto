@@ -11,5 +11,25 @@
     "log_dir": "./dev-log",
     "stdout": ["debug"],
     "log_files": ["error"]
+  },
+  "extensions": {
+    "storage_allowance": {
+      "enabled": false,
+      "max_bytes": 10485760,
+      "salt": "c0c0nut"
+    },
+    "liveness_probe": {
+      "enabled": false,
+      "user": "sysop",
+      "file_path": "/status.txt",
+      "file_size_bytes": 64,
+      "url_path": "status.txt"
+    },
+    "rate_limiter": {
+      "enabled": false,
+      "requests_per_window": 20,
+      "limiting_window_seconds": 10,
+      "redis_url": "redis://localhost:6379"
+    }    
   }
 }

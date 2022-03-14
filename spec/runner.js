@@ -7,3 +7,5 @@ require('./armadietto/storage_spec');
 
 require('./stores/file_tree_spec');
 // require('./stores/redis_spec');
+
+require('./armadietto/middleware_spec');

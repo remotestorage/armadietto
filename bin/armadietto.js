@@ -57,7 +57,7 @@ const remoteStorageServer = {
     const middleware = [ // order matters:  on each request middleware called in order defined below
       require('../lib/extensions/liveness_probe/liveness_probe'),
       require('../lib/extensions/rate_limiter/rate_limiter'),
-      require('../lib/extensions/storage_allowance/storage_allowance'),
+      require('../lib/extensions/storage_allowance/storage_allowance')
     ];
     const server = new Armadietto({
       basePath: conf.basePath,

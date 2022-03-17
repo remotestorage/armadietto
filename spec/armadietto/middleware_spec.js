@@ -104,7 +104,7 @@ class AbortMiddlewareD {
  *
  * Middleware is also dependency injected in the same fashion as the `middleware` array.
  *
- * You can see this done in each test below, where we depednendy inject an array of somecombination of the
+ * You can see this done in each test below, where we dependency inject an array of some combination of the
  * above sample classes.
  */
 const opts = {

@@ -102,7 +102,7 @@ class AbortMiddlewareD {
  * Below is the `opts` options object passed to Armadietto to intialize and dependency inject.  E.g. we
  * dependency inject `store` below.
  *
- * Middleware is also dependency injected in the same fasion as the `middleware` array.
+ * Middleware is also dependency injected in the same fashion as the `middleware` array.
  *
  * You can see this done in each test below, where we depednendy inject an array of somecombination of the
  * above sample classes.

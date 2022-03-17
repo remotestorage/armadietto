@@ -202,6 +202,8 @@ Available middleware extensions are touched upon below.
 
 The `storage_allowance` middleware limits each user's storage allowance as per the configuration.  The middleware embellishes the returned token to do its checks.  
 
+> ⚠ This extension is currently limited to the filesystem storage back-end (file-tree).
+
 User's storage capacity is checked only on authorization, not each request.  If a user is over-capacity, all writes will fail with HTTP 507/INSUFFICENT STORAGE until the user cleans up storage and re-authorizes.
 
 The configuration:

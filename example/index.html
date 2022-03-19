@@ -525,7 +525,7 @@
 
     async function apiStorage() {
       log('apiStorage :: start');
-      if (!data.token || !data.scope || !data.user || !data.server || !data.apiMethod || data.apiMethod !== 'LISTING' && !data.path || data.apiMethod === 'PUT' && !data.data) {
+      if (!data.token || !data.scope || !data.server || !data.apiMethod || data.apiMethod !== 'LISTING' && !data.path || data.apiMethod === 'PUT' && !data.data) {
         log('apiStorage :: required data properties not present, click this log to see expression', data);
         return;
       }

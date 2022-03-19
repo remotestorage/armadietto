@@ -2,6 +2,7 @@
   "basePath": "",
   "allow_signup": true,
   "storage_path": "./dev-storage",
+  "terms_of_service_url": "https://community.remotestorage.io/tos",
   "cache_views": true,
   "http": {
     "host": "127.0.0.1",

@@ -30,6 +30,7 @@
         </span>
       </h1>
 
+
       <nav role="navigation">
         <ul>
           <% if (signup) { %>
@@ -41,8 +42,13 @@
             <button id="switch">Switch</button>
           </li>
         </ul>
-      </nav>
-   </header>
+        <% if (typeof tosUrl !== 'undefined'  && tosUrl) { %>
+          <ul>
+            <li><p><a href="<%= tosUrl %>" target="_blank">Terms of Service</a></p></li>
+          </ul>
+        <% } %>    
+      </nav>        
+    </header>
 
     <main class="content" role="main">
 

@@ -74,6 +74,7 @@ const remoteStorageServer = {
       allow: {
         signup: conf.allow_signup || false
       },
+      tosUrl: conf.terms_of_service_url,
       cacheViews: conf.cache_views || false
     });
 

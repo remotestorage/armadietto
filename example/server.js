@@ -15,6 +15,7 @@ const server = new Armadietto({
   allow: {
     signup: true
   },
+  tosUrl: 'https://community.remotestorage.io/tos',
   cacheViews: false
 });
 

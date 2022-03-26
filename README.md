@@ -230,7 +230,9 @@ The `rate_limiter` middleware throttles requests from a single IP.
 
 Throttling state is handled by [redis](https://redis.com) to enable clustered Armadietto deployments.
 
-The configuration:
+Throttling occurs solely against HTTP GET/PUT/DELETE *storage* requests.  The configuration parameters need to be tuned to work well in conjunction with client retries (currently at 10 seconds for [remoteStorage.js](https://remotestoragejs.readthedocs.io/en/latest/index.html)) and non-abusive apps in mind.
+
+The configuration below has well tuned defaults:
 
 ``` 
   "extensions": {

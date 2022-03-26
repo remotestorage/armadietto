@@ -224,34 +224,6 @@ The configuration:
 - `max_bytes` is the maximum size of a user's storage
 - `salt` is your own secret key to salt the claim in the token
 
-#### liveness_probe
-
-The `liveness_probe` middleware allows a liveness check that exercises the storage layer.
-
-The liveness user and file are created if they do not exist.  Ensure to exercise the liveness endpoint at least once to reserve the user name for your liveness probe needs.
-
-The configuration:
-
-``` 
-  "extensions": {
-    ...
-    "liveness_probe": {
-      "enabled": true,
-      "user": "sysop",
-      "file_path": "/status.txt",
-      "file_size_bytes": 64,
-      "url_path": "status.txt"
-    },
-    ...
-  }
-```
-
-- `enabled` flags whether this extension is enabled
-- `user` is the user account under which the liveness probe file is created if it doesn't exist
-- `file_path` is the path to the file in the user's storage
-- `file_size_bytes` is the size of the file if newly created
-- `url_path` is the URL path of the liveness probe, if it's `status.txt` then you can test liveness with `http://localhost:8000/status.txt`
-
 #### rate_limiter
 
 The `rate_limiter` middleware throttles requests from a single IP.

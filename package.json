@@ -15,7 +15,7 @@
   "license": "MIT",
   "version": "0.2.0",
   "engines": {
-    "node": ">=12.x"
+    "node": ">=14.x"
   },
   "bin": {
     "armadietto": "./bin/armadietto.js"
@@ -24,8 +24,12 @@
   "dependencies": {
     "argparse": "^2.0.1",
     "ejs": "^3.1.6",
+    "fast-folder-size": "1.6.1",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4",
+    "node-fetch": "^2.6.7",
+    "rate-limiter-flexible": "^2.3.6",
+    "redis": "^3.1.2",
     "winston": "^3.5.1"
   },
   "devDependencies": {
@@ -34,10 +38,11 @@
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.3.0",
     "chai-spies": "^1.0.0",
-    "eslint": "^8.7.0",
+    "copyfiles": "^2.4.1",
+    "eslint": "^8.11.0",
     "eslint-config-standard": "^17.0.0-0",
     "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-n": "^14.0.0",
+    "eslint-plugin-n": "^15.0.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-standard": "^5.0.0",

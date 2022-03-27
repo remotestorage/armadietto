@@ -1,0 +1,27 @@
+<div class="oauth-form">
+
+  <div class="oauth-form">
+    <p>
+      You &mdash; <b><%= username %></b> &mdash; do not have space left on this storage cluster.
+    </p>
+    <p>
+      Your storage capacity is <%= allowance %> bytes but your usage is <%= size %> bytes.
+    </p>
+ 
+    <form method="GET" action="<%= location %>">
+      <br/>
+      <h3>
+        Please continue, but you won't be able to save more data.
+      </h3>
+      <p>
+        You should clean up your storage and re-authorize again to alleviate.
+      </p>
+      <br/>
+      <div class="actions">
+        <button type="submit" name="continue">Continue</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+ 

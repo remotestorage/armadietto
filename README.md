@@ -188,6 +188,72 @@ const server = new Armadietto({
 server.boot();
 ```
 
+## Middleware
+
+Armadietto is extensible through middleware.  Middleware is dependency injected in the same manner as switchable storage:  by defining  the `middleware` array in [./bin/armadietto.js](./bin/armadietto.js)' `init()`.
+
+Middleware is configurable in the usual way via the server's configuration JSON, such as the default [./bin/dev-conf.json](./bin/dev-conf.json): see `extensions` key.
+
+For examples of middleware configuration and use study [./spec/armadietto/middleware_spec.js](./spec/armadietto/middleware_spec.js).  The test file explains the expected interface for middleware classes and has a couple examples.
+
+Available middleware extensions are touched upon below.
+
+#### storage_allowance
+
+The `storage_allowance` middleware limits each user's storage allowance as per the configuration.  The middleware embellishes the returned token to do its checks.  
+
+> ⚠ This extension is currently limited to the filesystem storage back-end (file-tree).
+
+User's storage capacity is checked only on authorization, not each request.  If a user is over-capacity, all writes will fail with HTTP 507/INSUFFICENT STORAGE until the user cleans up storage and re-authorizes.
+
+The configuration:
+
+``` 
+  "extensions": {
+    ...
+    "storage_allowance": {
+      "enabled": true,
+      "max_bytes": 10485760,
+      "salt": "c0c0nut",
+      "redis_url": "redis://localhost:6379"
+    },
+    ...
+  }
+```
+
+- `enabled` flags whether this extension is enabled
+- `max_bytes` is the maximum size of a user's storage
+- `salt` is your own secret key to salt the claim in the token
+- `redis_url` is the [redis](https://redis.com) url as per `[redis[s]:]//[[user][:password@]][host][:port][/db-number][?db=db-number[&password=bar[&option=value]]]`
+
+#### rate_limiter
+
+The `rate_limiter` middleware throttles requests from a single IP.
+
+Throttling state is handled by [redis](https://redis.com) to enable clustered Armadietto deployments.
+
+Throttling occurs solely against HTTP GET/PUT/DELETE *storage* requests.  The configuration parameters need to be tuned to work well in conjunction with client retries (currently at 10 seconds for [remoteStorage.js](https://remotestoragejs.readthedocs.io/en/latest/index.html)) and non-abusive apps in mind.
+
+The configuration below has well tuned defaults:
+
+``` 
+  "extensions": {
+	...
+    "rate_limiter": {
+      "enabled": true,
+      "requests_per_window": 20,
+      "limiting_window_seconds": 10,
+      "redis_url": "redis://localhost:6379"
+    },
+    ...
+  }
+```
+
+- `enabled` flags whether this extension is enabled
+- `requests_per_window` is the number of requests from a single IP are allowed per window
+- `limiting_window_seconds` is the accounting time window period
+- `redis_url` is the [redis](https://redis.com) url as per `[redis[s]:]//[[user][:password@]][host][:port][/db-number][?db=db-number[&password=bar[&option=value]]]`
+
 ## Debugging an installation
 
 Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf`

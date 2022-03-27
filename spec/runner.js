@@ -11,3 +11,4 @@ require('./stores/file_tree_spec');
 
 require('./armadietto/middleware_spec');
 require('./armadietto/rate_limiter_spec');
+require('./armadietto/storage_allowance_spec');

@@ -214,7 +214,8 @@ The configuration:
     "storage_allowance": {
       "enabled": true,
       "max_bytes": 10485760,
-      "salt": "c0c0nut"
+      "salt": "c0c0nut",
+      "redis_url": "redis://localhost:6379"
     },
     ...
   }
@@ -223,6 +224,7 @@ The configuration:
 - `enabled` flags whether this extension is enabled
 - `max_bytes` is the maximum size of a user's storage
 - `salt` is your own secret key to salt the claim in the token
+- `redis_url` is the [redis](https://redis.com) url as per `[redis[s]:]//[[user][:password@]][host][:port][/db-number][?db=db-number[&password=bar[&option=value]]]`
 
 #### rate_limiter
 

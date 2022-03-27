@@ -23,7 +23,8 @@ const server = new Armadietto({
     storage_allowance: {
       enabled: true,
       max_bytes: 10485760,
-      salt: 'c0c0nut'
+      salt: 'c0c0nut',
+      redis_url: 'redis://localhost:6379'
     }
   }
 });

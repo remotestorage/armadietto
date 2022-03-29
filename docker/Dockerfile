@@ -51,13 +51,13 @@ RUN dos2unix bin/armadietto.js
 
 RUN ln -s /opt/armadietto/bin/armadietto.js /usr/local/bin/armadietto
 
-COPY docker/config.json /etc/armadietto.conf.json
+COPY docker/config.json /etc/armadietto/conf
 
 VOLUME $CONFIG_PATH_STORAGE
 VOLUME $CONFIG_PATH_LOGS
 EXPOSE $PORT
 USER $PROJECT_NAME
 
-CMD armadietto -c /etc/armadietto.conf.json
+CMD armadietto -c /etc/armadietto/conf
 
 HEALTHCHECK --start-period=10s CMD wget -q -O /dev/null http://127.0.0.1:$PORT/

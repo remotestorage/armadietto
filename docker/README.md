@@ -25,7 +25,7 @@ docker run -d -p 8000:8000 remotestorage/armadietto:latest
 ### Configuration
 
 The default configuration file for armadietto can be found within the docker
-container in `/etc/armadietto.conf.json` and contains the following
+container in `/etc/armadietto/conf` and contains the following
 configuration:
 
 ```json
@@ -56,7 +56,7 @@ configuration:
 A custom configuration file can be used by mounting it in the container
 
 ```
-docker run -d -v /my/custom/armadietto.conf.json:/etc/armadietto.conf.json:ro -p 8000:8000 remotestorage/armadietto:latest
+docker run -d -v /my/custom/armadietto.conf.json:/etc/armadietto/conf:ro -p 8000:8000 remotestorage/armadietto:latest
 ```
 
 A suitable data directory should also be mounted in the container to

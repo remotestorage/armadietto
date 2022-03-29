@@ -46,6 +46,9 @@ COPY README.md ./
 COPY lib/ lib/
 COPY bin/ bin/
 
+# Ensure bin file (esp the bang line) has unix eol
+RUN dos2unix bin/armadietto.js
+
 RUN ln -s /opt/armadietto/bin/armadietto.js /usr/local/bin/armadietto
 
 COPY docker/config.json /etc/armadietto.conf.json
@@ -55,6 +58,6 @@ VOLUME $CONFIG_PATH_LOGS
 EXPOSE $PORT
 USER $PROJECT_NAME
 
-CMD /opt/armadietto/bin/armadietto.js -c /etc/armadietto.conf.json
+CMD armadietto -c /etc/armadietto.conf.json
 
 HEALTHCHECK --start-period=10s CMD wget -q -O /dev/null http://127.0.0.1:$PORT/

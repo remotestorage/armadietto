@@ -53,7 +53,7 @@ const remoteStorageServer = {
     }
 
     process.umask(0o077);
-    const store = new Armadietto.FileTree({ path: conf.storage_path, lock_timeout_ms: conf.lock_timeout_ms });
+    const store = new Armadietto.FileTree({ path: conf.storage_path, lock_timeout_ms: conf.lock_timeout_ms, lock_stale_after_ms: conf.lock_stale_after_ms });
     const server = new Armadietto({
       basePath: conf.basePath,
       store,

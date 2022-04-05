@@ -197,7 +197,7 @@ You may need to tune the lock-file timeouts in your configuration:
 - *lock_timeout_ms* - millis to wait for lock file to be available
 - *lock_stale_after_ms* - millis to wait to deem lockfile stale
 
-To tune and test follow instructions in [example/README.md](example/README.md) for setup and run [example/load.html](example/load.html) off of `npm run serve` therein.
+To tune run the [hosted RS load test](https://overhide.github.io/armadietto/example/load.html) or follow instructions in [example/README.md](example/README.md) for local setup and subsequently run [example/load.html](example/load.html) off of `npm run serve` therein.
 
 ## Debugging an installation
 

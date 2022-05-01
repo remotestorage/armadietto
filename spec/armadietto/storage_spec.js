@@ -11,7 +11,7 @@ chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 chai.use(spies);
 
-// const req = chai.request('http://localhost:4568');
+// const req = chai.request('http://127.0.0.1:4568');
 const store = {
   get (username, path) {
     return { item: null, versionMatch: true };
@@ -53,7 +53,7 @@ describe('Storage', () => {
     })();
   });
 
-  const req = chai.request('http://localhost:4567');
+  const req = chai.request('http://127.0.0.1:4567');
   subject('req', () => req.get(get.path));
 
   describe('when the client uses path traversal in the path', () => {
@@ -214,7 +214,7 @@ describe('Storage', () => {
         expect(res).to.have.status(401);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache');
-        expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="localhost:4567" error="invalid_token"');
+        expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="127.0.0.1:4567" error="invalid_token"');
       });
     });
 

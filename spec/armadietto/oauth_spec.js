@@ -9,7 +9,7 @@ const Armadietto = require('../../lib/armadietto');
 chai.use(chaiHttp);
 chai.use(spies);
 
-const req = chai.request('http://localhost:4567');
+const req = chai.request('http://127.0.0.1:4567');
 const get = async (path, params) => {
   const ret = await req.get(path)
     .redirects(0)

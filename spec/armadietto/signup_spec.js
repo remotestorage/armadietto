@@ -14,7 +14,7 @@ const store = {
   }
 };
 const port = '4569';
-const host = `http://localhost:${port}`;
+const host = `http://127.0.0.1:${port}`;
 const req = chai.request(host);
 
 const get = async (path) => {
@@ -101,7 +101,7 @@ describe('Signup w/ base path & signup', () => {
   it('redirects to the home page', async () => {
     const res = await get('');
     expect(res).to.redirect;
-    expect(res).to.redirectTo('http://localhost:4569/basic');
+    expect(res).to.redirectTo('http://127.0.0.1:4569/basic');
   });
 
   it('returns a home page w/ signup link', async () => {

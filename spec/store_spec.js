@@ -10,6 +10,9 @@ const chaiAsPromised = require('chai-as-promised');
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 const { def, get, subject, sharedExamplesFor } = require('bdd-lazy-var/getter');
+const { configureLogger } = require('../lib/logger');
+
+configureLogger();
 
 sharedExamplesFor('Stores', (store) => {
   describe('createUser', () => {
@@ -18,6 +21,16 @@ sharedExamplesFor('Stores', (store) => {
     describe('with valid parameters', () => {
       def('params', { username: 'zebcoe', email: 'zeb@example.com', password: 'locog' });
       it('returns no errors', () => expect(get.user).to.be.fulfilled);
+    });
+
+    describe('with forbidden user name', () => {
+      def('params', { username: '..', email: 'zeb@example.com', password: 'locog' });
+      it('returns no errors', () => expect(get.user).to.be.rejectedWith(/Error: /));
+    });
+
+    describe('with user name containing spaces', () => {
+      def('params', { username: 'john doe', email: 'jdoe@example.com', password: 'locog' });
+      it('returns no errors', () => expect(get.user).to.be.rejectedWith(/Error: /));
     });
 
     describe('with no username', () => {
@@ -41,61 +54,83 @@ sharedExamplesFor('Stores', (store) => {
     describe('with an existing user', () => {
       def('params', { username: 'zebcoe', email: 'zeb@example.com', password: 'locog' });
       it('returns an error', () => expect(get.user)
-        .to.be.rejectedWith('The username is already taken'));
+        .to.be.rejectedWith('The username “zebcoe” is already taken'));
     });
   });
 
   describe('authenticate', () => {
     def('params', { username: 'boris', email: 'boris@example.com', password: 'zipwire' });
-    before(() => store.createUser(get.params));
+    before(async () => await store.createUser(get.params));
     subject('authenticate', () => store.authenticate(get.params));
 
-    it('returns no error for a valid username-password pairs', () =>
-      expect(get.authenticate).to.eventually.be.true);
+    it('returns no error for a valid username-password pair', () =>
+      expect(get.authenticate).to.eventually.be.ok);
 
     it('returns an error if the password is wrong', () => {
       get.params.password = 'bikes';
-      return expect(get.authenticate).to.be.rejectedWith('Incorrect password');
+      return expect(get.authenticate).to.be.rejectedWith(/password/i);
     });
 
     it('returns an error if the user does not exist', () => {
       get.params.username = 'zeb';
-      return expect(get.authenticate).to.be.rejectedWith('Username not found');
+      return expect(get.authenticate).to.be.rejectedWith(/name/i);
     });
   });
 
   describe('authorization methods', () => {
+    def('params', { username: 'natasha', email: 'natasha@example.com', password: 'iloveyou' });
     def('permissions', { documents: ['w'], photos: ['r', 'w'], contacts: ['r'], 'deep/dir': ['r', 'w'] });
     before(async () => {
-      // await store.createUser({username: 'boris', email: 'boris@example.com', password: 'dangle'});
-      this.accessToken = await store.authorize('www.example.com', 'boris', get.permissions);
+      await store.createUser(get.params);
+      await store.createUser({ username: 'aaron', email: 'aaron@example.net', password: 'daslp' });
+      this.accessToken = await store.authorize('www.example.com', 'natasha', get.params.password, get.permissions);
+      this.rootToken = await store.authorize('admin.example.com', 'aaron', 'daslp', { '': ['r', 'w'] });
+    });
 
-      // await store.createUser({username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
-      this.rootToken = await store.authorize('admin.example.com', 'zebcoe', { '': ['r', 'w'] });
+    describe('authorization', () => {
+      it('should call authentication directly', async () => {
+        chai.spy.on(store, 'authenticate');
+
+        const token = await store.authorize('https://example.net', get.params.username, get.params.password, get.permissions);
+        expect(token).to.be.a('string');
+        expect(store.authenticate).to.have.been.called.once;
+        expect(store.authenticate).to.have.been.called.with({ username: get.params.username, password: get.params.password });
+      });
     });
 
     describe('permissions', () => {
       it('returns the users\'s authorizations', async () => {
-        const auth = await store.permissions('boris', this.accessToken);
+        const auth = await store.permissions('natasha', this.accessToken);
         expect(auth).to.be.deep.equal({
           '/contacts/': ['r'],
           '/deep/dir/': ['r', 'w'],
           '/documents/': ['w'],
           '/photos/': ['r', 'w']
         });
+
+        const rootAuth = await store.permissions('aaron', this.rootToken);
+        expect(rootAuth).to.be.deep.equal({ '/': ['r', 'w'] });
       });
     });
 
     describe('revokeAccess', () => {
       it('removes the authorization from the store', async () => {
-        await store.revokeAccess('boris', this.accessToken);
-        const auth = await store.permissions('boris', this.accessToken);
+        await store.revokeAccess('natasha', this.accessToken);
+        const auth = await store.permissions('natasha', this.accessToken);
         expect(auth).to.be.deep.equal({});
       });
     });
   });
 
   describe('storage methods', () => {
+    before(async () => {
+      try {
+        await store.createUser({ username: 'boris', email: 'boris@example.com', password: 'zipwire' });
+      } catch (err) {}
+      try {
+        await store.createUser({ username: 'zebcoe', email: 'zeb@example.com', password: 'locog' });
+      } catch (err) {}
+    });
     describe('put', () => {
       it('sets the value of an item', async () => {
         await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'), null);
@@ -131,20 +166,18 @@ sharedExamplesFor('Stores', (store) => {
         expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
       });
 
-      it('returns true with a timestamp when a new item is created', async () => {
-        const before = new Date().getTime();
+      it('returns true when a new item is created', async () => {
         const { created, modified } = await store.put('boris', '/photos/antani', 'image/poster', Buffer.from('veribo'), null);
-        const after = new Date().getTime();
         expect(created).to.be.true;
-        expect(parseInt(modified)).to.be.lte(after).and.gte(before);
+        expect(modified).to.be.ok;
+        expect(['string', 'number']).to.contain(typeof modified);
       });
 
-      it('returns true with a timestamp when a new category is created', async () => {
-        const before = new Date().getTime();
+      it('returns true when a new category is created', async () => {
         const { created, modified, conflict } = await store.put('boris', '/documents/zipwire', 'image/poster', Buffer.from('vertibo'), null);
-        const after = new Date().getTime();
         expect(created).to.be.true;
-        expect(parseInt(modified)).to.be.lte(after).and.gte(before);
+        expect(modified).to.be.ok;
+        expect(['string', 'number']).to.contain(typeof modified);
         expect(!conflict).to.be.true;
       });
 
@@ -156,8 +189,9 @@ sharedExamplesFor('Stores', (store) => {
           expect(item.items.qux['Content-Type']).to.be.equal('image/poster');
         });
 
-        it('does not create path named as already existing document', async () => {
-          const { created } = await store.put('boris', '/photos/zipwire/foo', 'image/poster', Buffer.from('vertibo'));
+        it('returns a clash & does not create path named as already existing document', async () => {
+          const { created, isClash } = await store.put('boris', '/photos/zipwire/foo', 'image/poster', Buffer.from('vertibo'));
+          expect(isClash).to.be.true;
           expect(created).to.be.false;
           const { item } = await store.get('boris', '/photos/zipwire/foo');
           expect(item).to.be.null;
@@ -172,40 +206,44 @@ sharedExamplesFor('Stores', (store) => {
         expect(item).to.be.null;
       });
 
-      it('does not set the value if * is given for a non-existent item', async () => {
+      it('Sets the value if * is given for a non-existent item', async () => {
         await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '*');
         const { item } = await store.get('boris', '/photos/zipwire3');
         expect(item.value.toString()).to.be.equal('veribo');
       });
 
-      it('sets the value if the given version is current', async () => {
-        const { item: oldItem } = await store.get('boris', '/photos/election');
-        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('mayor'), oldItem.ETag);
-        const { item } = await store.get('boris', '/photos/election');
+      it('updates the value if the given version is current', async () => {
+        const firstResponse = await store.put('boris', '/notes/alpha', 'text/plain',
+          Buffer.from('first value'), null);
+        await store.put('boris', '/notes/alpha', 'text/plain', Buffer.from('mayor'), firstResponse.modified);
+        const { item } = await store.get('boris', '/notes/alpha');
         expect(item.value.toString()).to.be.equal('mayor');
       });
 
       it('does not set the value if the given version is not current', async () => {
-        const { item: oldItem } = await store.get('boris', '/photos/election');
-        const version = parseInt(oldItem.ETag) + 1;
-        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('hair'), version.toString());
-        const { item } = await store.get('boris', '/photos/election');
-        expect(item.value.toString()).to.be.equal('mayor');
+        const firstResponse = await store.put('boris', '/notes/beta', 'text/plain',
+          Buffer.from('uno'), null);
+        await store.put('boris', '/notes/beta', 'text/plain', Buffer.from('hair'), firstResponse.modified + 999);
+        const { item } = await store.get('boris', '/notes/beta');
+        expect(item.value.toString()).to.be.equal('uno');
       });
 
       it('does not set the value if * is given for an existing item', async () => {
-        await store.put('boris', '/photos/election', 'image/jpeg', Buffer.from('hair'), '*');
-        const { item } = await store.get('boris', '/photos/election');
-        expect(item.value.toString()).to.be.equal('mayor');
+        await store.put('boris', '/notes/gamma', 'text/plain',
+          Buffer.from('erste'), null);
+        await store.put('boris', '/notes/gamma', 'text/plain', Buffer.from('hair'), '*');
+        const { item } = await store.get('boris', '/notes/gamma');
+        expect(item.value.toString()).to.be.equal('erste');
       });
 
       it('returns false with no conflict when the given version is current', async () => {
-        const { item } = await store.get('boris', '/photos/election');
-        const currentVersion = item.ETag;
-        const { created, modified, conflict } = await store.put('boris', '/photos/election', 'image/jpeg',
+        const firstResponse = await store.put('boris', '/notes/delta', 'text/plain',
+          Buffer.from('primis'), null);
+        const currentVersion = firstResponse.modified;
+        const { created, modified, conflict } = await store.put('boris', '/notes/delta', 'text/plain',
           Buffer.from('mayor'), currentVersion);
         expect(created).to.be.false;
-        expect(modified).not.to.be.equal(currentVersion);
+        expect(modified).not.to.be.equal(currentVersion); // test can fail if store is *too* fast
         expect(conflict).to.be.false;
       });
 
@@ -221,8 +259,8 @@ sharedExamplesFor('Stores', (store) => {
     describe('get', () => {
       describe('for documents', () => {
         it('returns an existing resource', async () => {
-          await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'));
-          const { item } = await store.get('boris', '/photos/zipwire');
+          await store.put('boris', '/photos/zipwire4', 'image/poster', Buffer.from('vertibo'));
+          const { item } = await store.get('boris', '/photos/zipwire4');
           expect(item).to.be.deep.equal({
             'Content-Length': 7,
             'Content-Type': 'image/poster',
@@ -241,6 +279,15 @@ sharedExamplesFor('Stores', (store) => {
           expect(item).to.be.null;
         });
 
+        /** Stores SHOULD also set isClash true, but are not required to,
+         * if it would require extra calls to storage on every request. */
+        it('returns falsy when folder is retrieved as document', async () => {
+          await expect(store.put('boris', '/scope/some-folder/sound', 'audio/example', Buffer.from('ldjaflkdsjfklds'))).to.eventually.include({ created: true, conflict: false });
+          const { item /*, isClash */ } = await store.get('boris', '/scope/some-folder');
+          expect(item).to.be.null;
+          // expect(isClash).to.be.true;
+        });
+
         describe('versioning', () => {
           it('returns a versionMatch if the given version is current', async () => {
             const { item } = await store.get('boris', '/photos/zipwire');
@@ -250,37 +297,103 @@ sharedExamplesFor('Stores', (store) => {
 
           it('returns no versionMatch if the given version is not current', async () => {
             const { versionMatch } = await store.get('boris', '/photos/zipwire', '1234567');
-            expect(versionMatch).to.be.false;
+            expect(Boolean(versionMatch)).to.be.false;
+          });
+        });
+      });
+
+      describe('for directories', async () => {
+        it('returns a directory listing for a folder', async () => {
+          await store.put('boris', '/photos/bar/boo', 'text/plain', Buffer.from('some content'));
+          await store.put('boris', '/photos/bar/qux/boo', 'text/plain', Buffer.from('some content'));
+          const { item } = await store.get('boris', '/photos/bar/');
+          expect(item.items.boo).to.be.deep.equal({
+            'Content-Type': 'text/plain',
+            'Content-Length': 12,
+            ETag: item.items.boo.ETag
+          });
+          expect(item.items['qux/']).to.be.deep.equal({
+            ETag: item.items['qux/'].ETag
+          });
+          expect(Object.keys(item.items)).to.deep.equal(['boo', 'qux/']);
+        });
+
+        it('returns a directory listing for the root folder', async () => {
+          const startTime = Date.now();
+          await store.put('boris', '/singleton', 'application/identity', Buffer.from('me, myself & I'));
+          const { item } = await store.get('boris', '/');
+          expect(item.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof item.ETag);
+          expect(item.items).to.be.an.instanceof(Object);
+          expect(['string', 'number']).to.contain(typeof item.items.singleton.ETag);
+          expect(item.items.singleton.ETag).to.be.ok;
+          expect(item.items.singleton['Content-Type']).to.equal('application/identity');
+          expect(item.items.singleton['Content-Length']).to.equal(14);
+          expect(Object.keys(item.items.singleton)).to.deep.equal(['ETag', 'Content-Type', 'Content-Length']);
+        });
+
+        /**
+         * The spec says: "GET requests to empty folders SHOULD be responded to
+         * with a folder description with no items (the items field set to '{}')."
+         * We also allow a store to say the folder doesn't exist.
+         */
+        it('returns empty list or null for a non-existent directory', async () => {
+          const { item } = await store.get('boris', '/photos/qux/');
+          if (item instanceof Object) {
+            expect(item.items).to.be.deep.equal({});
+          } else {
+            expect(Boolean(item)).to.equal(false);
+          }
+        });
+
+        describe('with a document with the same name as a directory', () => {
+          it('returns a clash', async () => {
+            const { isClash } = await store.put('boris', '/photos/bar', 'text/plain', Buffer.from('ciao'));
+            expect(isClash).to.be.true;
           });
         });
 
-        describe('for directories', async () => {
-          it('returns a directory listing for a folder', async () => {
-            await store.put('boris', '/photos/bar/boo', 'text/plain', Buffer.from('some content'));
-            await store.put('boris', '/photos/bar/qux/boo', 'text/plain', Buffer.from('some content'));
-            const { item } = await store.get('boris', '/photos/bar/');
-            expect(Object.keys(item.items)).to.be.length(2);
-            expect(item.items.boo).to.be.deep.equal({
-              'Content-Type': 'text/plain',
-              'Content-Length': 12,
-              ETag: item.items.boo.ETag
-            });
-            expect(item.items['qux/']).to.be.deep.equal({
-              ETag: item.items['qux/'].ETag
-            });
-          });
+        /** Stores SHOULD return item null & isClash true, but are not required to,
+         * if it would require extra calls to storage on every request.
+         * Each store should implement a test validating the response it implements. */
+        it('should not throw error when document is retrieved as folder', async () => {
+          await expect(store.put('boris', '/scope/fonts', 'font/example', Buffer.from('fljadlkf'))).to.eventually.include({ created: true, conflict: false });
+          /* const { item, isClash } = */ await store.get('boris', '/scope/fonts/');
+          // expect(item).to.be.null;
+          // expect(isClash).to.be.true;
+        });
+      });
+    });
 
-          it('returns null for a non-existant directory', async () => {
-            const { item } = await store.get('boris', '/photos/qux/');
-            expect(item.items).to.be.deep.equal({});
-          });
+    describe('head', () => {
+      describe('for documents', () => {
+        it('returns headers for an existing resource', async () => {
+          const startTime = Date.now();
+          await store.put('boris', '/taxes/1972', 'text/csv', Buffer.from('$2032.17'));
+          const { item } = await store.get('boris', '/taxes/1972', null, true);
+          expect(['string', 'number']).to.contain(typeof item.ETag);
+          expect(item.ETag).to.be.ok;
+          expect(item['Content-Type']).to.equal('text/csv');
+          expect(item['Content-Length']).to.equal(8);
+          expect(Boolean(item.value)).to.equal(false);
+          expect(item).to.be.an('object').that.has.all.keys('ETag', 'Content-Type', 'Content-Length', 'value');
+        });
+      });
 
-          describe('with a document with the same name as a directory', () => {
-            it('returns an isDir conflict', async () => {
-              const { isDir } = await store.put('boris', '/photos/bar', 'text/plain', Buffer.from('ciao'));
-              expect(isDir).to.be.true;
-            });
-          });
+      describe('for folders', () => {
+        it('returns headers for the root folder', async () => {
+          const startTime = Date.now();
+          await store.put('boris', '/soliton', 'text/example', Buffer.from('I think, therefore I am.'));
+          const { item } = await store.get('boris', '/', null, true);
+          expect(item.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof item.ETag);
+          expect(item.items).to.be.an.instanceof(Object);
+          expect(['string', 'number']).to.contain(typeof item.items.soliton.ETag);
+          expect(item.items.soliton.ETag).to.be.ok;
+          expect(item.items.soliton['Content-Type']).to.equal('text/example');
+          expect(item.items.soliton['Content-Length']).to.equal(24);
+          expect(Object.keys(item.items.soliton)).to.deep.equal(['ETag', 'Content-Type', 'Content-Length']);
+          expect(Boolean(item.value)).to.be.false;
         });
       });
     });
@@ -290,8 +403,9 @@ sharedExamplesFor('Stores', (store) => {
         await store.put('boris', '/photos/election', '/image/jpeg', Buffer.from('hair'));
         const { item: itemBefore } = await store.get('boris', '/photos/election');
         expect(itemBefore).not.to.be.null;
-        const { deleted } = await store.delete('boris', '/photos/election');
+        const { deleted, modified } = await store.delete('boris', '/photos/election');
         expect(deleted).to.be.true;
+        expect(typeof modified).to.equal('string');
         const { item: itemAfter } = await store.get('boris', '/photos/election');
         expect(itemAfter).to.be.null;
       });
@@ -306,16 +420,24 @@ sharedExamplesFor('Stores', (store) => {
         expect(deleted).to.be.false;
       });
 
+      it('returns clash if path refers to folder', async () => {
+        await store.put('boris', '/notes/school/english', 'text/rtf', Buffer.from('hair'));
+        const { deleted, conflict, isClash } = await store.delete('boris', '/notes/school');
+        expect(deleted).to.be.false;
+        expect(Boolean(conflict)).to.be.false;
+        expect(isClash).to.be.true;
+      });
+
       describe('versioning', () => {
         it('deletes the item if the given version is current', async () => {
-          await store.put('boris', '/photos/election', null, Buffer.from('bar'));
+          await store.put('boris', '/photos/election', 'text/csv', Buffer.from('bar'));
           const { item } = await store.get('boris', '/photos/election');
           const { deleted } = await store.delete('boris', '/photos/election', item.ETag);
           expect(deleted).to.be.true;
         });
 
         it('does not delete the item and returns conflict if the given version is not current', async () => {
-          await store.put('boris', '/photos/election', null, Buffer.from('bar'));
+          await store.put('boris', '/photos/election', 'text/tab-separated-values', Buffer.from('bar'));
           const { deleted, conflict } = await store.delete('boris', '/photos/election', '123456');
           expect(deleted).to.be.false;
           expect(conflict).to.be.true;

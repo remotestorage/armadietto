@@ -327,6 +327,20 @@ describe('Storage', () => {
         expect(res.text).to.be.equal('We did something wrong');
       });
     });
+
+    describe('when the store returns a folder-document clash', () => {
+      before(() => {
+        store.get = () => { return { item: null, isClash: true }; };
+      });
+
+      it('returns a 409 response', async () => {
+        const res = await get('/storage/zebcoe/locog/chairface/');
+        expect(res).to.have.status(409);
+        expect(res).to.have.header('Cache-Control', 'no-cache');
+        expect(res).to.have.header('Content-Length');
+        // expect(res.text).to.equal('A document was found where a folder was expected, or vice-versa.');
+      });
+    });
   });
 
   describe('PUT', () => {
@@ -461,6 +475,20 @@ describe('Storage', () => {
       });
     });
 
+    describe('when the store says there was a folder-document clash', () => {
+      before(() => {
+        store.put = () => ({ created: false, isClash: true });
+      });
+
+      it('returns a 409 response', async () => {
+        const res = await put('/storage/zebcoe/statuses/some-doc', 'some value');
+        expect(res).to.have.status(409);
+        expect(res).to.have.header('Cache-Control', 'no-cache');
+        expect(res).to.have.header('Content-Length');
+        // expect(res.text).to.equal('A document was found where a folder was expected, or vice-versa.');
+      });
+    });
+
     describe('when the store returns an error', () => {
       before(() => {
         store.put = () => { throw new Error('Something is technically wrong'); };
@@ -542,6 +570,15 @@ describe('Storage', () => {
         expect(res).to.have.status(412);
         expect(res.text).to.be.equal('');
       });
+    });
+
+    it('returns an empty 409 response when the store says there was a clash', async () => {
+      store.delete = () => ({ deleted: false, isClash: true });
+      const res = await del('/storage/zebcoe/locog/seats');
+      expect(res).to.have.status(409);
+      expect(res).to.have.header('Content-Length');
+      expect(res.text).to.be.equal('');
+      // expect(res.text).to.equal('A folder was found where a document was expected.');
     });
 
     describe('when the store returns an error', () => {

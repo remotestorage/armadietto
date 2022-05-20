@@ -27,10 +27,12 @@ const post = async (path, params) => {
 };
 
 const store = {
-  authorize (clientId, username, permissions) {
+  async authorize (clientId, username, password, permissions) {
+    await this.authenticate({ username, password });
     return 'a_token';
   },
-  authenticate (params) {
+  async authenticate (params) {
+    return true;
   }
 };
 
@@ -147,14 +149,6 @@ describe('OAuth', async () => {
   });
 
   describe('with invalid login credentials', async () => {
-    it('does not authorize the client', async () => {
-      store.authenticate = (params) => {
-        throw new Error();
-      };
-      await post('/oauth', this.auth_params);
-      expect(store.authorize).to.be.called.exactly(0);
-    });
-
     it('returns a 401 response with the login form', async () => {
       store.authenticate = (params) => {
         throw new Error();

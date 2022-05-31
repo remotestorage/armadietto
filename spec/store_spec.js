@@ -136,6 +136,11 @@ sharedExamplesFor('Stores', (store) => {
         await store.put('boris', '/photos/zipwire', 'image/poster', Buffer.from('vertibo'), null);
         const { item } = await store.get('boris', '/photos/zipwire', null);
         expect(item.value).to.be.deep.equal(Buffer.from('vertibo'));
+        expect(item.ETag).to.be.ok;
+        expect(['string', 'number']).to.contain(typeof item.ETag);
+        expect(item['Content-Type']).to.equal('image/poster');
+        expect(item['Content-Length']).to.equal(7);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('stores binary data', async () => {
@@ -144,12 +149,18 @@ sharedExamplesFor('Stores', (store) => {
           img, null);
         const { item } = await store.get('boris', '/photos/election', null);
         expect(item.value).to.be.deep.equal(img);
+        expect(item['Content-Type']).to.equal('image/jpeg');
+        expect(item['Content-Length']).to.equal(46_134);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('sets the value of a public item', async () => {
         await store.put('boris', '/public/photos/zipwire2', 'image/poster', Buffer.from('vertibo'), null);
         let { item } = await store.get('boris', '/public/photos/zipwire2', null);
         expect(item.value).to.be.deep.equal(Buffer.from('vertibo'));
+        expect(item['Content-Type']).to.equal('image/poster');
+        expect(item['Content-Length']).to.equal(7);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
         ({ item } = await store.get('boris', '/photos/zipwire2', null));
         expect(item).to.be.null;
       });
@@ -158,12 +169,18 @@ sharedExamplesFor('Stores', (store) => {
         await store.put('zebcoe', '/manifesto', 'text/plain', Buffer.from('gizmos'), null);
         const { item } = await store.get('zebcoe', '/manifesto', null);
         expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
+        expect(item['Content-Type']).to.equal('text/plain');
+        expect(item['Content-Length']).to.equal(6);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('sets the value of a deep item', async () => {
         await store.put('boris', '/deep/dir/secret', 'text/plain', Buffer.from('gizmos'), null);
         const { item } = await store.get('boris', '/deep/dir/secret', null);
         expect(item.value).to.be.deep.equal(Buffer.from('gizmos'));
+        expect(item['Content-Type']).to.equal('text/plain');
+        expect(item['Content-Length']).to.equal(6);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('returns true when a new item is created', async () => {
@@ -185,8 +202,13 @@ sharedExamplesFor('Stores', (store) => {
         it('created the parent directory', async () => {
           await store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);
           const { item } = await store.get('boris', '/photos/foo/bar/', null);
+          expect(item.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof item.ETag);
+          expect(item.items.qux.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof item.items.qux.ETag);
           expect(item.items.qux['Content-Length']).to.be.equal(7);
           expect(item.items.qux['Content-Type']).to.be.equal('image/poster');
+          expect(item.items.qux['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
         });
 
         it('returns a clash & does not create path named as already existing document', async () => {
@@ -210,30 +232,42 @@ sharedExamplesFor('Stores', (store) => {
         await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '*');
         const { item } = await store.get('boris', '/photos/zipwire3');
         expect(item.value.toString()).to.be.equal('veribo');
+        expect(item['Content-Type']).to.equal('image/poster');
+        expect(item['Content-Length']).to.equal(6);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('updates the value if the given version is current', async () => {
-        const firstResponse = await store.put('boris', '/notes/alpha', 'text/plain',
+        const firstResponse = await store.put('boris', '/notes/alpha', 'text/rtf',
           Buffer.from('first value'), null);
         await store.put('boris', '/notes/alpha', 'text/plain', Buffer.from('mayor'), firstResponse.modified);
         const { item } = await store.get('boris', '/notes/alpha');
         expect(item.value.toString()).to.be.equal('mayor');
+        expect(item['Content-Type']).to.equal('text/plain');
+        expect(item['Content-Length']).to.equal(5);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('does not set the value if the given version is not current', async () => {
-        const firstResponse = await store.put('boris', '/notes/beta', 'text/plain',
+        const firstResponse = await store.put('boris', '/notes/beta', 'text/css',
           Buffer.from('uno'), null);
         await store.put('boris', '/notes/beta', 'text/plain', Buffer.from('hair'), firstResponse.modified + 999);
         const { item } = await store.get('boris', '/notes/beta');
         expect(item.value.toString()).to.be.equal('uno');
+        expect(item['Content-Type']).to.equal('text/css');
+        expect(item['Content-Length']).to.equal(3);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('does not set the value if * is given for an existing item', async () => {
-        await store.put('boris', '/notes/gamma', 'text/plain',
+        await store.put('boris', '/notes/gamma', 'text/example',
           Buffer.from('erste'), null);
         await store.put('boris', '/notes/gamma', 'text/plain', Buffer.from('hair'), '*');
         const { item } = await store.get('boris', '/notes/gamma');
         expect(item.value.toString()).to.be.equal('erste');
+        expect(item['Content-Type']).to.equal('text/example');
+        expect(item['Content-Length']).to.equal(5);
+        expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
       });
 
       it('returns false with no conflict when the given version is current', async () => {
@@ -259,14 +293,17 @@ sharedExamplesFor('Stores', (store) => {
     describe('get', () => {
       describe('for documents', () => {
         it('returns an existing resource', async () => {
+          const startTime = Date.now();
           await store.put('boris', '/photos/zipwire4', 'image/poster', Buffer.from('vertibo'));
           const { item } = await store.get('boris', '/photos/zipwire4');
-          expect(item).to.be.deep.equal({
-            'Content-Length': 7,
-            'Content-Type': 'image/poster',
-            ETag: item.ETag,
-            value: Buffer.from('vertibo')
-          });
+          expect(['string', 'number']).to.contain(typeof item.ETag);
+          expect(item.ETag).to.be.ok;
+          expect(item['Content-Type']).to.equal('image/poster');
+          expect(item['Content-Length']).to.equal(7);
+          expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
+          expect(Date.parse(item['Last-Modified'])).to.be.closeTo(startTime, 1000);
+          expect(item.value).to.deep.equal(Buffer.from('vertibo'));
+          expect(item).to.be.an('object').that.has.all.keys('ETag', 'Content-Type', 'Content-Length', 'Last-Modified', 'value');
         });
 
         it('returns null for a non-existant key', async () => {
@@ -304,14 +341,17 @@ sharedExamplesFor('Stores', (store) => {
 
       describe('for directories', async () => {
         it('returns a directory listing for a folder', async () => {
+          const startTime = Date.now();
           await store.put('boris', '/photos/bar/boo', 'text/plain', Buffer.from('some content'));
           await store.put('boris', '/photos/bar/qux/boo', 'text/plain', Buffer.from('some content'));
           const { item } = await store.get('boris', '/photos/bar/');
-          expect(item.items.boo).to.be.deep.equal({
-            'Content-Type': 'text/plain',
-            'Content-Length': 12,
-            ETag: item.items.boo.ETag
-          });
+          expect(['string', 'number']).to.contain(typeof item.items.boo.ETag);
+          expect(item.items.boo.ETag).to.be.ok;
+          expect(item.items.boo['Content-Type']).to.equal('text/plain');
+          expect(item.items.boo['Content-Length']).to.equal(12);
+          expect(item.items.boo['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
+          expect(Date.parse(item.items.boo['Last-Modified'])).to.be.closeTo(startTime, 1000);
+          expect(item.items.boo).to.be.an('object').that.has.all.keys('ETag', 'Content-Type', 'Content-Length', 'Last-Modified');
           expect(item.items['qux/']).to.be.deep.equal({
             ETag: item.items['qux/'].ETag
           });
@@ -329,7 +369,9 @@ sharedExamplesFor('Stores', (store) => {
           expect(item.items.singleton.ETag).to.be.ok;
           expect(item.items.singleton['Content-Type']).to.equal('application/identity');
           expect(item.items.singleton['Content-Length']).to.equal(14);
-          expect(Object.keys(item.items.singleton)).to.deep.equal(['ETag', 'Content-Type', 'Content-Length']);
+          expect(item.items.singleton['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
+          expect(Date.parse(item.items.singleton['Last-Modified'])).to.be.closeTo(startTime, 1000);
+          expect(Object.keys(item.items.singleton)).to.deep.equal(['ETag', 'Content-Type', 'Content-Length', 'Last-Modified']);
         });
 
         /**
@@ -375,8 +417,10 @@ sharedExamplesFor('Stores', (store) => {
           expect(item.ETag).to.be.ok;
           expect(item['Content-Type']).to.equal('text/csv');
           expect(item['Content-Length']).to.equal(8);
+          expect(item['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
+          expect(Date.parse(item['Last-Modified'])).to.be.closeTo(startTime, 1000);
           expect(Boolean(item.value)).to.equal(false);
-          expect(item).to.be.an('object').that.has.all.keys('ETag', 'Content-Type', 'Content-Length', 'value');
+          expect(item).to.be.an('object').that.has.all.keys('ETag', 'Content-Type', 'Content-Length', 'Last-Modified', 'value');
         });
       });
 
@@ -392,7 +436,9 @@ sharedExamplesFor('Stores', (store) => {
           expect(item.items.soliton.ETag).to.be.ok;
           expect(item.items.soliton['Content-Type']).to.equal('text/example');
           expect(item.items.soliton['Content-Length']).to.equal(24);
-          expect(Object.keys(item.items.soliton)).to.deep.equal(['ETag', 'Content-Type', 'Content-Length']);
+          expect(item.items.soliton['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
+          expect(Date.parse(item.items.soliton['Last-Modified'])).to.be.closeTo(startTime, 1000);
+          expect(Object.keys(item.items.soliton)).to.deep.equal(['ETag', 'Content-Type', 'Content-Length', 'Last-Modified']);
           expect(Boolean(item.value)).to.be.false;
         });
       });

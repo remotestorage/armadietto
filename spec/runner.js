@@ -6,4 +6,5 @@ require('./armadietto/signup_spec');
 require('./armadietto/storage_spec');
 
 require('./stores/file_tree_spec');
+require('./stores/couchdb_spec');
 // require('./stores/redis_spec');

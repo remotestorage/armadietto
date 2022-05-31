@@ -39,7 +39,7 @@ describe('Storage', () => {
       this._server = new Armadietto({
         store,
         http: { port: 4567 },
-        logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
+        logging: { log_dir: './test-log', stdout: [], log_files: ['warning', 'info'] }
       });
       await this._server.boot();
       done();
@@ -267,7 +267,7 @@ describe('Storage', () => {
             ETag: '1234544444',
             'Content-Type': 'example/example',
             'Content-Length': 42,
-            'Last-Modified': new Date('2001-03-04T05:06:07+00:00')
+            'Last-Modified': (new Date('2001-03-04T05:06:07+00:00')).toUTCString()
           },
           'bar/': { ETag: '12345888888' }
         },
@@ -291,7 +291,7 @@ describe('Storage', () => {
         expect(res).to.have.header('Content-Length');
         expect(parseInt(res.headers['content-length'])).to.be.greaterThan(50);
         expect(res.body['@context']).to.be.deep.equal('http://remotestorage.io/spec/folder-description');
-        expect(res.body.items).to.be.deep.equal(JSON.parse(JSON.stringify(folderData)).items);
+        expect(res.body.items).to.be.deep.equal(folderData.items);
       });
     });
 

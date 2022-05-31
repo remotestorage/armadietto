@@ -224,6 +224,7 @@ describe('Storage', () => {
     const item = {
       'Content-Type': 'custom/type',
       ETag: '1330177020000',
+      'Last-Modified': 'Mon, 25 May 2015 05:25:55 GMT',
       value: 'a value'
     };
 
@@ -243,6 +244,7 @@ describe('Storage', () => {
         expect(res).to.have.header('Content-Length', '7');
         expect(res).to.have.header('Content-Type', 'custom/type');
         expect(res).to.have.header('ETag', '"1330177020000"');
+        expect(res).to.have.header('Last-Modified', 'Mon, 25 May 2015 05:25:55 GMT');
         expect(res.text).to.be.equal('a value');
       });
 
@@ -259,15 +261,22 @@ describe('Storage', () => {
     });
 
     describe('when the store returns a directory listing', () => {
+      const folderData = {
+        items: {
+          bla: {
+            ETag: '1234544444',
+            'Content-Type': 'example/example',
+            'Content-Length': 42,
+            'Last-Modified': new Date('2001-03-04T05:06:07+00:00')
+          },
+          'bar/': { ETag: '12345888888' }
+        },
+        ETag: '12345888888'
+      };
       before(() => {
         store.get = () => {
           return {
-            item: {
-              items: [
-                { bla: { ETag: '1234544444' } },
-                { 'bar/': { ETag: '12345888888' } }],
-              ETag: '12345888888'
-            }
+            item: folderData
           };
         };
       });
@@ -278,7 +287,11 @@ describe('Storage', () => {
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('ETag', '"12345888888"');
-        // expect(res.body).to.be.deep.equal({'bar/': '12345888888', 'bla': '1234544444'});
+        expect(res).to.have.header('Content-Type', 'application/ld+json');
+        expect(res).to.have.header('Content-Length');
+        expect(parseInt(res.headers['content-length'])).to.be.greaterThan(50);
+        expect(res.body['@context']).to.be.deep.equal('http://remotestorage.io/spec/folder-description');
+        expect(res.body.items).to.be.deep.equal(JSON.parse(JSON.stringify(folderData)).items);
       });
     });
 
@@ -339,6 +352,77 @@ describe('Storage', () => {
         expect(res).to.have.header('Cache-Control', 'no-cache');
         expect(res).to.have.header('Content-Length');
         // expect(res.text).to.equal('A document was found where a folder was expected, or vice-versa.');
+      });
+    });
+  });
+
+  describe('HEAD', () => {
+    const item = {
+      'Content-Type': 'text/example',
+      'Content-Length': 25,
+      'Last-Modified': 'Wed, 17 Mar 2021 22:32:59 GMT',
+      ETag: '1330177020329',
+      value: 'a green and yellow basket'
+    };
+
+    const head = async (path) => {
+      const ret = await req.head(path).buffer(true)
+        .set('Authorization', 'Bearer a_token').send();
+      return ret;
+    };
+
+    describe('when the store returns an item', () => {
+      it('returns metadata in headers', async () => {
+        store.get = () => ({ item });
+        const res = await head('/storage/zebcoe/locog/thing');
+        expect(res).to.have.status(200);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
+        expect(res).to.have.header('ETag', '"1330177020329"');
+        expect(res).to.have.header('Content-Type', 'text/example');
+        expect(res).to.have.header('Content-Length', '25');
+        expect(res).to.have.header('Last-Modified', 'Wed, 17 Mar 2021 22:32:59 GMT');
+        expect(res.text).to.be.equal('');
+      });
+
+      it('returns a 304 for a failed conditional', async () => {
+        store.get = () => ({ item, versionMatch: true });
+        const res = await head('/storage/zebcoe/locog/thing');
+
+        expect(res).to.have.status(304);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
+        expect(res).to.have.header('ETag', '"1330177020329"');
+        expect(res.text).to.be.equal('');
+      });
+    });
+
+    const metadata = {
+      ETag: 'K3KD98FKR9FK49',
+      items: {
+        foo: {
+          ETag: '52KJLJLLK4K5JFK',
+          'Content-Type': 'example/example',
+          'Content-Length': 964,
+          'Last-Modified': 'Sat, 2 Jun 2018 15:58:23 GMT'
+        },
+        'bar/': {
+          ETag: '1337ABCD1337ABCD1337ABCD'
+        }
+      }
+    };
+
+    describe('when the store returns a directory', () => {
+      it('returns metadata in headers', async () => {
+        store.get = () => ({ item: metadata });
+        const res = await head('/storage/zebcoe/locog/');
+        expect(res).to.have.status(200);
+        expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+        expect(res).to.have.header('Cache-Control', 'no-cache');
+        expect(res).to.have.header('ETag', '"K3KD98FKR9FK49"');
+        expect(res).to.have.header('Content-Type', 'application/ld+json');
+        expect(res).to.have.header('Content-Length', '323');
+        expect(res.text).to.be.equal('');
       });
     });
   });

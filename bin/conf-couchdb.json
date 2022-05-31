@@ -1,0 +1,24 @@
+{
+  "allow_signup": true,
+  "url": "http://localhost:5984",
+  "userAdmin": "admin",
+  "passwordAdmin": "",
+  "cache_views": true,
+  "http": {
+    "host": "0.0.0.0",
+    "port": 8000
+  },
+  "https": {
+    "enable": false,
+    "force": false,
+    "port": 4443,
+    "cert": "/etc/letsencrypt/live/example.com/cert.pem",
+    "key": "/etc/letsencrypt/live/example.com/privkey.pem"
+  },
+  "logging": {
+	  "log_dir": "logs",
+	  "stdout": ["info"],
+	  "log_files": ["warning"]
+  },
+  "basePath": ""
+}

@@ -12,9 +12,11 @@ chai.use(chaiAsPromised);
 const { def, get, subject, sharedExamplesFor } = require('bdd-lazy-var/getter');
 const { configureLogger } = require('../lib/logger');
 
-configureLogger();
-
 sharedExamplesFor('Stores', (store) => {
+  before(() => {
+    configureLogger({ log_dir: './test-log', stdout: [], log_files: ['warning', 'info'] });
+  });
+
   describe('createUser', () => {
     subject('user', () => store.createUser(get.params));
 
@@ -82,9 +84,6 @@ sharedExamplesFor('Stores', (store) => {
     def('permissions', { documents: ['w'], photos: ['r', 'w'], contacts: ['r'], 'deep/dir': ['r', 'w'] });
     before(async () => {
       await store.createUser(get.params);
-      await store.createUser({ username: 'aaron', email: 'aaron@example.net', password: 'daslp' });
-      this.accessToken = await store.authorize('www.example.com', 'natasha', get.params.password, get.permissions);
-      this.rootToken = await store.authorize('admin.example.com', 'aaron', 'daslp', { '': ['r', 'w'] });
     });
 
     describe('authorization', () => {
@@ -96,9 +95,25 @@ sharedExamplesFor('Stores', (store) => {
         expect(store.authenticate).to.have.been.called.once;
         expect(store.authenticate).to.have.been.called.with({ username: get.params.username, password: get.params.password });
       });
+
+      it('should, if authentication throws an error, throw the same error', async () => {
+        chai.spy.on(store, 'authenticate', () => { throw new Error('probe'); });
+
+        await expect(store.authorize('https://example.net', get.params.username, get.params.password, get.permissions)).to.be.rejectedWith('probe');
+      });
+
+      afterEach(() => {
+        chai.spy.restore();
+      });
     });
 
     describe('permissions', () => {
+      before(async () => {
+        await store.createUser({ username: 'aaron', email: 'aaron@example.net', password: 'daslp' });
+        this.accessToken = await store.authorize('www.example.com', 'natasha', get.params.password, get.permissions);
+        this.rootToken = await store.authorize('admin.example.com', 'aaron', 'daslp', { '': ['r', 'w'] });
+      });
+
       it('returns the users\'s authorizations', async () => {
         const auth = await store.permissions('natasha', this.accessToken);
         expect(auth).to.be.deep.equal({
@@ -485,6 +500,12 @@ sharedExamplesFor('Stores', (store) => {
         it('does not delete the item and returns conflict if the given version is not current', async () => {
           await store.put('boris', '/photos/election', 'text/tab-separated-values', Buffer.from('bar'));
           const { deleted, conflict } = await store.delete('boris', '/photos/election', '123456');
+          expect(deleted).to.be.false;
+          expect(conflict).to.be.true;
+        });
+
+        it('returns conflict if the given version is not current and the document doesn\'t exist', async () => {
+          const { deleted, conflict } = await store.delete('boris', '/photos/sir-not-appearing-in-this-show', '123456');
           expect(deleted).to.be.false;
           expect(conflict).to.be.true;
         });

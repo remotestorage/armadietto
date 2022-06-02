@@ -238,7 +238,7 @@ sharedExamplesFor('Stores', (store) => {
 
     describe('versioning', () => {
       it('does not set the value if a version is given for a non-existent item', async () => {
-        await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '12345');
+        await store.put('boris', '/photos/zipwire3', 'image/poster', Buffer.from('veribo'), '1-34567890123456789012345678901234');
         const { item } = await store.get('boris', '/photos/zipwire3');
         expect(item).to.be.null;
       });
@@ -298,7 +298,7 @@ sharedExamplesFor('Stores', (store) => {
 
       it('returns false with a conflict when the given version is not current', async () => {
         const { created, modified, conflict } = await store.put('boris', '/photos/election', 'image/jpeg',
-          Buffer.from('mayor'), '123456');
+          Buffer.from('mayor'), '1-34567890123456789012345678901234');
         expect(created).to.be.false;
         expect(modified).not.to.be.ok;
         expect(conflict).to.be.true;
@@ -333,7 +333,7 @@ sharedExamplesFor('Stores', (store) => {
 
         /** Stores SHOULD also set isClash true, but are not required to,
          * if it would require extra calls to storage on every request. */
-        it('returns falsy when folder is retrieved as document', async () => {
+        it('returns null when folder is retrieved as document', async () => {
           await expect(store.put('boris', '/scope/some-folder/sound', 'audio/example', Buffer.from('ldjaflkdsjfklds'))).to.eventually.include({ created: true, conflict: false });
           const { item /*, isClash */ } = await store.get('boris', '/scope/some-folder');
           expect(item).to.be.null;
@@ -348,7 +348,7 @@ sharedExamplesFor('Stores', (store) => {
           });
 
           it('returns no versionMatch if the given version is not current', async () => {
-            const { versionMatch } = await store.get('boris', '/photos/zipwire', '1234567');
+            const { versionMatch } = await store.get('boris', '/photos/zipwire', '1-1234567');
             expect(Boolean(versionMatch)).to.be.false;
           });
         });
@@ -481,12 +481,12 @@ sharedExamplesFor('Stores', (store) => {
         expect(deleted).to.be.false;
       });
 
-      it('returns clash if path refers to folder', async () => {
+      /** The store MAY also return isClash true */
+      it('returns false and conflict false if path refers to folder', async () => {
         await store.put('boris', '/notes/school/english', 'text/rtf', Buffer.from('hair'));
-        const { deleted, conflict, isClash } = await store.delete('boris', '/notes/school');
+        const { deleted, conflict } = await store.delete('boris', '/notes/school');
         expect(deleted).to.be.false;
         expect(Boolean(conflict)).to.be.false;
-        expect(isClash).to.be.true;
       });
 
       describe('versioning', () => {
@@ -499,13 +499,13 @@ sharedExamplesFor('Stores', (store) => {
 
         it('does not delete the item and returns conflict if the given version is not current', async () => {
           await store.put('boris', '/photos/election', 'text/tab-separated-values', Buffer.from('bar'));
-          const { deleted, conflict } = await store.delete('boris', '/photos/election', '123456');
+          const { deleted, conflict } = await store.delete('boris', '/photos/election', '1-34567890123456789012345678901234');
           expect(deleted).to.be.false;
           expect(conflict).to.be.true;
         });
 
         it('returns conflict if the given version is not current and the document doesn\'t exist', async () => {
-          const { deleted, conflict } = await store.delete('boris', '/photos/sir-not-appearing-in-this-show', '123456');
+          const { deleted, conflict } = await store.delete('boris', '/photos/sir-not-appearing-in-this-show', '1-34567890123456789012345678901234');
           expect(deleted).to.be.false;
           expect(conflict).to.be.true;
         });

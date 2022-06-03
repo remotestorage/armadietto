@@ -4,11 +4,13 @@
 const fs = require('fs');
 const path = require('path');
 const chai = require('chai');
+const spies = require('chai-spies');
 const promisify = require('util').promisify;
 const readFile = promisify(fs.readFile);
 const chaiAsPromised = require('chai-as-promised');
 const expect = chai.expect;
 chai.use(chaiAsPromised);
+chai.use(spies);
 const { def, get, subject, sharedExamplesFor } = require('bdd-lazy-var/getter');
 const { configureLogger } = require('../lib/logger');
 

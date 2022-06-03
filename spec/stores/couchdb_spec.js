@@ -28,7 +28,7 @@ if (options) {
 
     before(async () => {
       const nano = nanoConnect({
-        url: 'http://localhost:5984',
+        url: options.url || 'http://localhost:5984',
         requestDefaults: { jar: true }
       });
       await nano.auth(options.userAdmin, options.passwordAdmin);

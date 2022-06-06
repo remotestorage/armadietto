@@ -216,7 +216,7 @@ sharedExamplesFor('Stores', (store) => {
       });
 
       describe('for a nested document', () => {
-        it('created the parent directory', async () => {
+        it('creates the parent folders', async () => {
           await store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);
           const { item } = await store.get('boris', '/photos/foo/bar/', null);
           expect(item.ETag).to.be.ok;
@@ -226,6 +226,24 @@ sharedExamplesFor('Stores', (store) => {
           expect(item.items.qux['Content-Length']).to.be.equal(7);
           expect(item.items.qux['Content-Type']).to.be.equal('image/poster');
           expect(item.items.qux['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
+
+          const { item: grandparent } = await store.get('boris', '/photos/foo/', null);
+          expect(grandparent.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof grandparent.ETag);
+          expect(['string', 'number']).to.contain(typeof grandparent.items['bar/'].ETag);
+          expect(grandparent.items['bar/'].ETag).to.equal(item.ETag);
+
+          const { item: greatGrand } = await store.get('boris', '/photos/', null);
+          expect(greatGrand.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof greatGrand.ETag);
+          expect(['string', 'number']).to.contain(typeof greatGrand.items['foo/'].ETag);
+          expect(greatGrand.items['foo/'].ETag).to.equal(grandparent.ETag);
+
+          const { item: root } = await store.get('boris', '/', null);
+          expect(root.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof root.ETag);
+          expect(['string', 'number']).to.contain(typeof root.items['photos/'].ETag);
+          expect(root.items['photos/'].ETag).to.equal(greatGrand.ETag);
         });
 
         it('returns a clash & does not create path named as already existing document', async () => {
@@ -234,6 +252,13 @@ sharedExamplesFor('Stores', (store) => {
           expect(created).to.be.false;
           const { item } = await store.get('boris', '/photos/zipwire/foo');
           expect(item).to.be.null;
+
+          const { item: doc } = await store.get('boris', '/photos/zipwire', null);
+          expect(doc.ETag).to.be.ok;
+          expect(['string', 'number']).to.contain(typeof doc.ETag);
+          expect(doc['Content-Type']).to.equal('image/poster');
+          expect(doc['Content-Length']).to.equal(7);
+          expect(doc['Last-Modified']).matches(/^\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT$/);
         });
       });
     });

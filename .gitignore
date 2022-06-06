@@ -12,3 +12,4 @@ dev-log
 dev-storage
 .vscode
 .idea
+.DS_Store

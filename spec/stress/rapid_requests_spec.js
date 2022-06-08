@@ -8,10 +8,12 @@ const expect = chai.expect;
 
 const Armadietto = require('../../lib/armadietto');
 const rmrf = require('rimraf');
+const { readFileSync } = require('fs');
+const { Buffer } = require('buffer');
 
 chai.use(chaiHttp);
 const port = '5678';
-const host = `http://localhost:${port}`;
+const host = `http://127.0.0.1:${port}`;
 const storagePath = os.tmpdir() + '/stress-storage';
 const username = 'stressuser';
 const password = 'kladljkfdsoi983';
@@ -20,11 +22,27 @@ const clientId = 'http://localhost:3000';
 const req = chai.request(host);
 process.umask(0o077);
 
+let options;
+try {
+  // noinspection JSCheckFunctionSignatures
+  options = JSON.parse(readFileSync('spec/couchDbOptions.json', 'utf8'));
+} catch (err) {
+  console.log('Not testing CouchDB store');
+}
+
+function userDbName (username) {
+  return 'userdb-' + Buffer.from(username).toString('hex');
+}
+
 describe('Rapid requests', function () {
   this.timeout(300_000);
 
   before(async function () {
-    const store = new Armadietto.FileTree({ path: storagePath });
+    console.log(`    making requests to ${host}`);
+    console.log(`    using ${username} w/ db ${userDbName(username)}`);
+    const store = new Armadietto.CouchDB(options);
+
+    // const store = new Armadietto.FileTree({ path: storagePath });
 
     this.server = new Armadietto({
       store,
@@ -33,8 +51,7 @@ describe('Rapid requests', function () {
     });
     await this.server.boot();
     await store.createUser({ username, email: 'a@b.co', password });
-    await store.authenticate({ username, password });
-    this.token = await store.authorize(clientId, username, { '/': ['r', 'w'] });
+    this.token = await store.authorize(clientId, username, password, { '/': ['r', 'w'] });
   });
 
   after(async function () {

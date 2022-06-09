@@ -34,7 +34,7 @@ if (options) {
       await nano.auth(options.userAdmin, options.passwordAdmin);
 
       const users = nano.use('_users');
-      for (const username of ['zebcoe', 'słychać', '和谐', 'boris', 'natasha', 'aaron']) {
+      for (const username of ['zebcoe1', 'zebcoe2', 'zebcoe3', 'zebcoe', 'słychać', '和谐', 'boris1', 'boris', 'natasha', 'aaron']) {
         try {
           const id = 'org.couchdb.user:' + username;
           const user = await users.get(id);
@@ -70,6 +70,10 @@ if (options) {
     });
 
     describe('storage methods', () => {
+      before(async () => {
+        await store.authorize('https://example.net', 'słychać', 'słychać', { '/': ['r', 'w'] });
+      });
+
       describe('get', () => {
         it('flags clash when document is retrieved as folder', async () => {
           await expect(store.put('słychać', '/scope/fonts2', 'font/example', Buffer.from('fljadlkf'))).to.eventually.include({

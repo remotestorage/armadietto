@@ -26,7 +26,7 @@
     "ejs": "^3.1.7",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4",
-    "nano": "^10.0.0",
+    "nano": "DougReeder/couchdb-nano#different-credentials",
     "winston": "^3.5.1"
   },
   "devDependencies": {

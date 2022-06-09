@@ -23,7 +23,7 @@ sharedExamplesFor('Stores', (store) => {
     subject('user', () => store.createUser(get.params));
 
     describe('with valid parameters', () => {
-      def('params', { username: 'zebcoe', email: 'zeb@example.com', password: 'locog' });
+      def('params', { username: 'zebcoe1', email: 'zeb1@example.com', password: 'locog' });
       it('returns no errors', () => expect(get.user).to.be.fulfilled);
     });
 
@@ -44,35 +44,37 @@ sharedExamplesFor('Stores', (store) => {
     });
 
     describe('with no email', () => {
-      def('params', { username: 'zebcoe', password: 'locog' });
+      def('params', { username: 'zebcoe2', password: 'locog' });
       it('returns an error', () => expect(get.user)
         .to.be.rejectedWith('Error: Email must not be blank'));
     });
 
     describe('with no password', () => {
-      def('params', { username: 'zebcoe', email: 'zeb@example.com' });
+      def('params', { username: 'zebcoe3', email: 'zeb3@example.com' });
       it('returns an error', () => expect(get.user)
         .to.be.rejectedWith('Error: Password must not be blank'));
     });
 
     describe('with an existing user', () => {
-      def('params', { username: 'zebcoe', email: 'zeb@example.com', password: 'locog' });
+      def('params', { username: 'zebcoe1', email: 'zeb1@example.com', password: 'locog' });
       it('returns an error', () => expect(get.user)
-        .to.be.rejectedWith('The username “zebcoe” is already taken'));
+        .to.be.rejectedWith('The username “zebcoe1” is already taken'));
     });
   });
 
   describe('authenticate', () => {
-    def('params', { username: 'boris', email: 'boris@example.com', password: 'zipwire' });
+    def('params', { username: 'boris1', email: 'boris1@example.com', password: 'zipwire' });
     before(async () => await store.createUser(get.params));
     subject('authenticate', () => store.authenticate(get.params));
-
-    it('returns no error for a valid username-password pair', () =>
-      expect(get.authenticate).to.eventually.be.ok);
 
     it('returns an error if the password is wrong', () => {
       get.params.password = 'bikes';
       return expect(get.authenticate).to.be.rejectedWith(/password/i);
+    });
+
+    it('returns no error for a valid username-password pair', () => {
+      get.params.password = 'zipwire';
+      expect(get.authenticate).to.eventually.be.ok;
     });
 
     it('returns an error if the user does not exist', () => {
@@ -143,10 +145,16 @@ sharedExamplesFor('Stores', (store) => {
     before(async () => {
       try {
         await store.createUser({ username: 'boris', email: 'boris@example.com', password: 'zipwire' });
-      } catch (err) {}
+        await store.authorize('https://example.net', 'boris', 'zipwire', { '/': ['r', 'w'] });
+      } catch (err) {
+        console.error('while creating & authorizing “boris”');
+      }
       try {
         await store.createUser({ username: 'zebcoe', email: 'zeb@example.com', password: 'locog' });
-      } catch (err) {}
+        await store.authorize('https://example.net', 'zebcoe', 'locog', { '/': ['r', 'w'] });
+      } catch (err) {
+        console.error('while creating & authorizing “zebcoe”');
+      }
     });
     describe('put', () => {
       it('sets the value of an item', async () => {

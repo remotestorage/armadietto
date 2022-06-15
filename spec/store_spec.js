@@ -115,6 +115,7 @@ sharedExamplesFor('Stores', (store) => {
       before(async () => {
         await store.createUser({ username: 'aaron', email: 'aaron@example.net', password: 'daslp' });
         this.accessToken = await store.authorize('www.example.com', 'natasha', get.params.password, get.permissions);
+        this.abcAccessToken = await store.authorize('abc.org', 'natasha', get.params.password, { photos: ['r'] });
         this.rootToken = await store.authorize('admin.example.com', 'aaron', 'daslp', { '': ['r', 'w'] });
       });
 
@@ -126,6 +127,8 @@ sharedExamplesFor('Stores', (store) => {
           '/documents/': ['w'],
           '/photos/': ['r', 'w']
         });
+        const auth2 = await store.permissions('natasha', this.abcAccessToken);
+        expect(auth2).to.be.deep.equal({ '/photos/': ['r'] });
 
         const rootAuth = await store.permissions('aaron', this.rootToken);
         expect(rootAuth).to.be.deep.equal({ '/': ['r', 'w'] });
@@ -137,6 +140,14 @@ sharedExamplesFor('Stores', (store) => {
         await store.revokeAccess('natasha', this.accessToken);
         const auth = await store.permissions('natasha', this.accessToken);
         expect(auth).to.be.deep.equal({});
+
+        const auth2 = await store.permissions('natasha', this.abcAccessToken);
+        expect(auth2).to.be.deep.equal({ '/photos/': ['r'] });
+      });
+
+      it('doesn\'t throw error if token doesn\'t correspond to any permissions', async () => {
+        await store.revokeAccess('natasha', 'dGVzdDI6NjJBNjg5NjI67_uDfWRnvO5WBPzW1Hj_Wp_2p3U');
+        await store.permissions('natasha', 'dGVzdDI6NjJBNjg5NjI67_uDfWRnvO5WBPzW1Hj_Wp_2p3U');
       });
     });
   });

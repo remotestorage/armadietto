@@ -90,8 +90,10 @@ You should take these steps to keep your storage safe:
 
 * Ideally, run your storage inside a container or on a dedicated machine
 
-If you're using the Redis backend, apply similar access restrictions to the
+If you're using the CouchDB or Redis backend, apply similar access restrictions to the
 database and to any files containing the database access credentials.
+
+If users are created using CouchDB directly, Armadietto can run without CouchDB admin credentials, reducing your attack surface.
 
 ## Serving over HTTPS
 
@@ -162,13 +164,29 @@ behaviour to enforce secure connections.
 ## Storage backends
 
 armadietto supports pluggable storage backends, and comes with a file system
-implementation out of the box (redis storage backend is on the way in
+implementation and CouchDB out of the box (redis storage backend is on the way in
 `feature/redis` branch):
 
 * `Armadietto.FileTree` - Uses the filesystem hierarchy and stores each item in its
   own individual file. Content and metadata are stored in separate files so the
   content does not need base64-encoding and can be hand-edited. Must only be run
   using a single server process.
+* `Armadietto.CouchDB` - Uses a CouchDB cluster, storing each user's data in their per-user database.
+  * CouchDB can be configured as needed, aside from the following:
+    * The CouchDB cluster *must* be configured with **couch_peruser enable**=true.
+    * Typically you will also set **delete_dbs**=true.
+    * Set **chttpd_auth iterations** (for pbkdf2) to at least 700,000 in 2022, and 100,000 more each year.
+    * Set **chttpd_auth timeout** to the number of seconds RS sessions should last.
+  * In the systemd unit file for Armadietto, set `Requires=couchdb.service` and `After=couchdb.service`
+  * One CouchDB user is created for each RS user. CouchDB users not created by Armadietto would need to have a design document copied over, and Couch permissions set.
+  * The RS document size limit is the CouchDB maximum attachment size (1 GiB by default).
+  * Each user can store about 300 million documents. (Performance near this limit has not been tested.)
+  * Multiple Armadietto instances can access a single CouchDB cluster. In production, Armadietto is typically run on each CouchDB node, and CouchDB is set to only accept requests on port 5984 from localhost.
+  * If you replicate from one CouchDB cluster to another, you must ensure users can't write conflicting versions to different clusters. CouchDB conflicts (which are separate from RS conflicts) are resolved by quietly picking a winning revision - effectively discarding some user data. So, RS users should typically be allowed to connect to only one cluster at a time. If replication between two clusters is up-to-date, a user can be switched to using the other cluster. (It is possible to create a “sweep” process outside Armadietto which periodically scans user databases, looks for documents which have CouchDB conflicts, fetches the conflicting revisions, and sends all revisions to users to reconcile. With such a process, users can safely connect to multiple CouchDB clusters.)
+  * In production, best practice is to
+    * **not** supply CouchDB admin credentials to Armadietto;
+    * create users directly in CouchDB, copying over the design document and setting permissions; and
+    * run a non-Armadietto process to delete sessions older than the token ("cookie") timeout, using the `sessions` view, with `reduce=false`.
 
 All the backends support the same set of features, including the ability to
 store arbitrary binary data with content types and modification times.
@@ -182,7 +200,18 @@ const store = new Armadietto.FileTree({path: 'path/to/storage'});
 // Then create the server with your store:
 const server = new Armadietto({
   store:  store,
-  http:   {port: process.argv[2]}
+  // ...
+});
+
+server.boot();
+```
+
+```js
+// To use the CouchDB store:
+const store = new Armadietto.CouchDB({ url: conf.url, userAdmin: conf.userAdmin, passwordAdmin: conf.passwordAdmin });
+const server = new Armadietto({
+  store,
+  // ...
 });
 
 server.boot();
@@ -201,7 +230,7 @@ See `DEVELOPMENT.md`
 (The MIT License)
 
 Copyright (c) 2012-2015 James Coglan  
-Copyright (c) 2018 remoteStorage contributors
+Copyright (c) 2018-2022 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in

@@ -5,7 +5,9 @@ on:
     types: [published]
   push:
     branches:
-     - '*'
+      - '*'
+    tags:
+      - '*'
 
 jobs:
   version:

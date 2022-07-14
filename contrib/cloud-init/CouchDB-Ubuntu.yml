@@ -1,0 +1,99 @@
+#cloud-config
+#hostname: cluster0N
+users:
+  - name: armadietto
+    shell: /bin/bash
+#    ssh-authorized-keys:
+write_files:
+  - path: /etc/armadietto/conf
+    #    owner: 'armadietto:armadietto'
+    permissions: '0640'
+    content: |
+      {
+        "allow_signup": true,
+        "url": "http://127.0.0.1:5984",
+        "userAdmin": "admin",
+        "passwordAdmin": "",
+        "cache_views": true,
+        "http": {
+          "host": "0.0.0.0",
+          "port": 8000
+        },
+        "logging": {
+           "log_dir": "/var/log/armadietto",
+           "stdout": ["info"],
+           "log_files": ["warning"]
+        },
+        "basePath": ""
+      }
+  - path: /root/armadietto.service
+    content: |
+      [Unit]
+      Description=Armadietto RemoteStorage server
+      Requires=couchdb.service
+      After=couchdb.service
+      StartLimitIntervalSec=0
+      Documentation=https://github.com/remotestorage/armadietto/
+
+      [Service]
+      Type=simple
+      Restart=always
+      RestartSec=1
+      User=armadietto
+      Group=armadietto
+      Environment=
+      ExecStartPre=
+      ExecStart=/usr/lib/node_modules/armadietto/bin/armadietto-couchdb.js -c /etc/armadietto/conf
+      ExecStartPost=
+      ExecStop=
+      ExecReload=
+
+      [Install]
+      WantedBy=multi-user.target
+package_upgrade: true
+apt:
+  sources:
+    couchdb:
+      source: deb [signed-by=$KEY_FILE] https://apache.jfrog.io/artifactory/couchdb-deb $RELEASE main
+      #      keyserver: https://couchdb.apache.org/repo/keys.asc
+      keyid: 390EF70BB1EA12B2773962950EE62FB37A00258D
+    nodejs:
+      source: deb [signed-by=$KEY_FILE] https://deb.nodesource.com/node_18.x $RELEASE main
+      #      keyserver: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+      keyid: 9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280
+packages:
+  - emacs-nox
+  - nodejs
+  # couchdb must be configured before installation
+runcmd:
+  - export PRIVATE_IPV4=$(curl -s http://169.254.169.254/metadata/v1/interfaces/private/0/ipv4/address)
+  # You can't securely set cookie nor password here; you must run `dpkg-reconfigure couchdb`.
+  # Use `debconf-show couchdb` to see existing config & `dpkg-reconfigure couchdb` to change.
+  - |
+    COUCHDB_PASSWORD=dkjflkjfoieijfeojf echo "
+    couchdb couchdb/mode select clustered
+    couchdb couchdb/mode seen true
+    couchdb couchdb/nodename string couchdb@$PRIVATE_IPV4
+    couchdb couchdb/nodename seen true
+    couchdb couchdb/cookie string lfkjdfojeiojvlvmiorq
+    couchdb couchdb/cookie seen true
+    couchdb couchdb/bindaddress string 0.0.0.0
+    couchdb couchdb/bindaddress seen true
+    couchdb couchdb/adminpass password ${COUCHDB_PASSWORD}
+    couchdb couchdb/adminpass seen true
+    couchdb couchdb/adminpass_again password ${COUCHDB_PASSWORD}
+    couchdb couchdb/adminpass_again seen true
+    " | debconf-set-selections
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y couchdb
+  - echo "-kernel inet_dist_listen_min 9100\n-kernel inet_dist_listen_max 9100" >>  /opt/couchdb/etc/vm.args
+  - echo "[chttpd_auth]\niterations = 700000\ntimeout = 3600\n\n[couch_peruser]\nenable = true\ndelete_dbs = true" >> /opt/couchdb/etc/local.d/20-armadietto.ini
+  # installs Armadietto
+  - mkdir /usr/lib/node_modules
+  - cd /usr/lib/node_modules
+  - git clone https://github.com/remotestorage/armadietto.git
+  - cd armadietto
+  - git checkout couchdb
+  - npm ci
+  - mkdir /var/log/armadietto
+  - chown armadietto:armadietto /var/log/armadietto /etc/armadietto/conf
+  - mv /root/armadietto.service /etc/systemd/system/

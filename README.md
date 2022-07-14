@@ -178,12 +178,13 @@ implementation and CouchDB out of the box (redis storage backend is on the way i
     * Set `chttpd_auth iterations` (for pbkdf2) to at least 700,000 in 2022, and 100,000 more each year.
     * Set `chttpd_auth timeout` to the number of seconds RS sessions should last.
     * Ensure `chttpd_auth secret` is the same on all nodes.
-  * In the systemd unit file for Armadietto, set `Requires=couchdb.service` and `After=couchdb.service`
-  * It's counterproductive to configure a load balancer to use sticky sessions.
+  * In the systemd unit file for Armadietto, set `Requires=couchdb.service` and `After=couchdb.service`. You can start from `contrib/systemd/armadietto.service`.
+  * It's counterproductive to configure the load balancer to use sticky sessions.
   * One CouchDB user is created for each RS user. CouchDB users not created by Armadietto would need to have a design document copied over to the user's database, and Couch permissions set.
   * The RS document size limit is the CouchDB maximum attachment size (1 GiB by default).
   * Each user can store about 300 million documents. (Performance near this limit has not been tested.)
   * Multiple Armadietto instances can access a single CouchDB cluster. Typically, one Armadietto instance is run on each CouchDB node, and CouchDB is set to only accept requests on port 5984 from localhost.
+  * `contrib/cloud-init/CouchDB-Ubuntu.yml` is `cloud-init` user data to install CouchDB & Armadietto on Ubuntu.
   * If you replicate from one CouchDB cluster to another, you must ensure users can't write conflicting versions to different clusters. CouchDB resolves its conflicts (which are separate from RS conflicts) by quietly picking a winning revision - effectively discarding some user data. So, RS users should typically be allowed to connect to only one cluster at a time. If replication between two clusters is up-to-date, a user can be switched to using the other cluster. (It is possible to create a “sweep” process outside Armadietto which periodically scans user databases, looks for documents which have CouchDB conflicts, fetches the conflicting revisions, and sends all revisions to users to reconcile. With such a process, users can safely connect to multiple CouchDB clusters.)
   * In production, best practice is to
     * **not** supply CouchDB admin credentials to Armadietto;

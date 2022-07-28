@@ -159,6 +159,15 @@ setup, you can set `https.force = true` but omit `https.port`; this means
 armadietto itself will not accept encrypted connections but will apply the above
 behaviour to enforce secure connections.
 
+## Stress Testing
+To test that an installation performs well under load, using node v16 or higher, run
+`SERVER_URL=https://myhostname USERNAME=existinguser PASSWORD=iloveyou npm run stresstest`,
+substituting your installation's origin, an existing user (preferably with no documents) and the user's password. If you don't define `SERVER_URL`, a server will be created locally, using the FileTree store.
+
+It's best to test using a machine on the same local network, to avoid bandwidth limitations and triggering abuse detection.
+
+If you get a failure on test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long', edit `spec/stress/rapid_requests_spec.js` and increase `num` until the test doesn't fail (the server has been pushed to its limit).
+
 ## Storage backends
 
 armadietto supports pluggable storage backends, and comes with a file system

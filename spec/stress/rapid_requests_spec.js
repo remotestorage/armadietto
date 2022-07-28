@@ -1,4 +1,4 @@
-/* eslint-env mocha, chai, node */
+/* eslint-env mocha, chai, node, browser */
 /* eslint-disable no-unused-expressions */
 
 const os = require('os');
@@ -11,49 +11,90 @@ const rmrf = require('rimraf');
 
 chai.use(chaiHttp);
 const port = '5678';
-const host = `http://localhost:${port}`;
+const host = process.env.SERVER_URL || `http://127.0.0.1:${port}`;
 const storagePath = os.tmpdir() + '/stress-storage';
-const username = 'stressuser';
-const password = 'kladljkfdsoi983';
-const clientId = 'http://localhost:3000';
+const username = process.env.USERNAME || 'stressuser';
+const password = process.env.PASSWORD || 'kladljkfdsoi983';
+const clientId = 'http://example.com';
 
 const req = chai.request(host);
 process.umask(0o077);
+
+function userDbName (username) {
+  return 'userdb-' + Buffer.from(username).toString('hex');
+}
 
 describe('Rapid requests', function () {
   this.timeout(300_000);
 
   before(async function () {
-    const store = new Armadietto.FileTree({ path: storagePath });
+    if (process.env.SERVER_URL) {
+      try {
+        const url = new URL('/oauth', host).href;
 
-    this.server = new Armadietto({
-      store,
-      http: { port },
-      logging: { log_dir: './stress-log', stdout: [], log_files: ['error'] }
-    });
-    await this.server.boot();
-    await store.createUser({ username, email: 'a@b.co', password });
-    await store.authenticate({ username, password });
-    this.token = await store.authorize(clientId, username, { '/': ['r', 'w'] });
+        const param = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: clientId + '/',
+          response_type: 'token',
+          state: '5d0176aa',
+          scope: '/:rw',
+          username,
+          password,
+          allow: 'Allow'
+        });
+        console.info(`    logging in to ${url}: username “${username}” scope “/:rw”`);
+        const resp = await fetch(
+          url,
+          { method: 'POST', body: param }
+        );
+        if (resp.redirected) {
+          const respUrl = new URL(resp.url);
+          const respParam = new URLSearchParams(respUrl.hash.slice(1));
+          this.token = respParam.get('access_token');
+        } else {
+          throw new Error(`${host} didn't redirect; ${resp.status} ${resp.statusText} ${(await resp.text()).slice(0, 60)}`);
+        }
+        console.info(`    using ${username} (CouchDB database ${userDbName(username)})`);
+      } catch (err) {
+        if (err.constructor !== Error) {
+          console.error(`    Is the server running?\n    ${err.name}  ${err.message} -> ${err.cause?.name}  ${err.cause?.message}`);
+        }
+        throw err;
+      }
+    } else {
+      const store = new Armadietto.FileTree({ path: storagePath });
+
+      this.server = new Armadietto({
+        store,
+        http: { port },
+        logging: { log_dir: './stress-log', stdout: [], log_files: ['error'] }
+      });
+      await this.server.boot();
+      await store.createUser({ username, email: 'a@b.co', password });
+      await store.authenticate({ username, password });
+      this.token = await store.authorize(clientId, username, { '/': ['r', 'w'] });
+    }
   });
 
   after(async function () {
     req.close();
-    await this.server.stop();
-    await new Promise(function (resolve, reject) {
-      rmrf(storagePath, function (err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
+    if (!process.env.SERVER_URL) {
+      await this.server.stop();
+      await new Promise(function (resolve, reject) {
+        rmrf(storagePath, function (err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
       });
-    });
+    }
   });
 
   /* This serves as a performance floor. As long as it passes in GitHub automation, we're okay.
    * On slow machines, the expectations might fail */
-  it('serves a burst of many puts or gets without error', async function () {
+  it('serves a burst of many puts and a burst of many gets without error', async function () {
     const delayMs = 2; const num = 1000;
     const puts = []; const gets = [];
     for (let i = 0; i < num; ++i) {
@@ -70,7 +111,8 @@ describe('Rapid requests', function () {
     const putResults = await Promise.all(puts);
 
     for (let i = 0; i < num; ++i) {
-      expect(putResults[i].statusCode).to.equal(201, `request ${i} failed`);
+      // Performance might be slightly different when replacing documents.
+      expect(putResults[i].statusCode).to.be.oneOf([201, 200], `request ${i} failed`);
     }
 
     for (let i = 0; i < num; ++i) {
@@ -112,7 +154,7 @@ describe('Rapid requests', function () {
 
     const putStatusCodes = putResults.map(result => result.statusCode);
     for (let i = 0; i < num; ++i) {
-      expect(putStatusCodes[i]).to.be.oneOf([201, 429]);
+      expect(putStatusCodes[i]).to.be.oneOf([201, 200, 429]);
     }
     expect(putStatusCodes).to.include(201);
     expect(putStatusCodes).to.include(429);
@@ -137,7 +179,7 @@ describe('Rapid requests', function () {
         expect(getResults[j].statusCode).to.be.oneOf([200, 429]);
         expect(getResults[j]).to.be.text;
       } else {
-        expect(getResults[j].statusCode).to.be.oneOf([404, 429]);
+        expect(getResults[j].statusCode).to.be.oneOf([200, 404, 429]);
       }
     }
 
@@ -177,10 +219,11 @@ describe('Rapid requests', function () {
       });
     });
     const response1 = await promise1;
-    expect(response1.statusCode).to.equal(201);
+    // Performance might be slightly different when replacing documents.
+    expect(response1.statusCode).to.be.oneOf([201, 200]);
 
     const response2 = await promise2;
-    expect(response2.statusCode).to.equal(201);
+    expect(response2.statusCode).to.be.oneOf([201, 200]);
   });
 });
 

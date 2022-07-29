@@ -160,8 +160,8 @@ armadietto itself will not accept encrypted connections but will apply the above
 behaviour to enforce secure connections.
 
 ## Stress Testing
-To test that an installation performs well under load, using node v16 or higher, run
-`SERVER_URL=https://myhostname USERNAME=existinguser PASSWORD=iloveyou npm run stresstest`,
+To test that an installation performs well under load, using node v18 or higher, run
+`SERVER_URL=https://myhostname USERNAME=existinguser PASSWORD=iloveyou npm run stress-test`,
 substituting your installation's origin, an existing user (preferably with no documents) and the user's password. If you don't define `SERVER_URL`, a server will be created locally, using the FileTree store.
 
 It's best to test using a machine on the same local network, to avoid bandwidth limitations and triggering abuse detection.

@@ -20,10 +20,6 @@ const clientId = 'http://example.com';
 const req = chai.request(host);
 process.umask(0o077);
 
-function userDbName (username) {
-  return 'userdb-' + Buffer.from(username).toString('hex');
-}
-
 describe('Rapid requests', function () {
   this.timeout(300_000);
 
@@ -57,7 +53,7 @@ describe('Rapid requests', function () {
         console.info(`    using ${username} (CouchDB database ${userDbName(username)})`);
       } catch (err) {
         if (err.constructor !== Error) {
-          console.error(`    Is the server running?\n    ${err.name}  ${err.message} -> ${err.cause?.name}  ${err.cause?.message}`);
+          console.error(`    Is the server running?\n    ${err.name} ${err.code}  ${err.message} -> ${err.cause?.name}  ${err.cause?.code}  ${err.cause?.message}`);
         }
         throw err;
       }
@@ -94,138 +90,197 @@ describe('Rapid requests', function () {
 
   /* This serves as a performance floor. As long as it passes in GitHub automation, we're okay.
    * On slow machines, the expectations might fail */
-  it('serves a burst of many puts and a burst of many gets without error', async function () {
-    const delayMs = 2; const num = 1000;
-    const puts = []; const gets = [];
-    for (let i = 0; i < num; ++i) {
-      const data = 'ABC' + String(1000 + i);
-      const path = `/storage/${username}/many/${i}`;
-      // Chai+Superagent doesn't send right away, unless you call end().
-      puts.push(new Promise((resolve, reject) => {
-        req.put(path).set('Authorization', 'Bearer ' + this.token).type('text/plain').send(Buffer.from(data)).end((err, resp) => {
-          if (err) { reject(err); } else { resolve(resp); }
-        });
-      }));
-      await delay(delayMs);
-    }
-    const putResults = await Promise.all(puts);
+  it('serves a burst of many puts and a burst of many gets without error or 429', async function () {
+    const directoryName = 'many'; const delayMs = 2;
+    const num = 1000; const targetSize = 37;
+    const putStatuses = await rapidPuts(this.token, directoryName, delayMs, num, targetSize);
 
     for (let i = 0; i < num; ++i) {
       // Performance might be slightly different when replacing documents.
-      expect(putResults[i].statusCode).to.be.oneOf([201, 200], `request ${i} failed`);
+      expect(putStatuses[i]).to.be.oneOf([201, 200], `put ${i} failed`);
     }
 
-    for (let i = 0; i < num; ++i) {
-      const path = `/storage/${username}/many/${i}`;
-      // Chai+Superagent doesn't send right away, unless you call end().
-      gets.push(new Promise((resolve, reject) => {
-        req.get(path).set('Authorization', 'Bearer ' + this.token).end((err, resp) => {
-          if (err) { reject(err); } else { resolve(resp); }
-        });
-      }));
-      await delay(delayMs);
-    }
-    const getResults = await Promise.all(gets);
+    const getResults = await rapidGets(this.token, directoryName, delayMs, num);
 
     for (let i = 0; i < num; ++i) {
-      expect(getResults[i].statusCode).to.equal(200);
-      expect(getResults[i]).to.be.text;
-      expect(getResults[i].text).to.equal('ABC' + String(1000 + i));
+      expect(getResults[i].status).to.equal(200, `get ${i} failed`);
+      expect(getResults[i].headers.get('content-type')).to.match(/^text\/plain/);
+      expect(getResults[i].headers.get('content-length')).to.equal(String(targetSize));
+
+      const text = await getResults[i].text();
+      switch (i) {
+        case 0:
+          expect(text).to.equal('A 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0');
+          break;
+        case 1:
+          expect(text).to.equal('B 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1');
+          break;
+        case 35:
+          expect(text).to.equal('j 35 35 35 35 35 35 35 35 35 35 35 35');
+          break;
+        default:
+          expect(text.length).to.equal(targetSize);
+      }
     }
   });
 
   /* This is a functional test, that the server behaves correctly when overloaded.
-   * It must pass on every machine. If no 429s are returned, increase `num` to make the test harder. */
-  it('returns "429 Too Many Requests" when a burst of puts or gets continues too long', async function () {
-    const delayMs = 1; const num = 3000;
-    const puts = []; const gets = [];
+   * It must pass on every machine. If no 429s are evoked, increase `num` to make the test harder. */
+  it('returns "429 Too Many Requests" or "503 Service Unavailable" when a burst of puts or gets continues too long', async function () {
+    const directoryName = 'more'; const delayMs = 1;
+    const num = 3000; const targetSize = 5555;
+    const putStatuses = await rapidPuts(this.token, directoryName, delayMs, num, targetSize);
+
     for (let i = 0; i < num; ++i) {
-      const data = 'ABC' + String(1000 + i);
-      const path = `/storage/${username}/more/${i}`;
-      // Chai+Superagent doesn't send right away, unless you call end().
-      puts.push(new Promise((resolve, reject) => {
-        req.put(path).set('Authorization', 'Bearer ' + this.token).type('text/plain').send(Buffer.from(data)).end((err, resp) => {
-          if (err) { reject(err); } else { resolve(resp); }
-        });
-      }));
-      await delay(delayMs);
+      expect(putStatuses?.[i]).to.be.oneOf([201, 200, 429, 503], `put ${i} failed`);
     }
-    const putResults = await Promise.all(puts);
+    const numPutsAccepted = putStatuses.reduce((acc, status) => [201, 200].includes(status) ? acc + 1 : acc, 0);
+    expect(numPutsAccepted).to.be.greaterThan(0, 'some puts should be accepted');
+    const numPutsRejected = putStatuses.reduce((acc, status) => [429, 503].includes(status) ? acc + 1 : acc, 0);
+    expect(numPutsRejected).to.be.greaterThan(0, 'This test did not stress the server enough');
 
-    const putStatusCodes = putResults.map(result => result.statusCode);
-    for (let i = 0; i < num; ++i) {
-      expect(putStatusCodes[i]).to.be.oneOf([201, 200, 429]);
-    }
-    expect(putStatusCodes).to.include(201);
-    expect(putStatusCodes).to.include(429);
+    const repeats = 2;
+    const getResults = await rapidGets(this.token, directoryName, delayMs, num, repeats);
 
-    // reads are faster, so let's do twice as many
-    for (let j = 0; j < num * 2; ++j) {
+    for (let j = 0; j < num * repeats; ++j) {
       const i = j % num;
-      const path = `/storage/${username}/more/${i}`;
-      // Chai+Superagent doesn't send right away, unless you call end().
-      gets.push(new Promise((resolve, reject) => {
-        req.get(path).set('Authorization', 'Bearer ' + this.token).end((err, resp) => {
-          if (err) { reject(err); } else { resolve(resp); }
-        });
-      }));
-      await delay(delayMs);
-    }
-    const getResults = await Promise.all(gets);
-
-    for (let j = 0; j < num * 2; ++j) {
-      const i = j % num;
-      if (putResults[i].statusCode === 201) {
-        expect(getResults[j].statusCode).to.be.oneOf([200, 429]);
-        expect(getResults[j]).to.be.text;
+      if (putStatuses[i] === 201) {
+        expect(getResults[j].status).to.be.oneOf([200, 429, 503], `get ${j} (created) failed`);
+        expect(getResults[j].headers.get('content-type')).to.match(/^text\/plain/);
       } else {
-        expect(getResults[j].statusCode).to.be.oneOf([200, 404, 429]);
+        expect(getResults[j].status).to.be.oneOf([200, 404, 429, 503], `get ${j} (pre-existing) failed`);
       }
     }
 
-    const getStatusCodes = getResults.map(result => result.statusCode);
-    expect(getStatusCodes).to.include(200);
-    expect(getStatusCodes).to.include(404);
-    expect(getStatusCodes).to.include(429);
+    const getStatuses = getResults.map(result => result?.status);
+    const numGetsAccepted = getStatuses.reduce((acc, status) => [200, 404].includes(status) ? acc + 1 : acc, 0);
+    expect(numGetsAccepted).to.be.greaterThan(0, 'some gets should be accepted');
+    const numGetsRejected = getStatuses.reduce((acc, status) => [429, 503].includes(status) ? acc + 1 : acc, 0);
+    expect(numGetsRejected).to.be.greaterThan(0, 'some gets should be rejected');
   });
 
   /* This serves as a performance floor. As long as it passes in GitHub automation, we're okay.
    * If the expectations fail, the storage on that system is probably too slow for Armadietto. */
   it('handles rapid large puts without error', async function () {
-    const article1 = 'All human beings are born free and equal in dignity and rights. They are endowed with reason and conscience and should act towards one another in a spirit of brotherhood.';
+    const directoryName = 'big'; const delayMs = 2;
+    const num = 3; const targetSize = 200_000_000;
+    const putStatuses = await rapidPuts(this.token, directoryName, delayMs, num, targetSize);
 
-    const article2 = 'Everyone is entitled to all the rights and freedoms set forth in this Declaration, without distinction of any kind, such as race, colour, sex, language, religion, political or other opinion, national or social origin, property, birth or other status. Furthermore, no distinction shall be made on the basis of the political, jurisdictional or international status of the country or territory to which a person belongs, whether it be independent, trust, non-self-governing or under any other limitation of sovereignty.';
-
-    const path1 = `/storage/${username}/big/1`;
-    const request1 = req.put(path1).set('Authorization', 'Bearer ' + this.token).type('text/plain');
-    for (let i = 0; i < 200_000_000 / article1.length; ++i) {
-      request1.send(article1);
+    for (let i = 0; i < num; ++i) {
+      // Performance might be slightly different when replacing documents.
+      expect(putStatuses[i]).to.be.oneOf([201, 200], `put ${i} failed`);
     }
 
-    const path2 = `/storage/${username}/big/2`;
-    const request2 = req.put(path2).set('Authorization', 'Bearer ' + this.token).type('text/plain');
-    for (let i = 0; i < 200_000_000 / article2.length; ++i) {
-      request2.send(article2);
+    const getResults = await rapidGets(this.token, directoryName, delayMs, num);
+
+    for (let i = 0; i < num; ++i) {
+      expect(getResults[i].status).to.equal(200, `get ${i} failed`);
+      expect(getResults[i].headers.get('content-type')).to.match(/^text\/plain/);
+      expect(getResults[i].headers.get('content-length')).to.equal(String(targetSize));
     }
-
-    const promise1 = new Promise((resolve, reject) => {
-      request1.end((err, resp) => {
-        if (err) { reject(err); } else { resolve(resp); }
-      });
-    });
-    const promise2 = new Promise((resolve, reject) => {
-      request2.end((err, resp) => {
-        if (err) { reject(err); } else { resolve(resp); }
-      });
-    });
-    const response1 = await promise1;
-    // Performance might be slightly different when replacing documents.
-    expect(response1.statusCode).to.be.oneOf([201, 200]);
-
-    const response2 = await promise2;
-    expect(response2.statusCode).to.be.oneOf([201, 200]);
   });
 });
+
+function userDbName (username) {
+  return 'userdb-' + Buffer.from(username).toString('hex');
+}
+
+async function rapidPuts (token, directoryName, delayMs, num, targetSize = 32) {
+  const puts = [];
+  for (let i = 0; i < num; ++i) {
+    const path = `/storage/${username}/${directoryName}/${i}`;
+    puts.push(fetch(new URL(path, host), {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'text/plain' },
+      body: streamFactory(targetSize, i)
+    }
+    ));
+    await delay(delayMs);
+  }
+  try {
+    const putResults = await Promise.all(puts);
+    return putResults?.map(result => result?.status);
+  } catch (err) {
+    let msg = `    while awaiting put of small document\n    ${err.name}  ${err.code}  ${err.message}`;
+    if (err.cause) {
+      msg += ` -> ${err.cause?.name}  ${err.cause?.code}  ${err.cause?.message}`;
+    }
+    console.error(msg);
+    throw err.cause || err;
+  }
+}
+
+async function rapidGets (token, directoryName, delayMs, num, repeats = 1) {
+  const gets = [];
+  // Reads are faster, so let's do more of them.
+  for (let j = 0; j < num * repeats; ++j) {
+    const i = j % num;
+    const path = `/storage/${username}/${directoryName}/${i}`;
+    gets.push(fetch(
+      new URL(path, host),
+      { headers: { Authorization: 'Bearer ' + token } }
+    ));
+    await delay(delayMs);
+  }
+  return await Promise.all(gets);
+}
+
+const CHUNK_SIZE = 1024;
+const encoder = new TextEncoder();
+
+function streamFactory (targetSize, seed = 1) {
+  let count = 0;
+
+  const stream = new ReadableStream({
+    type: 'bytes',
+    autoAllocateChunkSize: CHUNK_SIZE,
+    pull (controller) {
+      if (controller.byobRequest) {
+        const numRemaining = targetSize - count;
+        const view = controller.byobRequest.view; // Uint8Array(256)
+        const numToWrite = Math.min(view.length, numRemaining);
+
+        encoder.encodeInto(someChars(numToWrite, seed), view);
+        count += numToWrite;
+        controller.byobRequest.respond(numToWrite);
+
+        if (count >= targetSize) {
+          controller.close();
+        }
+      } else {
+        console.log('byobRequest was null');
+        const chunkSize = Math.max(controller.desiredSize, CHUNK_SIZE);
+        if (targetSize - count > chunkSize) {
+          const str = someChars(chunkSize, seed);
+          count += str.length;
+          controller.enqueue(str);
+        } else if (targetSize > count) {
+          const str = someChars(targetSize - count, seed);
+          count += str.length;
+          controller.enqueue(str);
+        } else {
+          controller.close();
+        }
+      }
+    }
+  });
+  return stream;
+}
+
+const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()';
+
+function someChars (num, seed) {
+  let string = charset.charAt(seed % charset.length);
+
+  while (string.length < num) {
+    string += ' ' + seed;
+  }
+
+  string = string.slice(0, num);
+  string[num - 1] = ' ';
+
+  return string;
+}
 
 function delay (ms) {
   return new Promise(resolve => {

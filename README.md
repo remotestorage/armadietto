@@ -168,6 +168,11 @@ It's best to test using a machine on the same local network, to avoid bandwidth 
 
 If you get a failure on test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long', edit `spec/stress/rapid_requests_spec.js` and increase `num` until the test doesn't fail (the server has been pushed to its limit).
 
+## Utility Functions
+To create a user, run `npm run create-user <username> <password>`.  Add the `-o` argument to set the origin (root URL) of the server, or `-e` to set the email.
+
+The server must already be running, and allow account creation.
+
 ## Storage backends
 
 armadietto supports pluggable storage backends, and comes with a file system

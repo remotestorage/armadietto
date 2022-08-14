@@ -26,7 +26,8 @@
     "ejs": "^3.1.6",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4",
-    "winston": "^3.5.1"
+    "winston": "^3.5.1",
+    "yargs": "^17.5.1"
   },
   "devDependencies": {
     "bdd-lazy-var": "^2.6.1",
@@ -48,6 +49,7 @@
   "scripts": {
     "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/dev-conf.json",
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
+    "create-user": "node --experimental-fetch ./bin/create-user.js",
     "stress-test-auto": "mocha spec/stress_runner_auto.js",
     "stress-test": "node --experimental-fetch node_modules/mocha/bin/_mocha spec/stress_runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",

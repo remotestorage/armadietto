@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-expressions */
 
 const os = require('os');
+const { userDbName, delay } = require('../util/test_util_node14');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const expect = chai.expect;
@@ -19,10 +20,6 @@ const clientId = 'http://example.com';
 
 const req = chai.request(host);
 process.umask(0o077);
-
-function userDbName (username) {
-  return 'userdb-' + Buffer.from(username).toString('hex');
-}
 
 describe('Rapid requests', function () {
   this.timeout(300_000);
@@ -137,7 +134,7 @@ describe('Rapid requests', function () {
   /* This is a functional test, that the server behaves correctly when overloaded.
    * It must pass on every machine. If no 429s are returned, increase `num` to make the test harder. */
   it('returns "429 Too Many Requests" when a burst of puts or gets continues too long', async function () {
-    const delayMs = 1; const num = 3000;
+    const delayMs = 2; const num = 3000;
     const puts = []; const gets = [];
     for (let i = 0; i < num; ++i) {
       const data = 'ABC' + String(1000 + i);
@@ -226,11 +223,3 @@ describe('Rapid requests', function () {
     expect(response2.statusCode).to.be.oneOf([201, 200]);
   });
 });
-
-function delay (ms) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, ms);
-  });
-}

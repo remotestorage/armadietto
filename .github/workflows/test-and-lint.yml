@@ -1,7 +1,7 @@
 name: test-and-lint
 on:
   push:
-    branches: [ master, stress-test ]
+    branches: [ master, stress-test, couchdb ]
   pull_request:
 jobs:
   Lint:
@@ -35,5 +35,5 @@ jobs:
         run: npm ci
       - name: Run tests
         run: npm test
-      - name: Run stress tests
-        run: npm run stress-test-auto
+#      - name: Run stress tests
+#        run: npm run stress-test-auto

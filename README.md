@@ -160,13 +160,19 @@ armadietto itself will not accept encrypted connections but will apply the above
 behaviour to enforce secure connections.
 
 ## Stress Testing
-To test that an installation performs well under load, using node v18 or higher, run
+
+To test that code changes haven't reduced performance, run
 `SERVER_URL=https://myhostname USERNAME=existinguser PASSWORD=iloveyou npm run stress-test`,
 substituting your installation's origin, an existing user (preferably with no documents) and the user's password. If you don't define `SERVER_URL`, a server will be created locally, using the FileTree store.
 
-It's best to test using a machine on the same local network, to avoid bandwidth limitations and triggering abuse detection.
+If the test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long' fails because no 429s were received, that just means the test didn't stress the server enough.
 
-If you get a failure on test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long', edit `spec/stress/rapid_requests_spec.js` and increase `num` until the test doesn't fail (the server has been pushed to its limit).
+To measure how well an installation performs under load, using node v18 or higher, run
+`npm run measure -- -o https://myhostname`
+
+Append `-d nn` to set the delay between requests in milliseconds `-s nnn` to set the size of requests, `-m nnn` to set the maximum number of requests, `-u existinguser` to set the account used, and `-p iloveyou` to set the password.
+
+It's best to test using a machine on the same local network, to avoid bandwidth limitations and triggering abuse detection.
 
 ## Utility Functions
 To create a user, run `npm run create-user <username> <password>`.  Add the `-o` argument to set the origin (root URL) of the server, or `-e` to set the email.

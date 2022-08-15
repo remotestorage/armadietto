@@ -2,6 +2,8 @@
 /* eslint-disable no-unused-expressions */
 
 const os = require('os');
+const { userDbName, delay } = require('../util/test_util_node14');
+const { streamFactory } = require('../util/test_util');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const expect = chai.expect;
@@ -127,7 +129,7 @@ describe('Rapid requests', function () {
   /* This is a functional test, that the server behaves correctly when overloaded.
    * It must pass on every machine. If no 429s are evoked, increase `num` to make the test harder. */
   it('returns "429 Too Many Requests" or "503 Service Unavailable" when a burst of puts or gets continues too long', async function () {
-    const directoryName = 'more'; const delayMs = 1;
+    const directoryName = 'more'; const delayMs = 2;
     const num = 3000; const targetSize = 5555;
     const putStatuses = await rapidPuts(this.token, directoryName, delayMs, num, targetSize);
 
@@ -161,7 +163,7 @@ describe('Rapid requests', function () {
 
   /* This serves as a performance floor. As long as it passes in GitHub automation, we're okay.
    * If the expectations fail, the storage on that system is probably too slow for Armadietto. */
-  it('handles rapid large puts without error', async function () {
+  it('handles multiple large puts without error', async function () {
     const directoryName = 'big'; const delayMs = 2;
     const num = 3; const targetSize = 200_000_000;
     const putStatuses = await rapidPuts(this.token, directoryName, delayMs, num, targetSize);
@@ -181,10 +183,6 @@ describe('Rapid requests', function () {
   });
 });
 
-function userDbName (username) {
-  return 'userdb-' + Buffer.from(username).toString('hex');
-}
-
 async function rapidPuts (token, directoryName, delayMs, num, targetSize = 32) {
   const puts = [];
   for (let i = 0; i < num; ++i) {
@@ -201,7 +199,7 @@ async function rapidPuts (token, directoryName, delayMs, num, targetSize = 32) {
     const putResults = await Promise.all(puts);
     return putResults?.map(result => result?.status);
   } catch (err) {
-    let msg = `    while awaiting put of small document\n    ${err.name}  ${err.code}  ${err.message}`;
+    let msg = `    while awaiting put of ${targetSize} byte document\n    ${err.name}  ${err.code}  ${err.message}`;
     if (err.cause) {
       msg += ` -> ${err.cause?.name}  ${err.cause?.code}  ${err.cause?.message}`;
     }
@@ -223,69 +221,4 @@ async function rapidGets (token, directoryName, delayMs, num, repeats = 1) {
     await delay(delayMs);
   }
   return await Promise.all(gets);
-}
-
-const CHUNK_SIZE = 1024;
-const encoder = new TextEncoder();
-
-function streamFactory (targetSize, seed = 1) {
-  let count = 0;
-
-  const stream = new ReadableStream({
-    type: 'bytes',
-    autoAllocateChunkSize: CHUNK_SIZE,
-    pull (controller) {
-      if (controller.byobRequest) {
-        const numRemaining = targetSize - count;
-        const view = controller.byobRequest.view; // Uint8Array(256)
-        const numToWrite = Math.min(view.length, numRemaining);
-
-        encoder.encodeInto(someChars(numToWrite, seed), view);
-        count += numToWrite;
-        controller.byobRequest.respond(numToWrite);
-
-        if (count >= targetSize) {
-          controller.close();
-        }
-      } else {
-        console.log('byobRequest was null');
-        const chunkSize = Math.max(controller.desiredSize, CHUNK_SIZE);
-        if (targetSize - count > chunkSize) {
-          const str = someChars(chunkSize, seed);
-          count += str.length;
-          controller.enqueue(str);
-        } else if (targetSize > count) {
-          const str = someChars(targetSize - count, seed);
-          count += str.length;
-          controller.enqueue(str);
-        } else {
-          controller.close();
-        }
-      }
-    }
-  });
-  return stream;
-}
-
-const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()';
-
-function someChars (num, seed) {
-  let string = charset.charAt(seed % charset.length);
-
-  while (string.length < num) {
-    string += ' ' + seed;
-  }
-
-  string = string.slice(0, num);
-  string[num - 1] = ' ';
-
-  return string;
-}
-
-function delay (ms) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, ms);
-  });
 }

@@ -51,8 +51,7 @@
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
     "create-user": "node --experimental-fetch ./bin/create-user.js",
     "measure": "node --experimental-fetch ./bin/measure.js",
-    "stress-test-auto": "mocha spec/stress_runner_auto.js",
-    "stress-test": "node --experimental-fetch node_modules/mocha/bin/_mocha spec/stress_runner.js",
+    "stress-test": "mocha spec/stress_runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\""
   },

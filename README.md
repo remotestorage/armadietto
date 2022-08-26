@@ -165,7 +165,7 @@ To test that code changes haven't reduced performance, run
 `SERVER_URL=https://myhostname USERNAME=existinguser PASSWORD=iloveyou npm run stress-test`,
 substituting your installation's origin, an existing user (preferably with no documents) and the user's password. If you don't define `SERVER_URL`, a server will be created locally, using the FileTree store.
 
-If the test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long' fails because no 429s were received, that just means the test didn't stress the server enough.
+If the test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long' fails with the message "AssertionError: expected [ Array(3000) ] to include 429", that just means the installation is *faster* than expected.
 
 To measure how well an installation performs under load, using node v18 or higher, run
 `npm run measure -- -o https://myhostname`

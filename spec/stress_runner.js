@@ -3,4 +3,4 @@
    If an expectation persistently fails, investigate why Armadietto is performing worse than before.
    If the tests fail to complete, fix them!
  */
-require('./stress/rapid_requests_spec');
+require('./stress/rapid_requests_node14_spec');

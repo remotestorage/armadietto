@@ -35,5 +35,3 @@ jobs:
         run: npm ci
       - name: Run tests
         run: npm test
-#      - name: Run stress tests
-#        run: npm run stress-test-auto

@@ -161,18 +161,18 @@ behaviour to enforce secure connections.
 
 ## Stress Testing
 
-To test that code changes haven't reduced performance, run
+To measure how well an installation performs under load, using Node v16 or higher, run
+`npm run measure -- -o https://myhostname`
+
+Append `-d nn` to set the delay between requests in milliseconds `-s nnn` to set the size of requests, `-m nnn` to set the maximum number of requests, `-n nn` to set the number of accounts used, `-u basename` to set the base name of accounts used (default `stressuser`), and `-p iloveyou` to set the password used for all accounts.
+
+It's best to test using a machine on the same local network, to avoid bandwidth limitations and triggering abuse detection.
+
+For a simple test that code changes haven't reduced performance, run
 `SERVER_URL=https://myhostname USERNAME=existinguser PASSWORD=iloveyou npm run stress-test`,
 substituting your installation's origin, an existing user (preferably with no documents) and the user's password. If you don't define `SERVER_URL`, a server will be created locally, using the FileTree store.
 
 If the test 'returns "429 Too Many Requests" when a burst of puts or gets continues too long' fails with the message "AssertionError: expected [ Array(3000) ] to include 429", that just means the installation is *faster* than expected.
-
-To measure how well an installation performs under load, using node v18 or higher, run
-`npm run measure -- -o https://myhostname`
-
-Append `-d nn` to set the delay between requests in milliseconds `-s nnn` to set the size of requests, `-m nnn` to set the maximum number of requests, `-u existinguser` to set the account used, and `-p iloveyou` to set the password.
-
-It's best to test using a machine on the same local network, to avoid bandwidth limitations and triggering abuse detection.
 
 ## Utility Functions
 To create a user, run `npm run create-user <username> <password>`.  Add the `-o` argument to set the origin (root URL) of the server, or `-e` to set the email.

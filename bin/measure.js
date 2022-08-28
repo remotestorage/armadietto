@@ -73,7 +73,7 @@ measure(argv.origin, argv.size, argv.delay, argv.max, usernames, argv.password)
 
 async function measure (origin, size, delayMs, max, usernames, password) {
   const url = new URL('/oauth', origin).href;
-  console.info(`logging in to ${url} & requesting scope “/:rw”`);
+  console.info(`Logging in to ${url} & requesting scope “/:rw”`);
   const credentials = [];
   for (let u = 0; u < usernames.length; ++u) {
     const username = usernames[u];
@@ -94,7 +94,7 @@ async function measure (origin, size, delayMs, max, usernames, password) {
       const token = respParam.get('access_token');
       if (token) {
         credentials.push({ username, token });
-        console.info(`using ${username} (CouchDB database ${userDbName(username)})`);
+        console.info(`Using ${username} (CouchDB database ${userDbName(username)})`);
       } else {
         console.error('Redirected, but no token. Is the server correctly configured?');
       }
@@ -120,7 +120,7 @@ async function measure (origin, size, delayMs, max, usernames, password) {
   try {
     deleteTimeNs = await deleteAll(credentials, directoryName, max);
 
-    console.info(`creating ${max} documents of ${size} bytes among ${credentials.length} users in “${directoryName}” at ${delayMs} ms intervals`);
+    console.info(`Creating ${max} documents of ${size} bytes among ${credentials.length} users in “${directoryName}” at ${delayMs} ms intervals`);
     let i = 0;
     createStart = process.hrtime.bigint();
     do {
@@ -191,7 +191,7 @@ async function measure (origin, size, delayMs, max, usernames, password) {
   }
 
   async function deleteAll (credentials, directoryName, max) {
-    console.info(`deleting ${Math.ceil(max / credentials.length) * credentials.length} documents among ${credentials.length} users in “${directoryName}”`);
+    console.info(`Deleting ${Math.ceil(max / credentials.length) * credentials.length} documents among ${credentials.length} users in “${directoryName}”`);
     const deleteBegin = process.hrtime.bigint();
     for (let i = 0; i < Math.ceil(max / credentials.length); ++i) {
       const promises = [];

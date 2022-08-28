@@ -49,8 +49,8 @@
   "scripts": {
     "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/dev-conf.json",
     "test": "mocha -u bdd-lazy-var/getter  spec/runner.js",
-    "create-user": "node --experimental-fetch ./bin/create-user.js",
-    "measure": "node --experimental-fetch ./bin/measure.js",
+    "create-user": "NODE_NO_WARNINGS=1 node --experimental-fetch ./bin/create-user.js",
+    "measure": "NODE_NO_WARNINGS=1 node --experimental-fetch ./bin/measure.js",
     "stress-test": "mocha spec/stress_runner.js",
     "lint": "eslint \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\""

@@ -50,5 +50,5 @@ server {
 
 ```
 5. Run `armadietto -e` to see a sample configuration file.
-6. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See README.md for values and their meanings.
-7. Run `armadietto -c /etc/armadietto/conf`
+6. Create a configuration file at `/etc/armadietto/conf.json` (or elsewhere). See README.md for values and their meanings.
+7. Run `armadietto -c /etc/armadietto/conf.json`

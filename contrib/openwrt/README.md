@@ -78,8 +78,9 @@ You can do this with SCP:
 
     scp contrib/openwrt/armadietto.sh root@192.168.1.1:/etc/init.d/armadietto
 
-Then you can start the service:
+Then you can enable and start the service:
 
+    service armadietto enable
     service armadietto start
 
 After than open in a browser your https://domainname:4443/ and signup for a new account.

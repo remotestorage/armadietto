@@ -43,9 +43,6 @@ Now edit the generated file with `vi /etc/armadietto/conf.json` and change the f
 * `https.key` set to `/etc/acme/domainname_ecc/domainname.key`
 * `logging.stdout` set to `warn`
 
-Optionally you can `https.port` set to default HTTPS `443` if you don't have any other sites on the port.
-If you do have then you need to configure a reverse proxy. If you not sure then leave it 4443.
-
 So it should look like:
 ```json
 {
@@ -72,6 +69,22 @@ So it should look like:
   "basePath": ""
 }
 ```
+
+Optionally you can `https.port` set to default HTTPS `443` if you don't have any other sites on the port.
+If you do have then you need to configure a reverse proxy. If you not sure then leave it 4443.
+
+You'll need to open the port on a firewall to make it accessible from internet.
+You can do that in the firewall GUI or via command line:
+
+    uci add firewall rule
+    uci set firewall.wan_https_turris_rule=rule
+    uci set firewall.wan_https_turris_rule.name='Allow-WAN-RS-HTTPS'
+    uci set firewall.wan_https_turris_rule.target='ACCEPT'
+    uci set firewall.wan_https_turris_rule.dest_port='4443'
+    uci set firewall.wan_https_turris_rule.proto='tcp'
+    uci set firewall.wan_https_turris_rule.src='wan'
+    uci commit firewall
+    service firewall restart
 
 Now we need to setup a service. Copy the file `armadietto.sh` into `/etc/init.d/armadietto`.
 You can do this with SCP:

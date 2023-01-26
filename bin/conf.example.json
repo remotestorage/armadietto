@@ -7,6 +7,7 @@
     "port": 8000
   },
   "https": {
+    "host": "0.0.0.0",
     "enable": false,
     "force": false,
     "port": 4443,

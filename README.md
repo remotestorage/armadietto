@@ -25,8 +25,8 @@ This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 See the `notes` directory for configuring a reverse proxy and other recipes.
 
 1. Run `armadietto -e` to see a sample configuration file.
-2. Create a configuration file at `/etc/armadietto/conf` (or elsewhere). See below for values and their meanings.
-3. Run `armadietto -c /etc/armadietto/conf`
+2. Create a configuration file at `/etc/armadietto/conf.json` (or elsewhere). See below for values and their meanings.
+3. Run `armadietto -c /etc/armadietto/conf.json`
 
 To see all options, run `armadietto -h`. Set the environment `DEBUG` to log the headers of every request.
 
@@ -190,7 +190,7 @@ server.boot();
 
 ## Debugging an installation
 
-Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf`
+Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadietto -c /etc/armadietto/conf.json`
 
 ## Development
 

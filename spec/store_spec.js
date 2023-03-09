@@ -148,6 +148,54 @@ sharedExamplesFor('Stores', (store) => {
         expect(!conflict).to.be.true;
       });
 
+      it("doesn't set the value of an existing item, when If-Match [ETag] doesn't match", async () => {
+        // client 1
+        const client1put1 = await store.put('boris', '/if-match/no-match', 'text/markdown', Buffer.from('Original paragraph'), null);
+        expect(client1put1.conflict).to.be.false;
+        expect(client1put1.created).to.be.true;
+
+        // both clients
+        const { item: original } = await store.get('boris', '/if-match/no-match', null);
+        expect(original.ETag).to.exist;
+
+        // client 2
+        const client2put = await store.put('boris', '/if-match/no-match', 'text/markdown', Buffer.from('Changed paragraph'), original.ETag);
+        expect(client2put.conflict).to.be.false;
+        expect(client2put.created).to.be.false;
+        const { item: change1 } = await store.get('boris', '/if-match/no-match', null);
+        expect(change1.value.toString('utf8')).to.be.deep.equal('Changed paragraph');
+        expect(change1.ETag).to.not.equal(original.ETag);
+
+        // client 1
+        const client1put2 = await store.put('boris', '/if-match/no-match', 'text/markdown', Buffer.from('Another change'), original.ETag);
+        expect(client1put2.conflict).to.be.true;
+        expect(client1put2.created).to.be.false;
+
+        const { item: final } = await store.get('boris', '/if-match/no-match', null);
+        expect(final.value.toString('utf8')).to.be.deep.equal('Changed paragraph');
+        expect(final.ETag).to.equal(change1.ETag);
+      });
+
+      it("doesn't set the value of an existing item, when If-None-Match * is used", async () => {
+        const response1 = await store.put('boris', '/if-none-match/star', 'text/markdown', Buffer.from('# Some Title'), null);
+        expect(response1.conflict).to.be.false;
+        expect(response1.created).to.be.true;
+        const response2 = await store.put('boris', '/if-none-match/star', 'text/markdown', Buffer.from('# Another Title'), '*');
+        expect(response2.conflict).to.be.true;
+        expect(response2.created).to.be.false;
+        const { item } = await store.get('boris', '/if-none-match/star', null);
+        expect(item.value).to.be.deep.equal(Buffer.from('# Some Title'));
+      });
+
+      it("doesn't set the value of an existing item, when If-None-Match [ETag] matches", async () => {
+        await store.put('boris', '/if-none-match/etag', 'text/markdown', Buffer.from('* Original Item'), null);
+        const { item: original } = await store.get('boris', '/if-none-match/etag', null);
+        expect(original.ETag).to.exist;
+        await store.put('boris', '/if-none-match/etag', 'text/markdown', Buffer.from('* Changed Item'), original.ETag);
+        const { item: final } = await store.get('boris', '/if-none-match/etag', null);
+        expect(final.value.toString('utf8')).to.be.deep.equal('* Original Item');
+      });
+
       describe('for a nested document', () => {
         it('created the parent directory', async () => {
           await store.put('boris', '/photos/foo/bar/qux', 'image/poster', Buffer.from('vertibo'), null);

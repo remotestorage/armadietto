@@ -60,7 +60,7 @@ sharedExamplesFor('Stores', (store) => {
 
     it('returns an error if the user does not exist', () => {
       get.params.username = 'zeb';
-      return expect(get.authenticate).to.be.rejectedWith('Username not found');
+      return expect(get.authenticate).to.be.rejectedWith("Username 'zeb' not found");
     });
   });
 

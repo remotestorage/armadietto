@@ -6,7 +6,7 @@ const { itBehavesLike } = require('bdd-lazy-var');
 require('../store_spec');
 
 describe('FileTree store', () => {
-  let store = new FileTree({ path: path.join(__dirname, '/../../tmp/store') });
+  const store = new FileTree({ path: path.join(__dirname, '/../../tmp/store') });
   after(() => {
     rmrf(path.join(__dirname, '/../../tmp/store'), () => {});
   });

@@ -77,10 +77,12 @@ sharedExamplesFor('Stores', (store) => {
     describe('permissions', () => {
       it('returns the users\'s authorizations', async () => {
         const auth = await store.permissions('boris', this.accessToken);
-        expect(auth).to.be.deep.equal({ '/contacts/': ['r'],
+        expect(auth).to.be.deep.equal({
+          '/contacts/': ['r'],
           '/deep/dir/': ['r', 'w'],
           '/documents/': ['w'],
-          '/photos/': ['r', 'w'] });
+          '/photos/': ['r', 'w']
+        });
       });
     });
 
@@ -224,7 +226,7 @@ sharedExamplesFor('Stores', (store) => {
           expect(item).to.be.deep.equal({
             'Content-Length': 7,
             'Content-Type': 'image/poster',
-            'ETag': item.ETag,
+            ETag: item.ETag,
             value: Buffer.from('vertibo')
           });
         });
@@ -258,10 +260,10 @@ sharedExamplesFor('Stores', (store) => {
             await store.put('boris', '/photos/bar/qux/boo', 'text/plain', Buffer.from('some content'));
             const { item } = await store.get('boris', '/photos/bar/');
             expect(Object.keys(item.items)).to.be.length(2);
-            expect(item.items['boo']).to.be.deep.equal({
+            expect(item.items.boo).to.be.deep.equal({
               'Content-Type': 'text/plain',
               'Content-Length': 12,
-              'ETag': item.items.boo.ETag
+              ETag: item.items.boo.ETag
             });
             expect(item.items['qux/']).to.be.deep.equal({
               ETag: item.items['qux/'].ETag

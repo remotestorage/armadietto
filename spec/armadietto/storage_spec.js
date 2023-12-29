@@ -11,8 +11,8 @@ chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 chai.use(spies);
 
-// const req = chai.request('http://localhost:4568');
-let store = {
+// const req = chai.request('http://127.0.0.1:4568');
+const store = {
   get (username, path) {
     return { item: null, versionMatch: true };
   },
@@ -36,7 +36,11 @@ const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37).toString();
 describe('Storage', () => {
   before((done) => {
     (async () => {
-      this._server = new Armadietto({ store, http: { port: 4567 } });
+      this._server = new Armadietto({
+        store,
+        http: { port: 4567 },
+        logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
+      });
       await this._server.boot();
       done();
     })();
@@ -49,7 +53,7 @@ describe('Storage', () => {
     })();
   });
 
-  const req = chai.request('http://localhost:4567');
+  const req = chai.request('http://127.0.0.1:4567');
   subject('req', () => req.get(get.path));
 
   describe('when the client uses path traversal in the path', () => {
@@ -74,13 +78,16 @@ describe('Storage', () => {
 
   describe('OPTIONS', () => {
     it('returns access control headers', async () => {
-      const res = await req.options('/storage/zebcoe/locog/seats').buffer(true);
-      expect(res).to.have.status(200);
-      expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+      const res = await req.options('/storage/zebcoe/locog/seats').set('Origin', 'https://example.com').buffer(true);
+      expect(res.statusCode).to.be.oneOf([200, 204]);
+      expect(res).to.have.header('Access-Control-Allow-Origin', 'https://example.com');
+      expect(res).to.have.header('Vary', 'Origin');
       expect(res).to.have.header('Access-Control-Allow-Headers', 'Authorization, Content-Length, Content-Type, If-Match, If-None-Match, Origin, X-Requested-With');
       expect(res).to.have.header('Access-Control-Allow-Methods', 'OPTIONS, GET, HEAD, PUT, DELETE');
       expect(res).to.have.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, ETag');
       expect(res).to.have.header('Cache-Control', 'no-cache');
+      expect(res).to.have.header('Access-Control-Max-Age');
+      expect(parseInt(res.header['access-control-max-age'])).to.be.greaterThan(10);
       expect(res.text).to.be.equal('');
     });
   });
@@ -95,7 +102,7 @@ describe('Storage', () => {
         sandbox.on(store, ['get']);
       });
 
-      let get = async (path) => {
+      const get = async (path) => {
         const ret = await req.get(path)
           .set('Authorization', 'Bearer a_token').send();
         return ret;
@@ -184,7 +191,7 @@ describe('Storage', () => {
         sandbox.on(store, ['get']);
       });
 
-      let get = async (path) => {
+      const get = async (path) => {
         const ret = await req.get(path).buffer(true)
           .set('Authorization', 'Bearer bad_token').send();
         return ret;
@@ -210,7 +217,7 @@ describe('Storage', () => {
         expect(res).to.have.status(401);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache');
-        expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="localhost:4567" error="invalid_token"');
+        expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="127.0.0.1:4567" error="invalid_token"');
       });
     });
 
@@ -220,7 +227,7 @@ describe('Storage', () => {
       value: 'a value'
     };
 
-    let get = async (path) => {
+    const get = async (path) => {
       const ret = await req.get(path).buffer(true)
         .set('Authorization', 'Bearer a_token').send();
       return ret;
@@ -254,10 +261,14 @@ describe('Storage', () => {
     describe('when the store returns a directory listing', () => {
       before(() => {
         store.get = () => {
-          return { item: { items: [
-            { 'bla': { ETag: '1234544444' } },
-            { 'bar/': { ETag: '12345888888' } }],
-          ETag: '12345888888' } };
+          return {
+            item: {
+              items: [
+                { bla: { ETag: '1234544444' } },
+                { 'bar/': { ETag: '12345888888' } }],
+              ETag: '12345888888'
+            }
+          };
         };
       });
 
@@ -286,7 +297,8 @@ describe('Storage', () => {
         expect(res).to.have.header('ETag', '"12345888888"');
         expect(res.body).to.be.deep.equal({
           '@context': 'http://remotestorage.io/spec/folder-description',
-          items: {} });
+          items: {}
+        });
       });
     });
 
@@ -323,7 +335,7 @@ describe('Storage', () => {
       store.put = () => ({ created: true });
     });
 
-    let put = async (path, params) => {
+    const put = async (path, params) => {
       const ret = await req.put(path).buffer(true).type('text/plain')
         .set('Authorization', 'Bearer a_token').send(params);
       return ret;
@@ -389,7 +401,7 @@ describe('Storage', () => {
     });
 
     describe('when an invalid access token is used', () => {
-      let put = async (path, params) => {
+      const put = async (path, params) => {
         const ret = await req.put(path).buffer(true)
           .set('Authorization', 'Bearer bad_token').send(params);
         return ret;
@@ -406,7 +418,7 @@ describe('Storage', () => {
         store.put = () => ({ created: true, modified: 1347016875231 });
       });
 
-      let put = async (path, params) => {
+      const put = async (path, params) => {
         const ret = await req.put(path).buffer(true)
           .set('Authorization', 'Bearer a_token').send(params);
         return ret;
@@ -465,7 +477,7 @@ describe('Storage', () => {
 
   describe('DELETE', () => {
     store.delete = () => ({ deleted: true });
-    let del = (path) => {
+    const del = (path) => {
       return req.delete(path).buffer(true)
         .set('Authorization', 'Bearer a_token');
     };

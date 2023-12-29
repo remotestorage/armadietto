@@ -19,7 +19,7 @@ To run the example server:
 $ npm run start
 ```
 
-The armadietto server starts on port 443.
+The armadietto server starts on port 8000.
 
 Leave the terminal running the server as is.
 
@@ -51,7 +51,7 @@ The example app shows the [remotestorage-widget](https://github.com/remotestorag
 
 The easiest way to create a user is to use the widget.  To create user 'tester' click the widget and enter:
 
-    tester@localhost:443
+    tester@localhost:8000
 
 Click `Connect`.  You'll be taken to an on-boarding site served by your localhost *armadietto*.
 
@@ -65,7 +65,7 @@ There is no automated redirection back to the example application at this point,
 
 First we need to fill out some configuration fields in the app.
 
-For *server* put in `http://localhost:443`.
+For *server* put in `http://localhost:8000`.
 
 For *user* type in the user's name, e.g. `tester`.
 

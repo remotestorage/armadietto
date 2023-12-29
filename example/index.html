@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -98,7 +98,7 @@
             <input name="responseType" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">responseType</label>
           </p></form>
           <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="postOAuth()">run postOAuth()</button></p>
-        </div>        
+        </div>
 
         <!-- httpStorage -->
         <div class="w3-panel w3-card">
@@ -123,19 +123,19 @@
               <option value="PUT" selected>PUT</option>
               <option value="GET">GET</option>
               <option value="DELETE">DELETE</option>
-            </select><label class="w3-text-blue">HTTP method for call</label></p>            
+            </select><label class="w3-text-blue">HTTP method for call</label></p>
             <p><select name="versioning" class="w3-select" onchange="scrubForm(event)">
               <option value="none" selected>no versioning (etags below ignored)</option>
               <option value="new">must not exist at all (If-None-Match: *)</option>
               <option value="match">must exist at version (If-Match: "..", "..")</option>
               <option value="nomatch">cannot exist at version (If-None-Match: "..", "..")</option>
-            </select><label class="w3-text-blue">etags versioning qualifier</label></p>            
+            </select><label class="w3-text-blue">etags versioning qualifier</label></p>
             <textarea name="etags" class="w3-input w3-border" rows="2" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">etags versioning list (space separated etags values)</label>
             <p><input name="path" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">path</label></p>
             <textarea name="data" class="w3-input w3-border" rows="10" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">data</label>
           </p></form>
           <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="httpStorage()">run httpStorage()</button></p>
-        </div>        
+        </div>
 
         <!-- apiStorage -->
         <div class="w3-panel w3-card">
@@ -158,12 +158,12 @@
               <option value="PUT">storeFile(..,path,..)</option>
               <option value="GET">getFile(path)</option>
               <option value="DELETE">remove(path)</option>
-            </select><label class="w3-text-blue">API call</label></p>            
+            </select><label class="w3-text-blue">API call</label></p>
             <p><input name="path" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">path</label></p>
             <textarea name="data" class="w3-input w3-border" rows="10" required onchange="scrubForm(event)"></textarea><label class="w3-text-blue">data</label>
           </p></form>
           <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="apiStorage()">run apiStorage()</button></p>
-        </div>        
+        </div>
 
       </div>
       <div id="panes">
@@ -198,7 +198,7 @@
     window.onload = function () {
       showPostScreenSetupLogs(); // ignore above :: logging setup
     }
-  
+
     log('initialize remoteStorage used by app: widget and non-widget');
     var remoteStorage = new RemoteStorage({logging: true, cache: false});
     var remoteStorageConnected = false;
@@ -229,7 +229,7 @@
 
     /**
      * Marshall select 'data' state for URL passing
-     */ 
+     */
     function marshal() {
       var {server, user, remotestorageHref} = data;
       return btoa(JSON.stringify({ server: server, user: user, remotestorageHref: remotestorageHref }));
@@ -248,9 +248,9 @@
 
     /**
      * Update use-case 'data' (global) with JSON passed in.
-     * 
+     *
      * SIDE EFFECT:  refreshes all forms.
-     */ 
+     */
     function updateData(withWhat) {
       data = {...data, ...withWhat};
       fillForms();
@@ -258,7 +258,7 @@
 
     /**
      * Scrub form fields of the caller's form into 'data'
-     * 
+     *
      * @param {} event -- event originating from an input within a form to scrub
      */
     function scrubForm(event) {
@@ -272,7 +272,7 @@
 
     /**
      * Fill form fields from JSON
-     * 
+     *
      * @param {string} formId - element ID of the form to fill
      * @param {Object} values - object to source values from by keys matching form field 'names'
      * @param {boolean} disabled - if true, the form is disabled, default, false
@@ -303,7 +303,7 @@
 
     /**
      * Handle events from remotestorage instance.
-     * 
+     *
      * @param {String} tag -- descriptive tag for remotestorage instance
      * @param {} rsInstance -- to handle events for
      */
@@ -322,7 +322,7 @@
         let scope = Object.keys(rsInstance.access.scopeModeMap)[0];
         let token = rsInstance.remote.token;
         updateData({
-          user: userLineParts[0], 
+          user: userLineParts[0],
           server: protocol + userLineParts[1],
           scope: scope,
           token: token});
@@ -364,8 +364,8 @@
       }
       let url = `${data.server}/.well-known/webfinger?resource=acct:${data.user}@${data.server}`;
       log(`getWebFinger :: GET `,{url: url});
-      let result = await fetch(url, { 
-        method: "GET", 
+      let result = await fetch(url, {
+        method: "GET",
         headers: { "Accept": "application/jrd+json, application/json" }
       })
       .then(res => res.json())
@@ -374,7 +374,7 @@
       let hits = result.links.filter((i) => 'rel' in i && i['rel'] == 'remotestorage');
       if (hits) {
         updateData({
-          remotestorageHref: hits[0].href, 
+          remotestorageHref: hits[0].href,
           authDialogUrl: hits[0].properties['http://tools.ietf.org/html/rfc6749#section-4.2'],
           redirectUrl: window.location.protocol + '//' + window.location.host + window.location.pathname
         });
@@ -393,8 +393,8 @@
       }
       let url = `${data.server}/.well-known/host-meta.json`;
       log(`getHostMeta :: GET`,{url: url});
-      let result = await fetch(url, { 
-        method: "GET", 
+      let result = await fetch(url, {
+        method: "GET",
         headers: { "Accept": "application/jrd+json, application/json" }
       })
       .then(res => res.json())
@@ -410,8 +410,8 @@
       }
       let url = `${data.server}/webfinger/jrd?resource=acct:${data.user}@${data.server}`;
       log(`getAccountMeta :: GET`, {url: url});
-      let result = await fetch(url, { 
-        method: "GET", 
+      let result = await fetch(url, {
+        method: "GET",
         headers: { "Accept": "application/jrd+json, application/json" }
       })
       .then(res => res.json())
@@ -467,8 +467,8 @@
         return;
       }
       const versioningHeaders = {
-        'none': (etags) => {}, 
-        'new': (etags) => {return {'If-None-Match': '*'}}, 
+        'none': (etags) => {},
+        'new': (etags) => {return {'If-None-Match': '*'}},
         'match': (etags) => {return {'If-Match': etags}},
         'nomatch': (etags) => {return {'If-None-Match': etags}}
       }
@@ -489,9 +489,9 @@
       };
 
       switch (data.httpMethod) {
-        case 'PUT': 
+        case 'PUT':
           payload = {
-            ...payload, 
+            ...payload,
             headers: {
               ...payload.headers,
               "Content-Type": "text/plain"
@@ -499,7 +499,7 @@
             body: data.data
           }
         break;
-        case 'GET': 
+        case 'GET':
           break;
         case 'DELETE':
           break;

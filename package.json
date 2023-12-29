@@ -46,7 +46,7 @@
   },
   "scripts": {
     "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/dev-conf.json",
-    "test": "mocha -b -u bdd-lazy-var/getter spec/runner.js",
+    "test": "mocha -u bdd-lazy-var/getter spec/runner.js",
     "lint": "eslint --max-warnings=0 \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\""
   },

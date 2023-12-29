@@ -58,7 +58,8 @@ describe('Storage', () => {
 
   describe('when the client uses path traversal in the path', () => {
     def('path', '/storage/zebcoe/locog/../seats/');
-    it('returns a 400', () => expect(get.req).to.eventually.have.status(400)
+    it('returns a 400', () => expect(get.req)
+      .to.eventually.have.status(400)
       .to.eventually.have.header('Access-Control-Allow-Origin', '*'));
   });
 

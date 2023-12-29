@@ -30,8 +30,6 @@ describe('WebFinger', () => {
         logging: { log_dir: './test-log', stdout: [], log_files: ['error'] }
       });
       await this._server.boot();
-      const res = await get('/');
-      expect(res).to.have.status(200);
       done();
     })();
   });

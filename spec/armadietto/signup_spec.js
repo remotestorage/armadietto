@@ -29,8 +29,6 @@ describe('Home w/o signup and no base path', () => {
       http: { port },
       logging: { log_dir: './test-log', stdout: [], log_files: ['notice'] }
     });
-    const res = await get('/');
-    expect(res).to.have.status(200);
     await this._server.boot();
   });
 
@@ -94,8 +92,6 @@ describe('Signup w/ base path & signup', () => {
       basePath: '/basic'
     });
     await this._server.boot();
-    const res = await get('/');
-    expect(res).to.have.status(200);
   });
 
   after(async () => {

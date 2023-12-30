@@ -252,7 +252,7 @@ header.topbar h1 a:focus {
 header.topbar nav ul {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: .5rem;
   margin: 0;
   padding: 0;

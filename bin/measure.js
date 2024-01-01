@@ -65,8 +65,8 @@ for (let i = 0; i < argv.numusers; ++i) {
 
 measure(argv.origin, argv.size, argv.delay, argv.max, usernames, argv.password)
   .then(result => {
-    console.info(`first failure: ${result.firstFailure}   longest run length: ${result.longestRunLength}   num: ${result.num}`);
     console.info(`delete time: ${result.deleteTimeNs / 1_000_000_000} s   create time: ${result.createTimeNs / 1_000_000_000} s`);
+    console.info(`first failure: ${result.firstFailure}   longest run length: ${result.longestRunLength}   num: ${result.num}`);
     // console.log(`statuses: ${result.statuses}`)
   })
   .catch(err => console.error('error:', err));
@@ -87,10 +87,11 @@ async function measure (origin, size, delayMs, max, usernames, password) {
       password,
       allow: 'Allow'
     });
-    const resp = await fetch(url, { method: 'POST', body: param });
-    if (resp.redirected) {
-      const respUrl = new URL(resp.url);
-      const respParam = new URLSearchParams(respUrl.hash.slice(1));
+    const resp = await fetch(url, { method: 'POST', body: param, redirect: 'manual' });
+    const location = resp.headers.get('Location');
+    if (resp.status === 302 && location) {
+      const locationUrl = new URL(location);
+      const respParam = new URLSearchParams(locationUrl.hash.slice(1));
       const token = respParam.get('access_token');
       if (token) {
         credentials.push({ username, token });
@@ -167,7 +168,8 @@ async function measure (origin, size, delayMs, max, usernames, password) {
       const promise = fetch(new URL(path, origin), {
         method: 'PUT',
         headers: { Authorization: 'Bearer ' + credential.token, 'Content-Type': 'text/plain' },
-        body: streamFactory(size, i)
+        body: streamFactory(size, i),
+        duplex: 'half'
       }
       );
       puts[i] = promise;
@@ -226,10 +228,11 @@ function streamFactory (targetSize, seed = 1) {
     type: 'bytes',
     autoAllocateChunkSize: CHUNK_SIZE,
     pull (controller) {
-      if (controller.byobRequest) {
+      if (controller.byobRequest) { // zero-copy
         const numRemaining = targetSize - count;
         const view = controller.byobRequest.view; // Uint8Array(256)
         const numToWrite = Math.min(view.length, numRemaining);
+        // console.log(`direct-writing min(${view.length}, ${numRemaining}) bytes`);
 
         encoder.encodeInto(someChars(numToWrite, seed), view);
         count += numToWrite;
@@ -238,8 +241,8 @@ function streamFactory (targetSize, seed = 1) {
         if (count >= targetSize) {
           controller.close();
         }
-      } else {
-        console.log('byobRequest was null');
+      } else { // enqueue
+        console.debug(`enqueuing max(${controller.desiredSize}, ${CHUNK_SIZE}) bytes`);
         const chunkSize = Math.max(controller.desiredSize, CHUNK_SIZE);
         if (targetSize - count > chunkSize) {
           const str = someChars(chunkSize, seed);

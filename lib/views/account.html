@@ -15,8 +15,7 @@
 		<% sessions.forEach(function(session) { %>
 			<tr>
 				<td>
-					<img src="<%= session.clientId %>/favicon.ico" alt="Favicon for <%= session.clientId %>" class="favicon">
-					<a href="<%= session.clientId %>" target="_blank"><%= session.clientId %></a>
+					<a href="<%= session.clientId %>" target="_blank"><%= session.appName %></a>
 				</td>
 				<td>
 					<% session.permissions.forEach(folder => { %>

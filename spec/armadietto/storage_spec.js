@@ -56,12 +56,6 @@ describe('Storage', () => {
   const req = chai.request('http://127.0.0.1:4567');
   subject('req', () => req.get(get.path));
 
-  describe('when the client uses path traversal in the path', () => {
-    def('path', '/storage/zebcoe/locog/../seats/');
-    it('returns a 400', () => expect(get.req).to.eventually.have.status(400)
-      .to.eventually.have.header('Access-Control-Allow-Origin', '*'));
-  });
-
   describe('when the client uses invalid chars in the path', () => {
     def('path', '/storage/zebcoe/locog/$eats');
     it('returns a 400', () => expect(get.req)

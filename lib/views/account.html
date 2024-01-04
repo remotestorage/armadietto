@@ -15,7 +15,7 @@
 		<% sessions.forEach(function(session) { %>
 			<tr>
 				<td>
-					<a href="<%= session.clientId %>" target="_blank"><%= session.clientId %></a>
+					<a href="<%= session.clientId %>" target="_blank"><%= session.appName %></a>
 				</td>
 				<td>
 					<% session.permissions.forEach(folder => { %>

@@ -32,9 +32,15 @@
 
       <nav role="navigation">
         <ul>
+          <li>
+            <a class="navitem" href="<%= basePath %>/">Home</a>
+          </li>
+		  <li>
+            <a class="navitem" href="<%= basePath %>/account">Account</a>
+          </li>
           <% if (signup) { %>
             <li class="login">
-              <a class="signup" href="<%= basePath %>/signup">Sign up</a>
+              <a class="navitem signup" href="<%= basePath %>/signup">Sign up</a>
             </li>
           <% } %>
           <li>

@@ -11,11 +11,11 @@
     <table>
       <tr>
         <th scope="row"><label for="username">Username</label></th>
-        <td><input type="text" id="username" name="username" value="<%= params.username || '' %>"></td>
+        <td><input type="text" id="username" name="username" value="<%= params.username || '' %>" autocomplete="username"></td>
       </tr>
       <tr>
         <th scope="row"><label for="password">Password</label></th>
-        <td><input type="password" id="password" name="password" value=""></td>
+        <td><input type="password" id="password" name="password" value="" autocomplete="current-password"></td>
       </tr>
     </table>
     <button type="submit" name="login" value="Go">Login</button>

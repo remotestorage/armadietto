@@ -116,7 +116,7 @@ Response codes:
 * `304`: `GET` where precondition fails
 * `401`: tokens with insufficient permissions
 * `404`: `GET` or `DELETE` to non-existing documents
-* `409`: `PUT` or `DELTE` where precondition fails
+* `409`: `PUT` or `DELETE` where precondition fails
 * `420`: client violates rate limit or behaves maliciously
 * `500`: internal server error
 

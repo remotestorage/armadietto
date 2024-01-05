@@ -12,6 +12,6 @@
   "logging": {
     "log_dir": "./dev-log",
     "stdout": ["debug"],
-    "log_files": ["error"]
+    "log_files": ["notice"]
   }
 }

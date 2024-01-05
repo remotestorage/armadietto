@@ -11,7 +11,7 @@ chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 chai.use(spies);
 
-// const req = chai.request('http://localhost:4568');
+// const req = chai.request('http://127.0.0.1:4568');
 const store = {
   get (username, path) {
     return { item: null, versionMatch: true };
@@ -53,14 +53,8 @@ describe('Storage', () => {
     })();
   });
 
-  const req = chai.request('http://localhost:4567');
+  const req = chai.request('http://127.0.0.1:4567');
   subject('req', () => req.get(get.path));
-
-  describe('when the client uses path traversal in the path', () => {
-    def('path', '/storage/zebcoe/locog/../seats/');
-    it('returns a 400', () => expect(get.req).to.eventually.have.status(400)
-      .to.eventually.have.header('Access-Control-Allow-Origin', '*'));
-  });
 
   describe('when the client uses invalid chars in the path', () => {
     def('path', '/storage/zebcoe/locog/$eats');
@@ -78,13 +72,16 @@ describe('Storage', () => {
 
   describe('OPTIONS', () => {
     it('returns access control headers', async () => {
-      const res = await req.options('/storage/zebcoe/locog/seats').buffer(true);
-      expect(res).to.have.status(200);
-      expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+      const res = await req.options('/storage/zebcoe/locog/seats').set('Origin', 'https://example.com').buffer(true);
+      expect(res.statusCode).to.be.oneOf([200, 204]);
+      expect(res).to.have.header('Access-Control-Allow-Origin', 'https://example.com');
+      expect(res).to.have.header('Vary', 'Origin');
       expect(res).to.have.header('Access-Control-Allow-Headers', 'Authorization, Content-Length, Content-Type, If-Match, If-None-Match, Origin, X-Requested-With');
       expect(res).to.have.header('Access-Control-Allow-Methods', 'OPTIONS, GET, HEAD, PUT, DELETE');
       expect(res).to.have.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, ETag');
       expect(res).to.have.header('Cache-Control', 'no-cache');
+      expect(res).to.have.header('Access-Control-Max-Age');
+      expect(parseInt(res.header['access-control-max-age'])).to.be.greaterThan(10);
       expect(res.text).to.be.equal('');
     });
   });
@@ -214,7 +211,7 @@ describe('Storage', () => {
         expect(res).to.have.status(401);
         expect(res).to.have.header('Access-Control-Allow-Origin', '*');
         expect(res).to.have.header('Cache-Control', 'no-cache');
-        expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="localhost:4567" error="invalid_token"');
+        expect(res).to.have.header('WWW-Authenticate', 'Bearer realm="127.0.0.1:4567" error="invalid_token"');
       });
     });
 

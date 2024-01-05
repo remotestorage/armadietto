@@ -1,0 +1,31 @@
+<section>
+	<header class="centered">
+		<h2>Account Info</h2>
+		<p>Your storage account: <%= params.username %>@<%= host %></p>
+	</header>
+
+	<table class="account-info">
+		<thead>
+			<tr>
+				<th>Application</th>
+				<th>Permissions</th>
+			</tr>
+		</thead>
+		<tbody>
+		<% sessions.forEach(function(session) { %>
+			<tr>
+				<td>
+					<a href="<%= session.clientId %>" target="_blank"><%= session.appName %></a>
+				</td>
+				<td>
+					<% session.permissions.forEach(folder => { %>
+					<%= folder.folder %> <span class="deemphasize">
+						(<%= folder.permissions.join(', ') %>)
+					</span>
+					<% }); %>
+				</td>
+			</tr>
+		<% }); %>
+		</tbody>
+	</table>
+</section>

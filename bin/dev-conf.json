@@ -2,7 +2,7 @@
   "basePath": "",
   "allow_signup": true,
   "storage_path": "./dev-storage",
-  "lock_timeout_ms": 200,
+  "lock_timeout_ms": 30000,
   "lock_stale_after_ms": 60000,
   "cache_views": true,
   "http": {

@@ -14,7 +14,7 @@ See [TLS certificates for a server](https://openwrt.org/docs/guide-user/services
 We assume that you already issued a cert
 
 To store data you need to mount a disk.
-See [Quick Start for Adding a USB drive](https://openwrt.org/docs/guide-user/storage/usb-drives-quickstart). 
+See [Quick Start for Adding a USB drive](https://openwrt.org/docs/guide-user/storage/usb-drives-quickstart).
 
 In the example it's mounted to /mnt/disk/
 Next we need to create a folder to store the user data. Login to OpenWrt with `ssh root@192.168.1.1` and execute:

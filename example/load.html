@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>RemoteStorage Load Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/remotestoragejs@latest/release/remotestorage.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/remotestorage-widget@latest/build/widget.js"></script>
+
+    <!-- ignore below :: code pane / logging  pane setup -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> <!-- only needed for logging and code panes -->
+    <script src="ignore/logging.js"></script> <!-- helper JS functionality to support showing source code for this file in the UI -->
+    <link rel="stylesheet" type="text/css" href="ignore/styles.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <!-- ignore above :: code pane / logging  pane setup -->
+  </head>
+
+  <body>
+    <p id="getwider">  |<---->| Cannot view, screen to narrow, please revisit on a wider device.</p>
+    <div id="window">
+      <div id="demoview">
+
+        <div id="remotestorage-widget-anchor"></div>
+
+        <!--- =========================================================================
+                                              ** UI Forms **
+              ========================================================================= -->
+
+        <!-- serverInfo -->
+        <div class="w3-panel w3-card w3-light-grey">
+          <form id="serverInfo"><p>
+            <input name="server" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">server</label>
+            <input name="user" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">user</label>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+          </p></form>
+        </div>
+
+        <!-- load -->
+        <div class="w3-panel w3-card">
+          <details><summary class="usecase">LOAD TEST over remoteStorage.js</summary><p>
+            <em>remoteStorage.js</em> abstracted API calls to the server.
+            <br/><br/>
+            Use <em>widget</em> (above) to retrieve the <em>token</em>.
+            <br/><br/>
+            Check log-pane for results.
+          </p></details>
+          <form id="apiStorage"><p>
+            <input name="token" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">token</label>
+            <input name="scope" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">scope</label>
+            <p><select name="httpMethod" class="w3-select" onchange="scrubForm(event)">
+              <option value="PUT" selected>PUT</option>
+              <option value="GET">GET</option>
+              <option value="DELETE">DELETE</option>
+            </select><label class="w3-text-blue">HTTP method for call</label></p>
+            <p><input name="iterations" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">iterations (number files to write)</label></p>
+            <p><input name="size" class="w3-input" type="text" onchange="scrubForm(event)"><label class="w3-text-blue">size (characters per file)</label></p>
+          </p></form>
+          <p><button class="w3-btn w3-blue w3-left-align w3-block" onclick="load()">run load()</button></p>
+        </div>
+
+      </div>
+      <div id="panes">
+        <div id="logview">
+          <div id="logviewcontents"></div>
+        </div>
+        <div id="codeview">
+          <iframe id="codeframe" src="ignore/code.html#welcome.txt"></iframe>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+
+    /* =========================================================================
+                                ** Initialization **
+       ========================================================================= */
+
+    // - save off URL params from load/refresh as widget will mangle them
+    // - init logging whenever page refreshed
+    // - create a new global 'remoteStorage' instance whenever screen refreshed
+    // - re-init 'data' including any 'state' values from URL in case of manual (non-widget) oauth redirect
+    //   - see gotoAuth and postOAuth
+    // - pre-fill all forms based on loaded/default 'data'
+    // - on DOM load initialize, attach widget, starts widget event listening to global 'remoteStorage'
+    //   - if was connected in localstorage before refresh/load, global 'remoteStorage' reconnects
+    //   - if was disconnected in localstorage (e.g. calls to gotoAuth and postOAuth disconnect) before refresh/load, then global 'remoteStorage' stays disconnected
+
+    const params = (new URLSearchParams(window.location.hash.substr(1))); // extract hash as params, as per draft-dejong
+    log('loading ', {href: window.location.href, params: params.toString()});
+
+    window.onload = function () {
+      showPostScreenSetupLogs(); // ignore above :: logging setup
+    }
+
+    log('initialize remoteStorage used by app: widget and non-widget');
+    var remoteStorage = new RemoteStorage({cache: false});
+    var remoteStorageConnected = false;
+
+    log("initialize data -- state for use-cases -- to empty");
+    var data = {
+      scope: 'armadietto-example-load:rw',
+      responseType: 'token',
+      token: params.get('access_token'),
+    };
+    unmarshal();
+    fillForms();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      remoteStorage.access.claim(data.scope, 'rw');
+      const widget = new Widget(remoteStorage);
+      attachEvents('appStorage', remoteStorage);
+      log('in DOMContentLoaded :: attaching remoteStorage to widget');
+      log('attaching to #remotestorage-widget-anchor element');
+      widget.attach('remotestorage-widget-anchor');
+    });
+
+    /* =========================================================================
+                         ** Supporting Methods / Utilities **
+       ========================================================================= */
+
+    /**
+     * Marshall select 'data' state for URL passing
+     */
+    function marshal() {
+      var {server, user, remotestorageHref} = data;
+      return btoa(JSON.stringify({ server: server, user: user, remotestorageHref: remotestorageHref }));
+    }
+
+    /**
+     * Unmarshal select 'data' state from passed in URL
+     */
+    function unmarshal() {
+      if (params.has('state') && params.get('state')) {
+        var state = JSON.parse(atob(params.get('state')));
+        log(`unmarshalled 'state' from URL params`, state);
+        updateData(state);
+      }
+    }
+
+    /**
+     * Update use-case 'data' (global) with JSON passed in.
+     *
+     * SIDE EFFECT:  refreshes all forms.
+     */
+    function updateData(withWhat) {
+      data = {...data, ...withWhat};
+      fillForms();
+    }
+
+    /**
+     * Scrub form fields of the caller's form into 'data'
+     *
+     * @param {} event -- event originating from an input within a form to scrub
+     */
+    function scrubForm(event) {
+      var form = event.target.form;
+      var json = {};
+      for (element of form) {
+        json[element.name] = element.value;
+      }
+      updateData(json);
+    }
+
+    /**
+     * Fill form fields from JSON
+     *
+     * @param {string} formId - element ID of the form to fill
+     * @param {Object} values - object to source values from by keys matching form field 'names'
+     * @param {boolean} disabled - if true, the form is disabled, default, false
+     */
+    function disableForm(formId, disabled) {
+      var form = document.getElementById(formId);
+      for (element of form) {
+        element.disabled = !!disabled;
+      }
+    }
+
+    /**
+     * Go through all forms and fill matching fields with 'data' (data attribut -> field name)
+     */
+    function fillForms() {
+      for (form of document.forms) {
+        for (element of form) {
+          if (element.name in data) {
+            element.value = data[element.name];
+          }
+        }
+      }
+    }
+
+    /* =========================================================================
+                                    ** Events **
+       ========================================================================= */
+
+    /**
+     * Handle events from remotestorage instance.
+     *
+     * @param {String} tag -- descriptive tag for remotestorage instance
+     * @param {} rsInstance -- to handle events for
+     */
+    function attachEvents(tag, rsInstance) {
+      log('initialize remotestorage event handlers for instance :: ' + tag);
+      rsInstance.on('connected', onConnected);
+      rsInstance.on('not-connected', onNotConnected);
+      rsInstance.on('ready', onReady);
+      rsInstance.on('disconnected', onDisconnect);
+      rsInstance.on('error', onError);
+
+      function onConnected (event) {
+        log(`onConnected :: start`, {tag: tag, event: event})
+        let userLineParts = rsInstance.remote.userAddress.split('@');
+        let protocol = rsInstance.remote.href.match(/^[a-z]+:\/\//ig);
+        let scope = Object.keys(rsInstance.access.scopeModeMap)[0];
+        let token = rsInstance.remote.token;
+        updateData({
+          user: userLineParts[0],
+          server: protocol + userLineParts[1],
+          scope: scope,
+          token: token});
+        log(`onConnected :: set data`, {tag: tag, event: event, data: data});
+        log(`onConnected :: disabling serverInfo entry`,{tag: tag, event: event});
+        disableForm('serverInfo', true);
+        remoteStorageConnected = true;
+      }
+
+      function onNotConnected (event) {
+        log(`onNotConnected :: start`, {tag: tag, event: event})
+        log(`onConnected :: re-enabling serverInfo entry`, {tag: tag, event: event});
+        disableForm('serverInfo', false);
+        remoteStorageConnected = false;
+      }
+
+      function onReady (event) {
+        log(`onReady :: start`, {tag: tag, event: event})
+      }
+
+      function onDisconnect (event) {
+        log(`onDisconnect :: start`, {tag: tag, event: event})
+      }
+
+      function onError (event) {
+        log(`onError :: start`, {tag: tag, event: event})
+      }
+    }
+
+    /* =========================================================================
+                          ** Form Actions / Use Case Functions **
+       ========================================================================= */
+
+    async function load() {
+      log('load :: start');
+      if (!data.token || !data.scope || !data.server || !data.iterations || !data.size) {
+        log('load :: required data properties not present, click this log to see expression', data);
+        return;
+      }
+      if (!remoteStorageConnected) {
+        let server = data.server.split('://').reduce((c,n) => n,'');
+        let address = `${data.user}@${server}`;
+        log('load :: connecting new remoteStorage', { address, address });
+        remoteStorage.connect(address, data.token);
+        log('load :: PLEASE RERUN :: once you see onConnected in log :: we had to re-connect');
+        return;
+      }
+      let category = data.scope.split(':')[0];
+      let client = remoteStorage.scope(`/${category}/`);
+      data.data = randomChars(data.size)
+
+      let successes = 0;
+      let failures = 0;
+      let timeStart = parseInt(Date.now());
+
+      let promises = [];
+      let fn = async (path) => {
+        let url = `${data.server}/storage/${data.user}/${category}/${path}`;
+        try {
+          let payload = {
+            method: data.httpMethod,
+            headers: {
+              "Authorization": `Bearer ${data.token}`
+            }
+          };
+
+          switch (data.httpMethod) {
+            case 'PUT':
+              payload = {
+                ...payload,
+                headers: {
+                  ...payload.headers,
+                  "Content-Type": "text/plain"
+                },
+                body: data.data
+              }
+            break;
+            case 'GET':
+              break;
+            case 'DELETE':
+              break;
+          }
+          let {etag, code, result} = await fetch(url, payload)
+            .then(res => {return {etag: res.headers.get('ETag'), code: res.status, result: res.text()}})
+            .catch(error => log(`httpStorage :: error`,{error: error}));
+          result = await result;
+
+          if (code !== 200 && code !== 404) {
+            failures++;
+            log(`load test :: retry successes:${successes} failures:${failures} ${path}`);
+            if (!remoteStorageConnected) return;
+            return fn(path);
+          }
+          successes++;
+          return result;
+        }
+        catch (e) {
+          failures++;
+          log(`load test :: retry successes:${successes} failures:${failures} ${path}`);
+          if (!remoteStorageConnected) return;
+          return fn(path);
+        }
+      };
+
+      for (var i = 0; i < data.iterations; i++) {
+        data.path = `file${i}`;
+        let path = data.path ? data.path.split('/').filter(t => t.length > 0).join('/') : '';
+        promises.push(fn(path));
+      }
+
+      await Promise.all(promises);
+
+      let timeEnd = parseInt(Date.now());
+      log(`load results :: ${data.apiMethod} x${data.iterations} @${data.size} chars - ${(timeEnd - timeStart) / 1000} seconds`);
+    }
+
+    function randomChars(length) {
+      var text = "";
+      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (var i = 0; i < length; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+      return text;
+    }    
+  </script>
+
+</html>

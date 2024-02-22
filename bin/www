@@ -1,0 +1,143 @@
+#!/usr/bin/env node
+
+const app = require('../lib/app');
+const http = require('http');
+const fs = require("fs");
+const path = require("path");
+const {ArgumentParser} = require("argparse");
+const {configureLogger, getLogger} = require("../lib/logger");
+const process = require("process");
+
+/** Command-line arguments and configuration loading */
+
+const args = parseArgs();
+let conf = {};
+
+if (args.exampleConf) {
+  console.info(fs.readFileSync(path.join(__dirname, '/conf.example.json'), 'utf8'));
+  return -1;
+}
+
+try {
+  conf = JSON.parse(fs.readFileSync(args.conf, 'utf8'));
+} catch (err) {
+  console.error(`Unable to load config file “${args.conf}”:`, err);
+  return -2;
+}
+
+/** Configures application */
+
+configureLogger(conf.logging);
+
+const port = normalizePort( process.env.PORT || conf.http?.port || '8000');
+app.set('port', port);
+
+app.locals.title = "Modular Armadietto";
+app.locals.basePath = '';
+// rendering should set host: getHost(req)
+app.locals.host = conf.http?.host + (port ? ':' + port : '');
+app.locals.signup = conf.allow_signup;
+
+/** Creates HTTP server. */
+
+const server = http.createServer(app);
+
+/** Listens on provided port, on all network interfaces. */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/** Event listener for HTTP server "error" event. */
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      getLogger().crit(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      getLogger().crit(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/** Event listener for HTTP server "listening" event. */
+function onListening() {
+  getLogger().notice(`Accepting remoteStorage connections: http://${app.locals.host}/${app.locals.basePath} ${(conf.https && conf.https?.port) || ''}`);
+}
+
+/** Adds listeners for shutdown and serious problems */
+
+// These are the happy paths for shutdown.
+process.on('SIGINT', stop.bind(this, 'SIGINT'));
+process.on('SIGTERM', stop.bind(this, 'SIGTERM'));
+
+function stop(signal) {
+  getLogger().debug(`${signal} signal received: closing HTTP server`);
+  server.close(() => {
+    getLogger().notice('No longer accepting remoteStorage connections');
+  });
+}
+
+// Without these listeners, these events would not be logged, only sent to stdout or stderr.
+process.on('uncaughtExceptionMonitor', (err, origin) => {
+  getLogger().crit(`${origin} ${err}`);
+});
+
+process.on('warning', (warning) => {
+  getLogger().warning(`${warning.name} ${warning.message} ${warning.stack}`);
+});
+
+process.on('multipleResolves', (type, promise, reason) => {
+  getLogger().debug(`multipleResolves ${type} “${reason}”`);
+});
+
+
+/** parses command-line arguments */
+function parseArgs () {
+  const version = require(path.join(__dirname, '/../package.json')).version;
+  const parser = new ArgumentParser({
+    add_help: true,
+    description: 'NodeJS remoteStorage server / ' + version
+  });
+
+  parser.add_argument('-c', '--conf', {
+    help: 'Path to configuration'
+  });
+
+  parser.add_argument('-e', '--exampleConf', {
+    help: 'Print configuration example',
+    action: 'store_true'
+  });
+
+  return parser.parse_args();
+}
+
+/** Normalizes a port into a number, string, or false. */
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}

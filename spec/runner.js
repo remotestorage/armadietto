@@ -7,3 +7,7 @@ require('./armadietto/storage_spec');
 
 require('./stores/file_tree_spec');
 // require('./stores/redis_spec');
+
+require('./modular/static.spec');
+require('./modular/notfound.spec');
+require('./modular/index.spec');

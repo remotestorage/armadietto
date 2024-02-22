@@ -24,8 +24,13 @@
   "dependencies": {
     "argparse": "^2.0.1",
     "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "http-errors": "^2.0.0",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4",
+    "morgan": "^1.10.0",
+    "pug": "^3.0.2",
     "winston": "^3.11.0"
   },
   "devDependencies": {
@@ -46,7 +51,9 @@
   },
   "scripts": {
     "dev": "nodemon --inspect -w ./lib ./bin/armadietto.js -c ./bin/dev-conf.json",
+    "modular": "PORT=8001 node --watch ./bin/www -c ./bin/dev-conf.json",
     "test": "mocha -u bdd-lazy-var/getter spec/runner.js",
+    "test-watch": "mocha --watch -u bdd-lazy-var/getter spec/runner.js",
     "lint": "eslint --max-warnings=0 \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\""
   },

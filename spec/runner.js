@@ -7,6 +7,7 @@ require('./armadietto/storage_spec');
 require('./armadietto/a_root_spec');
 require('./armadietto/a_not_found_spec');
 require('./armadietto/a_static_spec');
+require('./armadietto/a_signup_spec');
 
 require('./stores/file_tree_spec');
 // require('./stores/redis_spec');
@@ -14,3 +15,4 @@ require('./stores/file_tree_spec');
 require('./modular/m_root.spec');
 require('./modular/m_not_found.spec');
 require('./modular/m_static.spec');
+require('./modular/m_signup.spec');

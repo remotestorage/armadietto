@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const app = require('../lib/app');
 const http = require('http');
 const fs = require("fs");
 const path = require("path");
@@ -29,12 +28,25 @@ try {
 
 configureLogger(conf.logging);
 
+conf.basePath ||= '';
+if (conf.basePath && !conf.basePath.startsWith('/')) { conf.basePath = '/' + conf.basePath; }
+process.env.basePath = conf.basePath;
+
+const app = require('../lib/app');   // process.env.basePath must have been set previously
+const S3 = require("../lib/streaming_stores/S3");
+
 const port = normalizePort( process.env.PORT || conf.http?.port || '8000');
 app.set('port', port);
 
+// If the environment variables aren't set, storage uses a shared public account on play.min.io!
+app.set('streaming store', new S3(process.env.S3_HOSTNAME,
+  process.env.S3_PORT ? parseInt(process.env.S3_PORT) : undefined,
+  process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY));
+
+
 app.locals.title = "Modular Armadietto";
-app.locals.basePath = '';
-// rendering should set host: getHost(req)
+app.locals.basePath = conf.basePath;
+// rendering should set locals.host: getHost(req)
 app.locals.host = conf.http?.host + (port ? ':' + port : '');
 app.locals.signup = conf.allow_signup;
 

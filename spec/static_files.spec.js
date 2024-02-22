@@ -9,7 +9,7 @@ exports.shouldServeStaticFiles = function () {
   it('should return style sheet as text/css', async function () {
     const res = await chai.request(this.app).get('/assets/style.css');
     expect(res).to.have.status(200);
-    // expect(res).to.have.header('Content-Security-Policy');
+    // expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
     // expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     // expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);
@@ -25,7 +25,7 @@ exports.shouldServeStaticFiles = function () {
   it('should return client javascript as text/javascript', async function () {
     const res = await chai.request(this.app).get('/assets/armadietto-utilities.js');
     expect(res).to.have.status(200);
-    // expect(res).to.have.header('Content-Security-Policy');
+    // expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
     // expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     // expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);

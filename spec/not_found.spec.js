@@ -9,7 +9,7 @@ exports.shouldHandleNonexistingResource = function () {
   it('should return 404 Not Found', async function () {
     const res = await chai.request(this.app).get('/zorp/gnu/');
     expect(res).to.have.status(404);
-    // expect(res).to.have.header('Content-Security-Policy');
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     // expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);

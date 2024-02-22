@@ -23,25 +23,25 @@
   "main": "./lib/armadietto.js",
   "dependencies": {
     "argparse": "^2.0.1",
-    "ejs": "^3.1.7",
+    "ejs": "^3.1.9",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4",
-    "winston": "^3.5.1"
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "bdd-lazy-var": "^2.6.1",
-    "chai": "^4.3.4",
+    "chai": "^4.4.1",
     "chai-as-promised": "^7.1.1",
-    "chai-http": "^4.3.0",
-    "chai-spies": "^1.0.0",
-    "eslint": "^8.7.0",
-    "eslint-config-standard": "^17.0.0-0",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-n": "^14.0.0",
+    "chai-http": "^4.4.0",
+    "chai-spies": "^1.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "mocha": "^10.1.0",
-    "nodemon": "^2.0.15",
+    "eslint-plugin-promise": "^6.1.1",
+    "mocha": "^10.3.0",
+    "nodemon": "^3.0.3",
     "rimraf": "^3.0.2"
   },
   "scripts": {

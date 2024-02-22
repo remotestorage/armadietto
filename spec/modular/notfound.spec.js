@@ -34,7 +34,7 @@ describe('Nonexistant page', () => {
     expect(res).to.have.header('Content-Type', /^text\/html/);
     expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(1500);
     expect(res).to.have.header('ETag');
-    expect(res.text).to.contain('<title>Error — Armadietto</title>');
+    expect(res.text).to.contain('<title>Not Found — Armadietto</title>');
     expect(res.text).to.match(/<h\d>Something went wrong<\/h\d>/);
     expect(res.text).to.contain('>404<');
     expect(res.text).to.contain('>Not Found<');

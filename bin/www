@@ -38,6 +38,8 @@ const S3 = require("../lib/streaming_stores/S3");
 const port = normalizePort( process.env.PORT || conf.http?.port || '8000');
 app.set('port', port);
 
+app.set('forceSSL', Boolean(conf.https?.force));
+
 // If the environment variables aren't set, storage uses a shared public account on play.min.io!
 app.set('streaming store', new S3(process.env.S3_HOSTNAME,
   process.env.S3_PORT ? parseInt(process.env.S3_PORT) : undefined,
@@ -87,7 +89,7 @@ function onError(error) {
 
 /** Event listener for HTTP server "listening" event. */
 function onListening() {
-  getLogger().notice(`Accepting remoteStorage connections: http://${app.locals.host}/${app.locals.basePath} ${(conf.https && conf.https?.port) || ''}`);
+  getLogger().notice(`Accepting remoteStorage connections: http://${app.locals.host}/${app.locals.basePath} ${(conf.https?.port) || ''}`);
 }
 
 /** Adds listeners for shutdown and serious problems */

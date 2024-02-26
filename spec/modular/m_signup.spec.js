@@ -9,7 +9,6 @@ describe('Signup (modular)', function () {
     before(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-      delete require.cache[require.resolve('../../lib/app')];
       const app = require('../../lib/app');
       app.locals.title = 'Test Armadietto';
       app.locals.basePath = '';
@@ -43,6 +42,10 @@ describe('Signup (modular)', function () {
       app.locals.signup = true;
       this.app = app;
       this.username = 'john-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
+    });
+
+    after(function () {
+      delete require.cache[require.resolve('../../lib/app')];
     });
 
     shouldAllowSignupsBasePath();

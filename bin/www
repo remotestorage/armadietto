@@ -39,6 +39,9 @@ const port = normalizePort( process.env.PORT || conf.http?.port || '8000');
 app.set('port', port);
 
 app.set('forceSSL', Boolean(conf.https?.force));
+if (conf.http?.port && conf.https?.port) {
+  app.set('httpsPort', parseInt(conf.https?.port));   // only for redirecting to HTTPS
+}
 
 // If the environment variables aren't set, storage uses a shared public account on play.min.io!
 app.set('streaming store', new S3(process.env.S3_HOSTNAME,

@@ -10,6 +10,7 @@ require('./armadietto/a_static_spec');
 require('./armadietto/a_signup_spec');
 require('./armadietto/a_web_finger.spec');
 require('./armadietto/a_oauth_spec');
+require('./armadietto/a_storage_spec');
 
 require('./stores/file_tree_spec');
 // require('./stores/redis_spec');
@@ -20,5 +21,6 @@ require('./modular/m_static.spec');
 require('./modular/m_signup.spec');
 require('./modular/m_web_finger.spec');
 require('./modular/m_oauth.spec');
+require('./modular/m_storage.spec');
 
 // require('./streaming_stores/S3.spec');

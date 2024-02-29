@@ -49,24 +49,25 @@ const mockStore = {
     }
 
     return {
+      status: this.metadata?.ETag ? (isBodyReturned ? 200 : 304) : 404,
       readStream: isBodyReturned ? Readable.from(content, { objectMode: false }) : null,
       contentLength: content?.length,
       contentType,
       ETag: this.metadata?.ETag // no ETag means no such file
     };
   },
-  async put (_username, _path, contentType, readStream, condition) {
+  async put (_username, _path, contentType, contentLength, readStream, condition) {
     if (condition?.name === 'If-None-Match' && condition?.ETag === '*') {
       if (this.metadata?.ETag) {
-        return ['CONFLICT'];
+        return ['PRECONDITION FAILED'];
       }
     } else if (condition?.name === 'If-None-Match') {
       if (condition?.ETag === this.metadata?.ETag) {
-        return ['CONFLICT'];
+        return ['PRECONDITION FAILED'];
       }
     } else if (condition?.name === 'If-Match') {
       if (condition?.ETag !== this.metadata?.ETag) {
-        return ['CONFLICT', this.metadata?.ETag];
+        return ['PRECONDITION FAILED', this.metadata?.ETag];
       }
     } // else unconditional
 
@@ -80,11 +81,11 @@ const mockStore = {
   async delete (_username, _path, condition) {
     if (condition?.name === 'If-None-Match') {
       if (condition?.ETag === this.metadata?.ETag) {
-        return ['CONFLICT'];
+        return ['PRECONDITION FAILED'];
       }
     } else if (condition?.name === 'If-Match') {
       if (condition?.ETag !== this.metadata?.ETag) {
-        return ['CONFLICT', this.metadata?.ETag];
+        return ['PRECONDITION FAILED', this.metadata?.ETag];
       }
     } // else unconditional
     if (this.metadata?.ETag) {
@@ -137,12 +138,22 @@ describe('Storage (modular)', function () {
     });
 
     describe('when a valid access token is used', function () {
+      // scenario: retrieve only if changed
       it('ask the store for an item conditionally based on If-None-Match', async function () {
         const ETag = '"1111aaaa2222"';
         await chai.request(this.app).get('/storage/zebcoe/locog/seats')
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', ETag).send();
         expect(this.store.get).to.have.been.called.with('zebcoe', '/locog/seats', { name: 'If-None-Match', ETag });
+      });
+
+      // scenario: ensure range is from same version
+      it('ask the store for an item conditionally based on If-Match', async function () {
+        const ETag = '"l45l43k54j3lk"';
+        await chai.request(this.app).get('/storage/zebcoe/locog/seats')
+          .set('Authorization', 'Bearer a_token')
+          .set('If-Match', ETag).send();
+        expect(this.store.get).to.have.been.called.with('zebcoe', '/locog/seats', { name: 'If-Match', ETag });
       });
     });
   });

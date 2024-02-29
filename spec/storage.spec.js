@@ -305,8 +305,9 @@ module.exports.shouldCrudBlobs = function () {
 
     describe('when a valid access token is used', function () {
       it('tells the store to save the given value', async function () {
+        const content = 'a value';
         const res = await chai.request(this.app).put('/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
-          .set('Authorization', 'Bearer a_token').send('a value');
+          .set('Content-Length', content.length.toString()).set('Authorization', 'Bearer a_token').send(content);
         expect(this.store.put).to.have.been.called.once;
         expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain');
         expect(res.status).to.be.oneOf([200, 201, 204]);
@@ -328,6 +329,7 @@ module.exports.shouldCrudBlobs = function () {
         this.store.metadata = { contentType: 'text/plain', ETag };
         this.store.children = null;
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Content-Length', content.length.toString())
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', ETag)
           .send(content);
@@ -347,6 +349,7 @@ module.exports.shouldCrudBlobs = function () {
         const newContent = 'new content';
         const newETag = '"zzzzyyyyxxxx"';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Content-Length', newContent.length.toString())
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', newETag)
           .send(newContent);
@@ -356,10 +359,12 @@ module.exports.shouldCrudBlobs = function () {
 
       it('tells the store to create a value conditionally based on If-None-Match * (doesn\'t exist)', async function () {
         this.store.content = this.store.metadata = this.store.children = null;
+        const content = 'a value';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Content-Length', content.length.toString())
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', '*')
-          .send('a value');
+          .send(content);
         expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain');
         expect(res).to.have.status(201);
         expect(res.text).to.equal('');
@@ -370,10 +375,12 @@ module.exports.shouldCrudBlobs = function () {
         this.store.content = 'old content';
         this.store.metadata = { contentType: 'text/plain', ETag: oldETag };
         this.store.children = null;
+        const content = 'a value';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Content-Length', content.length.toString())
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', '*')
-          .send('a value');
+          .send(content);
         expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain');
         expect(res).to.have.status(412);
         expect(res.text).to.equal('');
@@ -384,10 +391,12 @@ module.exports.shouldCrudBlobs = function () {
         this.store.content = 'a value';
         this.store.metadata = { contentType: 'text/plain', ETag: oldETag };
         this.store.children = null;
+        const content = 'a value';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Content-Length', content.length.toString())
           .set('Authorization', 'Bearer a_token')
           .set('If-Match', oldETag)
-          .send('a value');
+          .send(content);
         expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain');
         expect(res.status).to.be.oneOf([200, 204]);
         expect(res.text).to.equal('');
@@ -398,10 +407,12 @@ module.exports.shouldCrudBlobs = function () {
         this.store.content = 'old value';
         this.store.metadata = { contentType: 'text/plain', ETag: oldETag };
         this.store.children = null;
+        const content = 'new value';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Content-Length', content.length.toString())
           .set('Authorization', 'Bearer a_token')
           .set('If-Match', '"NewNewNew')
-          .send('new value');
+          .send(content);
         expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain');
         expect(res).to.have.status(412);
         expect(res.text).to.equal('');

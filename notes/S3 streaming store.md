@@ -4,28 +4,35 @@ Streaming Stores can only be used with the modular server.
 
 You should be able to connect to any S3-compatible service that supports versioning. Tested services include:
 
+Tested implementations:
+
+* OpenIO
+
+Incompatible implementations:
+
 * min.io (both self-hosted and cloud)
 
 
-Configure the store by passing to the constructor the endpoint (host name), access key (admin user name) and secret key (password). For non-Amazon providers, you may need to pass in a port number as well.  You can provide these however you like, but typically they are stored in these environment variables:
+Configure the store by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the files can be **read, altered and deleted** by anyone in the world.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
 
-* S3_HOSTNAME
-* S3_PORT
+* S3_ENDPOINT
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
 Creating a client then resembles:
 
 ```javascript
-const store = new S3(process.env.S3_HOSTNAME,
-    process.env.S3_PORT ? parseInt(process.env.S3_PORT) : undefined,
+const store = new S3(process.env.S3_ENDPOINT,
     process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY);
 ```
 
+Https is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.
+
 This one access key is used to create a bucket for each user.
 The bucket name is the username.
+If other buckets are created at that endpoint, those bucket names will be unavailable as usernames.
 Buckets can be administered using the service's tools, such as a webapp console or command-line tools.
-The bucket can contain non-remoteStorage blobs outside these prefixes:
+The bucket **MAY** contain non-remoteStorage blobs outside these prefixes:
 
 * remoteStorageBlob/
 * remoteStorageAuth/

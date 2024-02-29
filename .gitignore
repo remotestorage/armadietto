@@ -17,3 +17,6 @@ dev-storage
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Data stores
+myminio

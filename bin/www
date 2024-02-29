@@ -44,8 +44,7 @@ if (conf.http?.port && conf.https?.port) {
 }
 
 // If the environment variables aren't set, storage uses a shared public account on play.min.io!
-app.set('streaming store', new S3(process.env.S3_HOSTNAME,
-  process.env.S3_PORT ? parseInt(process.env.S3_PORT) : undefined,
+app.set('streaming store', new S3(process.env.S3_ENDPOINT,
   process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY));
 
 

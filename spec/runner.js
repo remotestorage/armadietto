@@ -23,4 +23,5 @@ require('./modular/m_web_finger.spec');
 require('./modular/m_oauth.spec');
 require('./modular/m_storage.spec');
 
+// If a local S3 store isn't running and configured, tests are run using a shared public account on play.min.io
 // require('./streaming_stores/S3.spec');

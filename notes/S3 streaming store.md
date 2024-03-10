@@ -4,7 +4,11 @@ Streaming Stores can only be used with the modular server.
 
 You should be able to connect to any S3-compatible service that supports versioning. Tested services include:
 
-Tested implementations:
+Tested working implementations:
+
+* AWS S3
+
+Tested working with caveats
 
 * OpenIO
 
@@ -13,7 +17,7 @@ Incompatible implementations:
 * min.io (both self-hosted and cloud)
 
 
-Configure the store by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the files can be **read, altered and deleted** by anyone in the world.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
+Configure the store by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the files can be **read, altered and deleted** by anyone in the world. It's also incompatible.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
 
 * S3_ENDPOINT
 * S3_ACCESS_KEY

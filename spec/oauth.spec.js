@@ -115,7 +115,7 @@ exports.shouldImplementOAuth = function () {
 
     it('redirects with an access token', async function () {
       const res = await post(this.app, '/oauth', this.auth_params);
-      expect(res).to.redirectTo(/http:\/\/example.com\/cb#access_token=[\w-]+&token_type=bearer&state=the_state/);
+      expect(res).to.redirectTo(/http:\/\/example\.com\/cb#access_token=[\w-]+&token_type=bearer&state=the_state/);
     });
   });
 

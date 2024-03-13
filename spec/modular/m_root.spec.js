@@ -1,7 +1,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const expect = chai.expect;
-const app = require('../../lib/app');
+const appFactory = require('../../lib/appFactory');
 const { configureLogger } = require('../../lib/logger');
 const { shouldBeWelcomeWithoutSignup, shouldBeWelcomeWithSignup } = require('../root.spec');
 
@@ -14,7 +14,7 @@ describe('root page (modular)', function () {
     beforeEach(function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-      this.app = app;
+      this.app = appFactory({}, (_req, _res, next) => next());
       this.app.locals.title = 'Armadietto without Signup';
       this.app.locals.basePath = '';
       this.app.locals.host = 'localhost:xxxx';
@@ -28,7 +28,7 @@ describe('root page (modular)', function () {
     beforeEach(function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-      this.app = app;
+      this.app = appFactory({}, (_req, _res, next) => next());
       this.app.locals.title = 'Armadietto with Signup';
       this.app.locals.basePath = '';
       this.app.locals.host = 'localhost:xxxx';
@@ -43,16 +43,30 @@ describe('root page (modular)', function () {
     before(async () => {
       configureLogger({});
 
-      app.locals.title = 'Test Armadietto';
-      app.locals.basePath = '';
-      app.locals.host = 'localhost:xxxx';
-      app.locals.signup = false;
+      this.app = appFactory({}, (_req, _res, next) => next());
+      this.app.locals.title = 'Armadietto with Signup';
+      this.app.locals.basePath = '';
+      this.app.locals.host = 'localhost:xxxx';
+      this.app.locals.signup = true;
     });
 
     it('should return Welcome page w/ security headers', async () => {
-      const res = await chai.request(app).get('/');
+      const res = await chai.request(this.app).get('/');
       expect(res).to.have.status(200);
-      expect(res).to.have.header('Content-Security-Policy', 'sandbox allow-scripts allow-forms allow-popups allow-same-origin;default-src \'self\';script-src \'self\';script-src-attr \'none\';style-src \'self\';img-src \'self\';font-src \'self\';object-src \'none\';child-src \'none\';connect-src \'none\';base-uri \'self\';frame-ancestors \'none\';form-action https:;upgrade-insecure-requests');
+      expect(res.get('Content-Security-Policy')).to.contain('sandbox allow-scripts allow-forms allow-popups allow-same-origin;');
+      expect(res.get('Content-Security-Policy')).to.contain('default-src \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('script-src \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('script-src-attr \'none\';');
+      expect(res.get('Content-Security-Policy')).to.contain('style-src \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('img-src \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('font-src \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('object-src \'none\';');
+      expect(res.get('Content-Security-Policy')).to.contain('child-src \'none\';');
+      expect(res.get('Content-Security-Policy')).to.contain('connect-src \'none\';');
+      expect(res.get('Content-Security-Policy')).to.contain('base-uri \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('frame-ancestors \'none\';');
+      expect(res.get('Content-Security-Policy')).to.contain('form-action https:'); // in dev may also allow http:
+      expect(res.get('Content-Security-Policy')).to.contain('upgrade-insecure-requests');
       expect(res).to.have.header('Cross-Origin-Opener-Policy', 'same-origin');
       expect(res).to.have.header('Cross-Origin-Resource-Policy', 'same-origin');
       expect(res).to.have.header('Origin-Agent-Cluster');

@@ -30,7 +30,7 @@ const mockStore = {
         };
       }
     } else { // unconditional GET
-      if (this.children) {
+      if (_path.endsWith('/')) {
         return {
           item: { ETag, items: this.children }
         };
@@ -134,17 +134,6 @@ describe('Storage (monolithic)', function () {
       });
     });
   });
-
-  // describe('PUT', function () {
-  //   beforeEach(function () {
-  //     sandbox.on(this.store, ['put']);
-  //   });
-  //
-  //   afterEach(function () {
-  //     sandbox.restore();
-  //   });
-  //
-  // })
 
   describe('DELETE', function () {
     beforeEach(function () {

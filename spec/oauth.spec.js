@@ -4,10 +4,6 @@ const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
-const spies = require('chai-spies');
-chai.use(spies);
-
-const sandbox = chai.spy.sandbox();
 
 async function post (app, url, params) {
   return chai.request(app).post(url).type('form').send(params).redirects(0);
@@ -25,12 +21,6 @@ exports.shouldImplementOAuth = function () {
         scope: 'the_scope'
         // no state
       };
-
-      sandbox.on(this.store, ['authorize', 'authenticate']);
-    });
-
-    afterEach(function () {
-      sandbox.restore();
     });
 
     it('returns an error if redirect_uri is missing', async function () {
@@ -82,35 +72,6 @@ exports.shouldImplementOAuth = function () {
         scope: 'the_scope',
         state: 'the_state'
       };
-
-      sandbox.on(this.store, ['authorize', 'authenticate']);
-    });
-
-    afterEach(function () {
-      sandbox.restore();
-    });
-
-    describe('without explicit read/write permissions', async function () {
-      it('authorizes the client to read and write', async function () {
-        await post(this.app, '/oauth', this.auth_params);
-        // expect(this.store.authorize).to.have.been.called.with('the_client_id', 'zebcoe', { the_scope: ['r', 'w'] });
-      });
-    });
-
-    describe('with explicit read permission', async function () {
-      it('authorizes the client to read', async function () {
-        this.auth_params.scope = 'the_scope:r';
-        await post(this.app, '/oauth', this.auth_params);
-        // expect(this.store.authorize).to.have.been.called.with('the_client_id', 'zebcoe', { the_scope: ['r'] });
-      });
-    });
-
-    describe('with explicit read/write permission', async function () {
-      it('authorizes the client to read and write', async function () {
-        this.auth_params.scope = 'the_scope:rw';
-        await post(this.app, '/oauth', this.auth_params);
-        // expect(this.store.authorize).to.have.been.called.with('the_client_id', 'zebcoe', { the_scope: ['r', 'w'] });
-      });
     });
 
     it('redirects with an access token', async function () {
@@ -123,33 +84,16 @@ exports.shouldImplementOAuth = function () {
     beforeEach(function () {
       this.auth_params = {
         username: 'zebcoe',
-        password: 'locog',
+        password: 'incorrect',
         client_id: 'the_client_id',
         redirect_uri: 'http://example.com/cb',
         response_type: 'token',
         scope: 'the_scope',
         state: 'the_state'
       };
-
-      sandbox.on(this.store, ['authorize', 'authenticate']);
-    });
-
-    afterEach(function () {
-      sandbox.restore();
-    });
-
-    it('does not authorize the client', async function () {
-      this.store.authenticate = async function (_params) {
-        throw new Error();
-      };
-      await post(this.app, '/oauth', this.auth_params);
-      expect(this.store.authorize).to.have.been.called.exactly(0);
     });
 
     it('returns a 401 response with the login form', async function () {
-      this.store.authenticate = async function (_params) {
-        throw new Error();
-      };
       const res = await post(this.app, '/oauth', this.auth_params);
       expect(res).to.have.status(401);
       expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');

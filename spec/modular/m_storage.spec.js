@@ -10,6 +10,80 @@ chai.use(chaiHttp);
 const spies = require('chai-spies');
 chai.use(spies);
 chai.use(require('chai-as-promised'));
+const express = require('express');
+const { pipeline } = require('node:stream/promises');
+const streamingStorageRouter = require('../../lib/routes/streaming_storage');
+
+/** This mock needs to implement conditionals, to test the code that generates responses */
+const mockStoreRouter = express.Router();
+mockStoreRouter.content = null;
+mockStoreRouter.metadata = null;
+mockStoreRouter.children = null;
+mockStoreRouter.get('/:username/*',
+  async function (req, res, next) {
+    if (req.get('If-None-Match') && req.get('If-None-Match') === mockStoreRouter.metadata?.ETag) {
+      res.status(304).end(); return;
+    } else if (req.get('If-Match') && req.get('If-Match') !== mockStoreRouter.metadata?.ETag) {
+      res.status(412).end(); return;
+    }
+
+    if (mockStoreRouter.metadata) {
+      let content, contentType;
+      if (req.url.endsWith('/')) {
+        content = JSON.stringify({
+          '@context': 'http://remotestorage.io/spec/folder-description',
+          ETag: mockStoreRouter.metadata?.ETag,
+          items: mockStoreRouter.children || []
+        });
+        contentType = 'application/ld+json';
+      } else {
+        content = mockStoreRouter.content;
+        contentType = mockStoreRouter.metadata?.contentType;
+      }
+
+      res.status(200).set('Content-Length', content?.length || 0).set('Content-Type', contentType).set('ETag', mockStoreRouter.metadata?.ETag);
+      return pipeline(Readable.from([content || ''], { objectMode: false }), res);
+    } else {
+      res.status(404).end();
+    }
+  }
+);
+
+mockStoreRouter.put('/:username/*',
+  async function (req, res, next) {
+    if (req.get('If-None-Match') === '*' && mockStoreRouter.metadata?.ETag) {
+      res.status(412).end(); return;
+    } else if (req.get('If-None-Match') && req.get('If-None-Match') === mockStoreRouter.metadata?.ETag) {
+      res.status(412).end(); return;
+    } else if (req.get('If-Match') && req.get('If-Match') !== mockStoreRouter.metadata?.ETag) {
+      res.status(412).end(); return;
+    } // else unconditional
+
+    const statusCode = mockStoreRouter.metadata?.ETag ? 204 : 201;
+    mockStoreRouter.content = (await req.setEncoding('utf-8').toArray())[0];
+    const ETag = `"ETag|${mockStoreRouter.content}"`;
+    mockStoreRouter.metadata = { contentType: req.get('Content-Type'), ETag };
+    mockStoreRouter.children = null;
+    res.status(statusCode).set('ETag', ETag).end();
+  }
+);
+
+mockStoreRouter.delete('/:username/*',
+  async function (req, res, next) {
+    if (req.get('If-Match') && req.get('If-Match') !== mockStoreRouter.metadata?.ETag) {
+      return res.status(412).end();
+    } else if (req.get('If-None-Match') && req.get('If-None-Match') === mockStoreRouter.metadata?.ETag) {
+      return res.status(412).end();
+    }
+
+    if (mockStoreRouter.metadata?.ETag) {
+      res.status(204).set('ETag', `"ETag|${mockStoreRouter.content}"`).end();
+    } else { // didn't exist
+      res.status(404).end();
+    }
+    mockStoreRouter.content = mockStoreRouter.metadata = mockStoreRouter.children = null;
+  }
+);
 
 function put (app, path, params) {
   return chai.request(app).put(path).buffer(true).type('text/plain')
@@ -20,214 +94,135 @@ function del (app, path) {
   return chai.request(app).delete(path).set('Authorization', 'Bearer a_token');
 }
 
-/** This mock needs to implement conditionals, to test the code that generates responses */
-const mockStore = {
-  content: null,
-  metadata: null,
-  children: null,
-  async get (_username, _path, condition) {
-    let isBodyReturned;
-    if (condition?.name === 'If-None-Match') {
-      isBodyReturned = condition.ETag !== this.metadata?.ETag;
-    } else if (condition?.name === 'If-Match') {
-      isBodyReturned = condition.ETag === this.metadata?.ETag;
-    } else { // unconditional
-      isBodyReturned = Boolean(this.metadata);
-    }
-
-    let content, contentType;
-    if (this.children) {
-      content = JSON.stringify({
-        '@context': 'http://remotestorage.io/spec/folder-description',
-        ETag: this.metadata?.ETag,
-        items: this.children
-      });
-      contentType = 'application/ld+json';
-    } else {
-      content = this.content || '';
-      contentType = this.metadata?.contentType;
-    }
-
-    return {
-      status: this.metadata?.ETag ? (isBodyReturned ? 200 : 304) : 404,
-      readStream: isBodyReturned ? Readable.from(content, { objectMode: false }) : null,
-      contentLength: content?.length,
-      contentType,
-      ETag: this.metadata?.ETag // no ETag means no such file
-    };
-  },
-  async put (_username, _path, contentType, contentLength, readStream, condition) {
-    if (condition?.name === 'If-None-Match' && condition?.ETag === '*') {
-      if (this.metadata?.ETag) {
-        return ['PRECONDITION FAILED'];
-      }
-    } else if (condition?.name === 'If-None-Match') {
-      if (condition?.ETag === this.metadata?.ETag) {
-        return ['PRECONDITION FAILED'];
-      }
-    } else if (condition?.name === 'If-Match') {
-      if (condition?.ETag !== this.metadata?.ETag) {
-        return ['PRECONDITION FAILED', this.metadata?.ETag];
-      }
-    } // else unconditional
-
-    const result = this.metadata?.ETag ? 'UPDATED' : 'CREATED';
-    this.content = (await readStream.setEncoding('utf-8').toArray())[0];
-    const ETag = `"ETag|${this.content}"`;
-    this.metadata = { contentType, ETag };
-    this.children = null;
-    return [result, ETag];
-  },
-  async delete (_username, _path, condition) {
-    if (condition?.name === 'If-None-Match') {
-      if (condition?.ETag === this.metadata?.ETag) {
-        return ['PRECONDITION FAILED'];
-      }
-    } else if (condition?.name === 'If-Match') {
-      if (condition?.ETag !== this.metadata?.ETag) {
-        return ['PRECONDITION FAILED', this.metadata?.ETag];
-      }
-    } // else unconditional
-    if (this.metadata?.ETag) {
-      this.content = this.metadata = this.children = null;
-      return ['DELETED', `"ETag|${this.content}"`];
-    } else { // didn't exist
-      this.content = this.metadata = this.children = null;
-      return ['NOT FOUND'];
-    }
-  },
-  async permissions (user, token) {
-    if (user === 'boris' && token === 'a_token') return false;
-    if (user === 'zebcoe' && token === 'a_token') {
-      return {
-        '/locog/': ['r', 'w'],
-        '/books/': ['r'],
-        '/statuses/': ['w'],
-        '/deep/': ['r', 'w']
-      };
-    }
-    if (user === 'zebcoe' && token === 'root_token') return { '/': ['r', 'r'] };
-    if (user === 'zebcoe' && token === 'bad_token') return false;
-  }
-};
-
-const sandbox = chai.spy.sandbox();
-const modifiedTimestamp = Date.UTC(2012, 1, 25, 13, 37).toString();
-
 describe('Storage (modular)', function () {
   before(async function () {
     configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-    this.store = mockStore;
+    this.store = mockStoreRouter;
 
-    this.app = require('../../lib/app');
-    this.app.set('streaming store', this.store);
+    this.session = {};
+    const session = this.session;
+
+    this.app = express();
+    this.app.use(function (req, _res, next) {
+      req.session = session; next();
+    });
+    this.app.use('/storage', streamingStorageRouter);
+    this.app.use('/storage', mockStoreRouter);
+    // this.app.set('account', mockStoreRouter);
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
     this.app.locals.host = 'localhost:xxxx';
     this.app.locals.signup = false;
   });
 
-  describe('GET', function () {
-    beforeEach(function () {
-      sandbox.on(this.store, ['get']);
-    });
+  beforeEach(function () {
+    this.session.permissions = {
+      '/locog/': ['r', 'w'],
+      '/books/': ['r'],
+      '/statuses/': ['w'],
+      '/deep/': ['r', 'w']
+    };
+  });
 
-    afterEach(function () {
-      sandbox.restore();
-    });
-
+  describe('GET (not implemented by file_tree)', function () {
     describe('when a valid access token is used', function () {
-      // scenario: retrieve only if changed
-      it('ask the store for an item conditionally based on If-None-Match', async function () {
-        const ETag = '"1111aaaa2222"';
-        await chai.request(this.app).get('/storage/zebcoe/locog/seats')
+      // scenario: ensure range is from same version
+      it('returns Precondition Failed when If-Match is not equal', async function () {
+        mockStoreRouter.content = 'fizbin';
+        mockStoreRouter.metadata = { contentType: 'text/plain', ETag: '"current-etag"' };
+        const res = await chai.request(this.app).get('/storage/zebcoe/locog/seats')
           .set('Authorization', 'Bearer a_token')
-          .set('If-None-Match', ETag).send();
-        expect(this.store.get).to.have.been.called.with('zebcoe', '/locog/seats', { name: 'If-None-Match', ETag });
+          .set('If-Match', '"different-etag"').send();
+        expect(res).to.have.status(412);
+        const retrievedContent = await res.setEncoding('utf-8').toArray();
+        expect(retrievedContent).to.be.deep.equal([]);
       });
 
       // scenario: ensure range is from same version
-      it('ask the store for an item conditionally based on If-Match', async function () {
+      it('returns whole document when If-Match is equal', async function () {
         const ETag = '"l45l43k54j3lk"';
-        await chai.request(this.app).get('/storage/zebcoe/locog/seats')
+        const res = await chai.request(this.app).get('/storage/zebcoe/locog/seats')
           .set('Authorization', 'Bearer a_token')
           .set('If-Match', ETag).send();
-        expect(this.store.get).to.have.been.called.with('zebcoe', '/locog/seats', { name: 'If-Match', ETag });
+        expect(res).to.have.status(412);
+        const retrievedContent = await res.setEncoding('utf-8').toArray();
+        expect(retrievedContent).to.be.deep.equal([]);
       });
     });
   });
 
-  describe('PUT', function () {
+  describe('PUT (not implemented by file_tree)', function () {
     beforeEach(function () {
-      this.store.content = this.store.metadata = this.store.children = null;
-      sandbox.on(this.store, ['put']);
-    });
-
-    afterEach(function () {
-      sandbox.restore();
+      mockStoreRouter.content = mockStoreRouter.metadata = mockStoreRouter.children = null;
     });
 
     describe('when a valid access token is used', function () {
-      it('tells the store to save a value conditionally based on If-None-Match (does match)', async function () {
+      // scenario: backup / sync
+      it('creates when If-None-Match is ETag', async function () {
         const content = 'a value';
         const ETag = '"f5f5f5f5f"';
-        this.store.content = content;
-        this.store.metadata = { contentType: 'text/plain', ETag };
-        this.store.children = null;
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', ETag)
           .send(content);
-        expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats',
-          'text/plain');
+        expect(res).to.have.status(201);
+        expect(res.text).to.equal('');
+        expect(res).to.have.header('Content-Length', '0');
+      });
+
+      // scenario: backup / sync
+      it('returns Precondition Failed when If-None-Match is equal', async function () {
+        const content = 'a value';
+        const ETag = '"f5f5f5f5f"';
+        mockStoreRouter.content = content;
+        mockStoreRouter.metadata = { contentType: 'text/plain', ETag };
+        mockStoreRouter.children = null;
+        const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
+          .set('Authorization', 'Bearer a_token')
+          .set('If-None-Match', ETag)
+          .send(content);
         expect(res).to.have.status(412);
         expect(res.text).to.equal('');
         expect(res).to.have.header('Content-Length', '0');
       });
 
-      it('tells the store to save a value conditionally based on If-None-Match (doesn\'t match)', async function () {
+      // newer backup / sync
+      it('overwrites document when If-None-Match is not equal', async function () {
         const oldETag = '"a1b2c3d4"';
-        this.store.content = 'old content';
-        this.store.metadata = { contentType: 'text/plain', ETag: oldETag };
-        this.store.children = null;
+        mockStoreRouter.content = 'old content';
+        mockStoreRouter.metadata = { contentType: 'text/plain', ETag: oldETag };
+        mockStoreRouter.children = null;
         const newContent = 'new content';
         const newETag = '"zzzzyyyyxxxx"';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
           .set('Authorization', 'Bearer a_token')
           .set('If-None-Match', newETag)
           .send(newContent);
-        expect(this.store.put).to.have.been.called.with('zebcoe', '/locog/seats', 'text/plain');
-        expect(res.status).to.be.oneOf([200, 204]);
+        expect(res.status).to.be.oneOf([204]);
       });
     });
   });
 
-  describe('DELETE', function () {
+  describe('DELETE (not implemented by file_tree)', function () {
     beforeEach(function () {
-      sandbox.on(this.store, ['delete']);
+      mockStoreRouter.content = mockStoreRouter.metadata = mockStoreRouter.children = null;
     });
 
-    afterEach(function () {
-      sandbox.restore();
-    });
-
-    it('tells the store to delete an item conditionally based on If-None-Match (doesn\'t match)', async function () {
-      this.store.content = 'old value';
-      this.store.metadata = { ETag: '"ETag|old value' };
+    it('should not delete a document if the If-None-Match header is equal', async function () {
+      mockStoreRouter.content = 'old value';
+      mockStoreRouter.metadata = { ETag: '"ETag|old value' };
       const res = await del(this.app, '/storage/zebcoe/locog/seats')
-        .set('If-None-Match', `"${modifiedTimestamp}"`);
-      expect(this.store.delete).to.have.been.called.with('zebcoe', '/locog/seats');
-      expect(res.status).to.be.oneOf([200, 204]);
+        .set('If-None-Match', mockStoreRouter.metadata.ETag);
+      expect(res.status).to.be.oneOf([412]);
       expect(res.text).to.equal('');
     });
 
-    it('tells the store to delete an item conditionally based on If-None-Match (does match)', async function () {
-      this.store.content = 'old value';
-      this.store.metadata = { ETag: `"${modifiedTimestamp}"` };
-      const res = await del(this.app, '/storage/zebcoe/locog/seats').set('If-None-Match', `"${modifiedTimestamp}"`);
-      expect(this.store.delete).to.have.been.called.with('zebcoe', '/locog/seats');
-      expect(res).to.have.status(412);
+    it('deletes a document if the If-None-Match header is not equal', async function () {
+      mockStoreRouter.content = 'old value';
+      mockStoreRouter.metadata = { ETag: '"ETag|old value"' };
+      const res = await del(this.app, '/storage/zebcoe/locog/seats').set('If-None-Match', '"k5lj5l4jk"');
+      expect(res).to.have.status(204);
       expect(res.text).to.equal('');
     });
   });

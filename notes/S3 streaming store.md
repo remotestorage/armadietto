@@ -23,11 +23,12 @@ Configure the store by passing to the constructor the endpoint (host name, and p
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
-Creating a client then resembles:
+Creating an app server then resembles:
 
 ```javascript
-const store = new S3(process.env.S3_ENDPOINT,
+const s3handler = new S3Handler(process.env.S3_ENDPOINT,
     process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY);
+const app = require('../../lib/appFactory')(s3handler, s3handler);
 ```
 
 Https is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.

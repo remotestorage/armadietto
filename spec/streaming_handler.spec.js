@@ -306,7 +306,7 @@ module.exports.shouldStoreStream = function () {
         expect(getRes2._getBuffer().toString()).to.equal('');
       });
 
-      it('should return directory when If-None-Match has an old ETag', async function () {
+      it('returns directory when If-None-Match has an old ETag', async function () {
         const content = 'mud';
         const [putRes] = await this.doHandle({
           method: 'PUT',

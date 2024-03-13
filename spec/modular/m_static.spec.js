@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-const app = require('../../lib/app');
+const appFactory = require('../../lib/appFactory');
 const { configureLogger } = require('../../lib/logger');
 const { shouldServeStaticFiles } = require('../static_files.spec');
 
@@ -9,6 +9,7 @@ describe('Static asset handler (modular)', function () {
   before(function () {
     configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
+    const app = appFactory({}, (_req, _res, next) => next());
     app.locals.title = 'Test Armadietto';
     app.locals.basePath = '';
     app.locals.host = 'localhost:xxxx';

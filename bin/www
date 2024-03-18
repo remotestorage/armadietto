@@ -8,8 +8,6 @@ const {configureLogger, getLogger} = require("../lib/logger");
 const S3Handler = require("../lib/routes/S3Handler");
 const process = require("process");
 const https = require("https");
-const { networkInterfaces } = require('os');
-const dns = require("dns");
 
 const SSL_CIPHERS = 'ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM';
 const SSL_OPTIONS = require('crypto').constants.SSL_OP_CIPHER_SERVER_PREFERENCE;
@@ -41,18 +39,24 @@ process.env.basePath = conf.basePath;
 
 const appFactory = require('../lib/appFactory');   // process.env.basePath must have been set previously
 
-const userNameSuffix = conf.user_name_suffix || '-Armadietto';
+let jwtSecret = process.env.JWT_SECRET || process.env.S3_SECRET_KEY;
+if (!jwtSecret) {
+  process.env.SECRET = jwtSecret = String(Math.round(Math.random() * Number.MAX_SAFE_INTEGER))
+  getLogger().warning(`neither JWT_SECRET nor S3_SECRET_KEY were set in the environment. Setting it to “${jwtSecret}”`)
+}
+
+const userNameSuffix = conf.user_name_suffix || '-' + (conf.domain_name || 'Armadietto');
 
 if (conf.http?.port) {
-  start(Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT}), userNameSuffix);
+  start(jwtSecret, Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT}), userNameSuffix);
 }
 
 if (conf.https?.port) {
-  start(conf.https, userNameSuffix);
+  start(jwtSecret, conf.https, userNameSuffix);
 }
 
 
-function start(network, userNameSuffix) {
+function start(jwtSecret, network, userNameSuffix) {
   // If the environment variables aren't set, s3handler uses a shared public account on play.min.io,
   // to which anyone in the world can read and write!
   // It is not entirely compatible with S3Handler.
@@ -60,7 +64,7 @@ function start(network, userNameSuffix) {
     process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY, undefined,
     userNameSuffix);
 
-  const app = appFactory(s3handler, s3handler);
+  const app = appFactory(jwtSecret, s3handler, s3handler);
 
   const port = normalizePort( network?.port || '8000');
   app.set('port', port);
@@ -70,11 +74,10 @@ function start(network, userNameSuffix) {
     app.set('httpsPort', parseInt(conf.https?.port));   // only for redirecting to HTTPS
   }
 
-
   app.locals.title = "Modular Armadietto";
   app.locals.basePath = conf.basePath;
-  // rendering should set `locals.host` to `getHost(req)`
-  app.locals.host = (network?.host || '0.0.0.0') + (port ? ':' + port : '');
+  // rendering can set `locals.host` to `getHost(req)`
+  app.locals.host = (conf.domain_name || network?.host || '0.0.0.0') + (port ? ':' + port : '');
   app.locals.signup = conf.allow_signup;
 
   /** Creates HTTP server. */

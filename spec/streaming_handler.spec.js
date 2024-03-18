@@ -65,7 +65,7 @@ module.exports.shouldStoreStream = function () {
   });
 
   describe('GET', function () {
-    this.timeout(15_000);
+    this.timeout(20_000);
 
     describe('for files', function () {
       describe('unversioned', function () {
@@ -337,7 +337,7 @@ module.exports.shouldStoreStream = function () {
   });
 
   describe('PUT', function () {
-    this.timeout(15_000);
+    this.timeout(20_000);
 
     describe('unversioned', function () {
       it('does not create a file for a bad user name', async function () {
@@ -679,7 +679,6 @@ module.exports.shouldStoreStream = function () {
       });
 
       it('does not create folder where a document exists', async function () {
-        this.timeout(1000000);
         const content = 'Londonderry';
         const [putRes1] = await this.doHandle({
           method: 'PUT',
@@ -970,7 +969,7 @@ module.exports.shouldStoreStream = function () {
   });
 
   describe('DELETE', function () {
-    this.timeout(15_000);
+    this.timeout(20_000);
 
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {

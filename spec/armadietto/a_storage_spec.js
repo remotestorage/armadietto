@@ -112,6 +112,10 @@ describe('Storage (monolithic)', function () {
       http: { },
       logging: { stdout: [], log_dir: './test-log', log_files: ['debug'] }
     });
+
+    this.good_token = 'a_token';
+    this.bad_token = 'bad_token';
+    this.root_token = 'root_token';
   });
 
   shouldCrudBlobs();

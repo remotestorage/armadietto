@@ -13,6 +13,9 @@ chai.use(require('chai-as-promised'));
 const express = require('express');
 const { pipeline } = require('node:stream/promises');
 const streamingStorageRouter = require('../../lib/routes/streaming_storage');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'swordfish';
 
 /** This mock needs to implement conditionals, to test the code that generates responses */
 const mockStoreRouter = express.Router();
@@ -20,7 +23,7 @@ mockStoreRouter.content = null;
 mockStoreRouter.metadata = null;
 mockStoreRouter.children = null;
 mockStoreRouter.get('/:username/*',
-  async function (req, res, next) {
+  async function (req, res) {
     if (req.get('If-None-Match') && req.get('If-None-Match') === mockStoreRouter.metadata?.ETag) {
       res.status(304).end(); return;
     } else if (req.get('If-Match') && req.get('If-Match') !== mockStoreRouter.metadata?.ETag) {
@@ -50,7 +53,7 @@ mockStoreRouter.get('/:username/*',
 );
 
 mockStoreRouter.put('/:username/*',
-  async function (req, res, next) {
+  async function (req, res) {
     if (req.get('If-None-Match') === '*' && mockStoreRouter.metadata?.ETag) {
       res.status(412).end(); return;
     } else if (req.get('If-None-Match') && req.get('If-None-Match') === mockStoreRouter.metadata?.ETag) {
@@ -69,7 +72,7 @@ mockStoreRouter.put('/:username/*',
 );
 
 mockStoreRouter.delete('/:username/*',
-  async function (req, res, next) {
+  async function (req, res) {
     if (req.get('If-Match') && req.get('If-Match') !== mockStoreRouter.metadata?.ETag) {
       return res.status(412).end();
     } else if (req.get('If-None-Match') && req.get('If-None-Match') === mockStoreRouter.metadata?.ETag) {
@@ -85,13 +88,19 @@ mockStoreRouter.delete('/:username/*',
   }
 );
 
-function put (app, path, params) {
-  return chai.request(app).put(path).buffer(true).type('text/plain')
-    .set('Authorization', 'Bearer a_token').send(params);
+function get (app, url, token) {
+  return chai.request(app).get(url).set('Authorization', 'Bearer ' + token)
+    .set('Origin', 'https://rs-app.com:2112').buffer(true);
 }
 
-function del (app, path) {
-  return chai.request(app).delete(path).set('Authorization', 'Bearer a_token');
+function put (app, path, token, content) {
+  return chai.request(app).put(path).buffer(true).type('text/plain')
+    .set('Authorization', 'Bearer ' + token).set('Origin', 'https://rs-app.com:2112').send(content);
+}
+
+function del (app, path, token) {
+  return chai.request(app).delete(path).set('Authorization', 'Bearer ' + token)
+    .set('Origin', 'https://rs-app.com:2112');
 }
 
 describe('Storage (modular)', function () {
@@ -100,40 +109,62 @@ describe('Storage (modular)', function () {
 
     this.store = mockStoreRouter;
 
-    this.session = {};
-    const session = this.session;
-
     this.app = express();
-    this.app.use(function (req, _res, next) {
-      req.session = session; next();
-    });
-    this.app.use('/storage', streamingStorageRouter);
+    this.app.use('/storage', streamingStorageRouter(JWT_SECRET));
     this.app.use('/storage', mockStoreRouter);
     // this.app.set('account', mockStoreRouter);
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
     this.app.locals.host = 'localhost:xxxx';
     this.app.locals.signup = false;
-  });
 
-  beforeEach(function () {
-    this.session.permissions = {
-      '/locog/': ['r', 'w'],
-      '/books/': ['r'],
-      '/statuses/': ['w'],
-      '/deep/': ['r', 'w']
-    };
+    this.good_token = jwt.sign(
+      {
+        scopes: 'locog:rw books:r statuses:w deep:rw'
+      },
+      JWT_SECRET,
+      { algorithm: 'HS256', audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+    );
+    this.root_token = jwt.sign(
+      {
+        scopes: 'root:rw'
+      },
+      JWT_SECRET,
+      { algorithm: 'HS256', audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+    );
+    this.bad_token = jwt.sign(
+      {
+        scopes: 'locog:rw books:r statuses:w deep:rw'
+      },
+      'some other secret',
+      { algorithm: 'HS256', audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+    );
   });
 
   describe('GET (not implemented by file_tree)', function () {
     describe('when a valid access token is used', function () {
+      it('returns Cache-Control: public for a public document', async function () {
+        this.store.content = 'a value';
+        this.store.metadata = { contentType: 'custom/type', ETag: '"j52l4j22"' };
+        const res = await get(this.app, '/storage/zebcoe/public/locog/seats', this.bad_token);
+        expect(res).to.have.status(200);
+        expect(res.get('Cache-Control')).to.contain('public');
+      });
+
+      it('does not return Cache-Control: public for a public directory', async function () {
+        this.store.content = 'a value';
+        this.store.metadata = { contentType: 'custom/type', ETag: '"j52l4j22"' };
+        const res = await get(this.app, '/storage/zebcoe/public/locog/seats/', this.bad_token);
+        expect(res).to.have.status(401);
+        expect(res.get('Cache-Control')).not.to.contain('public');
+      });
+
       // scenario: ensure range is from same version
       it('returns Precondition Failed when If-Match is not equal', async function () {
         mockStoreRouter.content = 'fizbin';
         mockStoreRouter.metadata = { contentType: 'text/plain', ETag: '"current-etag"' };
-        const res = await chai.request(this.app).get('/storage/zebcoe/locog/seats')
-          .set('Authorization', 'Bearer a_token')
-          .set('If-Match', '"different-etag"').send();
+        const res = await get(this.app, '/storage/zebcoe/locog/seats', this.good_token)
+          .set('Origin', 'https://rs-app.com:2112').set('If-Match', '"different-etag"').send();
         expect(res).to.have.status(412);
         const retrievedContent = await res.setEncoding('utf-8').toArray();
         expect(retrievedContent).to.be.deep.equal([]);
@@ -142,8 +173,7 @@ describe('Storage (modular)', function () {
       // scenario: ensure range is from same version
       it('returns whole document when If-Match is equal', async function () {
         const ETag = '"l45l43k54j3lk"';
-        const res = await chai.request(this.app).get('/storage/zebcoe/locog/seats')
-          .set('Authorization', 'Bearer a_token')
+        const res = await get(this.app, '/storage/zebcoe/locog/seats', this.good_token)
           .set('If-Match', ETag).send();
         expect(res).to.have.status(412);
         const retrievedContent = await res.setEncoding('utf-8').toArray();
@@ -162,8 +192,8 @@ describe('Storage (modular)', function () {
       it('creates when If-None-Match is ETag', async function () {
         const content = 'a value';
         const ETag = '"f5f5f5f5f"';
-        const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
-          .set('Authorization', 'Bearer a_token')
+        const res = await put(this.app, '/storage/zebcoe/locog/seats', this.good_token).buffer(true).type('text/plain')
+          .set('Authorization', 'Bearer ' + this.good_token)
           .set('If-None-Match', ETag)
           .send(content);
         expect(res).to.have.status(201);
@@ -179,7 +209,7 @@ describe('Storage (modular)', function () {
         mockStoreRouter.metadata = { contentType: 'text/plain', ETag };
         mockStoreRouter.children = null;
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
-          .set('Authorization', 'Bearer a_token')
+          .set('Authorization', 'Bearer ' + this.good_token)
           .set('If-None-Match', ETag)
           .send(content);
         expect(res).to.have.status(412);
@@ -196,7 +226,7 @@ describe('Storage (modular)', function () {
         const newContent = 'new content';
         const newETag = '"zzzzyyyyxxxx"';
         const res = await put(this.app, '/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
-          .set('Authorization', 'Bearer a_token')
+          .set('Authorization', 'Bearer ' + this.good_token)
           .set('If-None-Match', newETag)
           .send(newContent);
         expect(res.status).to.be.oneOf([204]);
@@ -212,7 +242,7 @@ describe('Storage (modular)', function () {
     it('should not delete a document if the If-None-Match header is equal', async function () {
       mockStoreRouter.content = 'old value';
       mockStoreRouter.metadata = { ETag: '"ETag|old value' };
-      const res = await del(this.app, '/storage/zebcoe/locog/seats')
+      const res = await del(this.app, '/storage/zebcoe/locog/seats', this.good_token)
         .set('If-None-Match', mockStoreRouter.metadata.ETag);
       expect(res.status).to.be.oneOf([412]);
       expect(res.text).to.equal('');
@@ -221,11 +251,24 @@ describe('Storage (modular)', function () {
     it('deletes a document if the If-None-Match header is not equal', async function () {
       mockStoreRouter.content = 'old value';
       mockStoreRouter.metadata = { ETag: '"ETag|old value"' };
-      const res = await del(this.app, '/storage/zebcoe/locog/seats').set('If-None-Match', '"k5lj5l4jk"');
+      const res = await del(this.app, '/storage/zebcoe/locog/seats', this.good_token).set('If-None-Match', '"k5lj5l4jk"');
       expect(res).to.have.status(204);
       expect(res.text).to.equal('');
     });
   });
 
+  describe('without JWT', function () {
+    it('returns Unauthorized w/ OAuth realm & scope but no error', async function () {
+      const res = await chai.request(this.app).get('/storage/zebcoe/statuses/')
+        .set('Origin', 'https://rs-app.com:2112').buffer(true);
+      expect(res).to.have.status(401);
+      expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
+      expect(res.get('Cache-Control')).to.contain('no-cache');
+      expect(res).to.have.header('WWW-Authenticate', /^Bearer\b/);
+      expect(res).to.have.header('WWW-Authenticate', /\srealm="127\.0\.0\.1:\d{1,5}"/);
+      expect(res).to.have.header('WWW-Authenticate', /\sscope="statuses:r"/);
+      expect(res).not.to.have.header('WWW-Authenticate', /\serror="/);
+    });
+  });
   shouldCrudBlobs();
 });

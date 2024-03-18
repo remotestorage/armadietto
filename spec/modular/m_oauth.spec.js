@@ -12,6 +12,7 @@ const express = require('express');
 const oAuthRouter = require('../../lib/routes/oauth');
 const path = require('path');
 const helmet = require('helmet');
+const jwt = require('jsonwebtoken');
 
 async function post (app, url, params) {
   return chai.request(app).post(url).type('form').send(params).redirects(0);
@@ -27,9 +28,6 @@ describe('OAuth (modular)', function () {
         throw new Error('Password and username do not match');
       }
     };
-
-    this.session = {};
-    const session = this.session;
 
     this.app = express();
     this.app.engine('.html', require('ejs').__express);
@@ -57,11 +55,7 @@ describe('OAuth (modular)', function () {
       }
     }));
     this.app.use(express.urlencoded({ extended: false }));
-    this.app.use(function (req, _res, next) { // mock session restore
-      req.sessionID = 'some-session-token';
-      req.session = session; next();
-    });
-    this.app.use('/oauth', oAuthRouter);
+    this.app.use('/oauth', oAuthRouter('swordfish'));
     this.app.set('account', mockAccount);
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
@@ -86,25 +80,53 @@ describe('OAuth (modular)', function () {
 
     describe('without explicit read/write permissions', async function () {
       it('authorizes the client to read and write', async function () {
-        await post(this.app, '/oauth', this.auth_params);
-        expect(this.session.permissions).to.deep.equal({ the_scope: ['r', 'w'] });
+        const res = await post(this.app, '/oauth', this.auth_params);
+        const redirect = new URL(res.get('location'));
+        expect(redirect.origin).to.equal('http://example.com');
+        expect(redirect.pathname).to.equal('/cb');
+        const params = new URLSearchParams(redirect.hash.slice(1));
+        expect(params.get('token_type')).to.equal('bearer');
+        expect(params.get('state')).to.equal('the_state');
+        const token = params.get('access_token');
+        expect(token).to.match(/^eyJh/);
+        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        expect(scopes).to.equal('the_scope:rw');
       });
     });
 
     describe('with explicit read permission', async function () {
       it('authorizes the client to read', async function () {
         this.auth_params.scope = 'the_scope:r';
-        await post(this.app, '/oauth', this.auth_params);
-        expect(this.session.permissions).to.deep.equal({ the_scope: ['r'] });
+        const res = await post(this.app, '/oauth', this.auth_params);
+        const redirect = new URL(res.get('location'));
+        const params = new URLSearchParams(redirect.hash.slice(1));
+        const token = params.get('access_token');
+        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        expect(scopes).to.equal('the_scope:r');
       });
     });
 
     describe('with explicit read/write permission', async function () {
       it('authorizes the client to read and write', async function () {
         this.auth_params.scope = 'the_scope:rw';
-        await post(this.app, '/oauth', this.auth_params);
-        expect(this.session.permissions).to.deep.equal({ the_scope: ['r', 'w'] });
-        // expect(this.store.authorize).to.have.been.called.with('the_client_id', 'zebcoe', { the_scope: ['r', 'w'] });
+        const res = await post(this.app, '/oauth', this.auth_params);
+        const redirect = new URL(res.get('location'));
+        const params = new URLSearchParams(redirect.hash.slice(1));
+        const token = params.get('access_token');
+        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        expect(scopes).to.equal('the_scope:rw');
+      });
+    });
+
+    describe('with multiple read/write permissions', async function () {
+      it('authorizes the client to read and write nonexplicit scopes', async function () {
+        this.auth_params.scope = 'first_scope second_scope:r third_scope:rw fourth_scope';
+        const res = await post(this.app, '/oauth', this.auth_params);
+        const redirect = new URL(res.get('location'));
+        const params = new URLSearchParams(redirect.hash.slice(1));
+        const token = params.get('access_token');
+        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        expect(scopes).to.equal('first_scope:rw second_scope:r third_scope:rw fourth_scope:rw');
       });
     });
   });

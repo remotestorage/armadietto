@@ -91,8 +91,4 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
       await expect(this.store.authenticate(goodParams)).to.eventually.equal(true);
     });
   });
-
-  // authorization: save permissions to session.permissions
-  // permissions: read session.permissions
-  // revokeAccess: delete session.permissions
 };

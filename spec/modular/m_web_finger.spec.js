@@ -8,7 +8,7 @@ describe('Web Finger (modular)', function () {
   before(function (done) {
     configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-    this.app = require('../../lib/appFactory')({}, (_req, _res, next) => next());
+    this.app = require('../../lib/appFactory')('swordfish', {}, (_req, _res, next) => next());
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
     this.app.locals.host = 'localhost:xxxx';

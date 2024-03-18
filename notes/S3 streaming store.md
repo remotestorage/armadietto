@@ -23,6 +23,8 @@ Configure the store by passing to the constructor the endpoint (host name, and p
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
+For AWS, you must also pass a fifth argument — a user name suffix so bucket names don't collide with other users. By default, this is a dash plus `conf.domain_name`, but you can set `conf.user_name_suffix`.
+
 Creating an app server then resembles:
 
 ```javascript

@@ -11,4 +11,4 @@ There's an NPM module for almost anything worth doing in a Node.js server (albei
 Production servers typically outsource TLS to a proxy server — nginx and Apache are both well-documented.  A proxy server can also cache static content. Armadietto sets caching headers to tell caches what they can and can't cache.
 
 If the modular server is behind a proxy, you must set
-`app.set('trust proxy', 1)` ~~to allow sessions to work~~
+`app.set('trust proxy', 1)`

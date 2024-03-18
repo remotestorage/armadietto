@@ -15,7 +15,7 @@ describe('Signup (modular)', function () {
     before(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-      const app = appFactory(mockAccount, (_req, _res, next) => next());
+      const app = appFactory('swordfish', mockAccount, (_req, _res, next) => next());
       app.locals.title = 'Test Armadietto';
       app.locals.basePath = '';
       app.locals.host = 'localhost:xxxx';
@@ -39,7 +39,7 @@ describe('Signup (modular)', function () {
 
       process.env.basePath = 'basic';
       delete require.cache[require.resolve('../../lib/appFactory')];
-      const app = require('../../lib/appFactory')(mockAccount, (_req, _res, next) => next());
+      const app = require('../../lib/appFactory')('swordfish', mockAccount, (_req, _res, next) => next());
       app.set('account', this.store);
       process.env.basePath = '';
       app.locals.title = 'Test Armadietto';

@@ -4,7 +4,6 @@ const { configureLogger } = require('../../lib/logger');
 const { shouldBlockSignups, shouldAllowSignupsBasePath } = require('../signup.spec');
 const core = require('../../lib/stores/core');
 const appFactory = require('../../lib/appFactory');
-const process = require('process');
 
 const mockAccount = {
 
@@ -15,9 +14,8 @@ describe('Signup (modular)', function () {
     before(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-      const app = appFactory('swordfish', mockAccount, (_req, _res, next) => next());
+      const app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: mockAccount, store: (_req, _res, next) => next() });
       app.locals.title = 'Test Armadietto';
-      app.locals.basePath = '';
       app.locals.host = 'localhost:xxxx';
       app.locals.signup = false;
       this.app = app;
@@ -37,13 +35,15 @@ describe('Signup (modular)', function () {
         }
       };
 
-      process.env.basePath = 'basic';
       delete require.cache[require.resolve('../../lib/appFactory')];
-      const app = require('../../lib/appFactory')('swordfish', mockAccount, (_req, _res, next) => next());
+      const app = require('../../lib/appFactory')({
+        jwtSecret: 'swordfish',
+        account: mockAccount,
+        store: (_req, _res, next) => next(),
+        basePath: '/basic'
+      });
       app.set('account', this.store);
-      process.env.basePath = '';
       app.locals.title = 'Test Armadietto';
-      app.locals.basePath = '/basic';
       app.locals.host = 'localhost:xxxx';
       app.locals.signup = true;
       this.app = app;

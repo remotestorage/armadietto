@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require("fs");
 const path = require("path");
 const {ArgumentParser} = require("argparse");
+const appFactory = require('../lib/appFactory');
 const {configureLogger, getLogger} = require("../lib/logger");
 const S3Handler = require("../lib/routes/S3Handler");
 const process = require("process");
@@ -33,11 +34,8 @@ try {
 
 configureLogger(conf.logging);
 
-conf.basePath ||= '';
-if (conf.basePath && !conf.basePath.startsWith('/')) { conf.basePath = '/' + conf.basePath; }
-process.env.basePath = conf.basePath;
-
-const appFactory = require('../lib/appFactory');   // process.env.basePath must have been set previously
+let basePath = conf.basePath || '';
+if (basePath && !basePath.startsWith('/')) { basePath = '/' + basePath; }
 
 let jwtSecret = process.env.JWT_SECRET || process.env.S3_SECRET_KEY;
 if (!jwtSecret) {
@@ -45,18 +43,23 @@ if (!jwtSecret) {
   getLogger().warning(`neither JWT_SECRET nor S3_SECRET_KEY were set in the environment. Setting it to “${jwtSecret}”`)
 }
 
-const userNameSuffix = conf.user_name_suffix || '-' + (conf.domain_name || 'Armadietto');
+const hostIdentity = conf.host_identity?.trim();
+if (!hostIdentity) {
+  getLogger().emerg(`host_identity MUST be set in the configuration file`);
+  process.exit(1);
+}
+const userNameSuffix = conf.user_name_suffix ?? '-' + hostIdentity;
 
 if (conf.http?.port) {
-  start(jwtSecret, Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT}), userNameSuffix);
+  start( Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT}));
 }
 
 if (conf.https?.port) {
-  start(jwtSecret, conf.https, userNameSuffix);
+  start(conf.https);
 }
 
 
-function start(jwtSecret, network, userNameSuffix) {
+function start(network) {
   // If the environment variables aren't set, s3handler uses a shared public account on play.min.io,
   // to which anyone in the world can read and write!
   // It is not entirely compatible with S3Handler.
@@ -64,7 +67,7 @@ function start(jwtSecret, network, userNameSuffix) {
     process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY, undefined,
     userNameSuffix);
 
-  const app = appFactory(jwtSecret, s3handler, s3handler);
+  const app = appFactory({hostIdentity, jwtSecret, account: s3handler, store: s3handler, basePath});
 
   const port = normalizePort( network?.port || '8000');
   app.set('port', port);
@@ -75,9 +78,8 @@ function start(jwtSecret, network, userNameSuffix) {
   }
 
   app.locals.title = "Modular Armadietto";
-  app.locals.basePath = conf.basePath;
-  // rendering can set `locals.host` to `getHost(req)`
-  app.locals.host = (conf.domain_name || network?.host || '0.0.0.0') + (port ? ':' + port : '');
+  // Before rendering, `locals.host` should be set to `getHost(req)`
+  app.locals.host = (network?.host || '0.0.0.0') + (port ? ':' + port : '');
   app.locals.signup = conf.allow_signup;
 
   /** Creates HTTP server. */
@@ -134,7 +136,7 @@ function start(jwtSecret, network, userNameSuffix) {
 
   /** Event listener for HTTP server "listening" event. */
   function onListening() {
-    getLogger().notice(`Accepting remoteStorage connections: http${network.key ? 's' : ''}://${app.locals.host}/${app.locals.basePath}`);
+    getLogger().notice(`Accepting remoteStorage connections: http${network.key ? 's' : ''}://${app.locals.host}${basePath}/`);
   }
 
   /** Adds listeners for shutdown and serious problems */
@@ -146,7 +148,7 @@ function start(jwtSecret, network, userNameSuffix) {
   function stop(signal) {
     getLogger().debug(`${signal} signal received: closing HTTP server`);
     server.close(() => {
-      getLogger().notice(`No longer accepting remoteStorage connections: http${network.key ? 's' : ''}://${app.locals.host}/${app.locals.basePath}`);
+      getLogger().notice(`No longer accepting remoteStorage connections: http${network.key ? 's' : ''}://${app.locals.host}${basePath}/`);
     });
   }
 

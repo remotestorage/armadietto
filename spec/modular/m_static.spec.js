@@ -9,9 +9,8 @@ describe('Static asset handler (modular)', function () {
   before(function () {
     configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-    const app = appFactory('swordfish', {}, (_req, _res, next) => next());
+    const app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, store: (_req, _res, next) => next() });
     app.locals.title = 'Test Armadietto';
-    app.locals.basePath = '';
     app.locals.host = 'localhost:xxxx';
     app.locals.signup = false;
     this.app = app;

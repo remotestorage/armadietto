@@ -14,9 +14,8 @@ describe('root page (modular)', function () {
     beforeEach(function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-      this.app = appFactory('swordfish', {}, (_req, _res, next) => next());
+      this.app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, store: (_req, _res, next) => next() });
       this.app.locals.title = 'Armadietto without Signup';
-      this.app.locals.basePath = '';
       this.app.locals.host = 'localhost:xxxx';
       this.app.locals.signup = false;
     });
@@ -28,9 +27,8 @@ describe('root page (modular)', function () {
     beforeEach(function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-      this.app = appFactory('swordfish', {}, (_req, _res, next) => next());
+      this.app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, store: (_req, _res, next) => next() });
       this.app.locals.title = 'Armadietto with Signup';
-      this.app.locals.basePath = '';
       this.app.locals.host = 'localhost:xxxx';
       this.app.locals.signup = true;
     });
@@ -43,9 +41,8 @@ describe('root page (modular)', function () {
     before(async () => {
       configureLogger({});
 
-      this.app = appFactory('swordfish', {}, (_req, _res, next) => next());
+      this.app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, store: (_req, _res, next) => next() });
       this.app.locals.title = 'Armadietto with Signup';
-      this.app.locals.basePath = '';
       this.app.locals.host = 'localhost:xxxx';
       this.app.locals.signup = true;
     });

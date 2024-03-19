@@ -1,4 +1,5 @@
 /* eslint-env mocha, chai, node */
+/* eslint-disable no-unused-expressions */
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -29,6 +30,7 @@ describe('OAuth (modular)', function () {
       }
     };
 
+    this.hostIdentity = 'automated test';
     this.app = express();
     this.app.engine('.html', require('ejs').__express);
     this.app.set('view engine', 'html');
@@ -55,7 +57,7 @@ describe('OAuth (modular)', function () {
       }
     }));
     this.app.use(express.urlencoded({ extended: false }));
-    this.app.use('/oauth', oAuthRouter('swordfish'));
+    this.app.use('/oauth', oAuthRouter(this.hostIdentity, 'swordfish'));
     this.app.set('account', mockAccount);
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
@@ -81,6 +83,7 @@ describe('OAuth (modular)', function () {
     describe('without explicit read/write permissions', async function () {
       it('authorizes the client to read and write', async function () {
         const res = await post(this.app, '/oauth', this.auth_params);
+        expect(res).to.redirect;
         const redirect = new URL(res.get('location'));
         expect(redirect.origin).to.equal('http://example.com');
         expect(redirect.pathname).to.equal('/cb');
@@ -88,8 +91,7 @@ describe('OAuth (modular)', function () {
         expect(params.get('token_type')).to.equal('bearer');
         expect(params.get('state')).to.equal('the_state');
         const token = params.get('access_token');
-        expect(token).to.match(/^eyJh/);
-        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
         expect(scopes).to.equal('the_scope:rw');
       });
     });
@@ -98,10 +100,11 @@ describe('OAuth (modular)', function () {
       it('authorizes the client to read', async function () {
         this.auth_params.scope = 'the_scope:r';
         const res = await post(this.app, '/oauth', this.auth_params);
+        expect(res).to.redirect;
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
         expect(scopes).to.equal('the_scope:r');
       });
     });
@@ -110,10 +113,11 @@ describe('OAuth (modular)', function () {
       it('authorizes the client to read and write', async function () {
         this.auth_params.scope = 'the_scope:rw';
         const res = await post(this.app, '/oauth', this.auth_params);
+        expect(res).to.redirect;
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
         expect(scopes).to.equal('the_scope:rw');
       });
     });
@@ -122,10 +126,11 @@ describe('OAuth (modular)', function () {
       it('authorizes the client to read and write nonexplicit scopes', async function () {
         this.auth_params.scope = 'first_scope second_scope:r third_scope:rw fourth_scope';
         const res = await post(this.app, '/oauth', this.auth_params);
+        expect(res).to.redirect;
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
         expect(scopes).to.equal('first_scope:rw second_scope:r third_scope:rw fourth_scope:rw');
       });
     });

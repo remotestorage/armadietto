@@ -109,10 +109,10 @@ describe('Storage (modular)', function () {
 
     this.store = mockStoreRouter;
 
+    this.hostIdentity = 'testhost';
     this.app = express();
-    this.app.use('/storage', streamingStorageRouter(JWT_SECRET));
+    this.app.use('/storage', streamingStorageRouter(this.hostIdentity, JWT_SECRET));
     this.app.use('/storage', mockStoreRouter);
-    // this.app.set('account', mockStoreRouter);
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
     this.app.locals.host = 'localhost:xxxx';
@@ -123,21 +123,21 @@ describe('Storage (modular)', function () {
         scopes: 'locog:rw books:r statuses:w deep:rw'
       },
       JWT_SECRET,
-      { algorithm: 'HS256', audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+      { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
     );
     this.root_token = jwt.sign(
       {
         scopes: 'root:rw'
       },
       JWT_SECRET,
-      { algorithm: 'HS256', audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+      { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
     );
     this.bad_token = jwt.sign(
       {
         scopes: 'locog:rw books:r statuses:w deep:rw'
       },
       'some other secret',
-      { algorithm: 'HS256', audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+      { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
     );
   });
 

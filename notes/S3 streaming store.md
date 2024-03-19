@@ -23,14 +23,14 @@ Configure the store by passing to the constructor the endpoint (host name, and p
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
-For AWS, you must also pass a fifth argument — a user name suffix so bucket names don't collide with other users. By default, this is a dash plus `conf.domain_name`, but you can set `conf.user_name_suffix`.
+For AWS, you must also pass a fifth argument — a user name suffix so bucket names don't collide with other users. By default, this is a dash plus `conf.host_identity`, but you can set `conf.user_name_suffix` to override.
 
 Creating an app server then resembles:
 
 ```javascript
 const s3handler = new S3Handler(process.env.S3_ENDPOINT,
     process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY);
-const app = require('../../lib/appFactory')(s3handler, s3handler);
+const app = require('../../lib/appFactory')({account: s3handler, store: s3handler, ...});
 ```
 
 Https is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.

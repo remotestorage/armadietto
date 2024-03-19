@@ -59,9 +59,9 @@ module.exports.shouldCrudBlobs = function () {
   });
 
   describe('GET', function () {
-    describe('when the client uses invalid chars in the path', function () {
+    describe('when the client uses a zero-length folder name', function () {
       it('returns a 400', async function () {
-        const res = await get(this.app, '/storage/zebcoe/locog/$eats', this.good_token);
+        const res = await get(this.app, '/storage/zebcoe/locog//seats', this.good_token);
         expect(res).to.have.status(400);
         expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
       });
@@ -70,6 +70,13 @@ module.exports.shouldCrudBlobs = function () {
     describe('when the client uses a zero-length path', function () {
       it('returns a 400 or 404', async function () {
         const res = await get(this.app, '/storage/zebcoe');
+        expect(res.statusCode).to.be.oneOf([400, 404]);
+      });
+    });
+
+    describe('when the client uses a path with double dots', function () {
+      it('returns a 400 or 404', async function () {
+        const res = await get(this.app, '/storage/zebcoe/../');
         expect(res.statusCode).to.be.oneOf([400, 404]);
       });
     });

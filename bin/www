@@ -6,7 +6,7 @@ const path = require("path");
 const {ArgumentParser} = require("argparse");
 const appFactory = require('../lib/appFactory');
 const {configureLogger, getLogger} = require("../lib/logger");
-const S3Handler = require("../lib/routes/S3Handler");
+const S3Handler = require("../lib/routes/S3_store_handler");
 const process = require("process");
 const https = require("https");
 

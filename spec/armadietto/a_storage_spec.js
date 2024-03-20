@@ -2,7 +2,7 @@
 
 const { configureLogger } = require('../../lib/logger');
 const Armadietto = require('../../lib/armadietto');
-const { shouldCrudBlobs } = require('../storage.spec');
+const { shouldCrudBlobs } = require('../storage_common.spec');
 const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');

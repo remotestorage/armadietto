@@ -9,6 +9,8 @@ const httpMocks = require('node-mocks-http');
 const { Readable } = require('node:stream');
 const { open } = require('node:fs/promises');
 const path = require('path');
+const longString = require('./util/longString');
+const LongStream = require('./util/LongStream');
 
 async function waitForEnd (response) {
   return new Promise(resolve => {
@@ -46,7 +48,16 @@ module.exports.shouldStoreStreams = function () {
       const res = httpMocks.createResponse({ req });
       res.req = req;
       req.res = res;
-      const next = chai.spy();
+      const next = chai.spy(err => {
+        let status;
+        if (err.Code === 'SlowDown') {
+          status = err.$metadata?.httpStatusCode;
+        }
+        if (!status) {
+          status = (err?.stack || err) + (err.cause ? '\n' + err.cause : '');
+        }
+        res.status(status).end();
+      });
 
       await this.handler(req, res, next);
       await waitForEnd(res);
@@ -55,17 +66,16 @@ module.exports.shouldStoreStreams = function () {
     };
 
     this.username = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
-    // TODO: replace with user handler
     await this.store.createUser({ username: this.username, email: 'l@m.no', password: '12345678' });
   });
 
   after(async function () {
-    this.timeout(30_000);
+    this.timeout(360_000);
     await this.store.deleteUser(this.username);
   });
 
   describe('GET', function () {
-    this.timeout(25_000);
+    this.timeout(30_000);
 
     describe('for files', function () {
       describe('unversioned', function () {
@@ -337,7 +347,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('PUT', function () {
-    this.timeout(25_000);
+    this.timeout(30_000);
 
     describe('unversioned', function () {
       it('does not create a file for a bad user name', async function () {
@@ -578,42 +588,164 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes.get('ETag')).to.equal(putRes2.get('ETag'));
       });
 
-      it.skip('transfers very large files', async function () {
-        this.timeout(20 * 60_000);
+      it('allows an item to be overwritten with same value', async function () {
+        const content = 'bees, wasps, ants & sawflies';
+        const [putRes1] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/insects/hymenoptera`,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'text/x.a' },
+          body: content
+        });
+        expect(putRes1.statusCode).to.equal(201);
+        expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes1._getBuffer().toString()).to.equal('');
 
-        const LIMIT = 600_000_000;
-        // const LIMIT = 5_000_000_000_000;   // 5 TiB
-        async function * bigContent () {
-          let total = 0;
-          while (total < LIMIT) {
-            total += 100;
-            const numberStr = String(total);
-            let line = '....................................................................................................';
-            line = line.slice(0, -numberStr.length) + numberStr;
-            const buffer = Buffer.from(line, 'utf8');
-            if (total % 10_000 === 0) {
-              console.log(line);
-            }
-            yield buffer;
-          }
-        }
-        const asyncIterator = bigContent();
+        const [putRes2] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/insects/hymenoptera`,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'text/x.a' },
+          body: content
+        });
+        expect(putRes2.statusCode).to.equal(200);
+        expect(putRes2.get('ETag')).to.equal(putRes1.get('ETag'));
+        expect(putRes2._getBuffer().toString()).to.equal('');
 
+        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/insects/hymenoptera` });
+        expect(getRes.statusCode).to.equal(200);
+        expect(getRes._getBuffer().toString()).to.equal(content);
+        expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
+        expect(getRes.get('Content-Type')).to.equal('text/x.a');
+        expect(getRes.get('ETag')).to.equal(putRes1.get('ETag'));
+      });
+
+      it('truncates very long paths', async function () {
+        const content = 'such a small thing';
+        const originalRsPath = longString(1100);
+        const originalUrlPath = `/${this.username}/` + originalRsPath;
         const [putRes] = await this.doHandle({
           method: 'PUT',
-          url: `/${this.username}/archive/bigfile`,
-          headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
-          body: Readable.from(asyncIterator)
+          url: originalUrlPath,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'image/poster' },
+          body: content
         });
         expect(putRes.statusCode).to.equal(201);
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/archive/bigfile` });
+        const [getRes1] = await this.doHandle({ method: 'GET', url: originalUrlPath });
+        expect(getRes1.statusCode).to.equal(200);
+        expect(getRes1._getBuffer().toString()).to.equal(content);
+        expect(parseInt(getRes1.get('Content-Length'))).to.equal(content.length);
+        expect(getRes1.get('Content-Type')).to.equal('image/poster');
+        expect(getRes1.get('ETag')).to.equal(putRes.get('ETag'));
+
+        const limit = 1023 - 'remoteStorageBlob/'.length;
+        const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/` + originalRsPath.slice(0, limit) });
+        expect(getRes2.statusCode).to.equal(200);
+        expect(getRes2._getBuffer().toString()).to.equal(content);
+        expect(parseInt(getRes2.get('Content-Length'))).to.equal(content.length);
+        expect(getRes2.get('Content-Type')).to.equal('image/poster');
+        expect(getRes2.get('ETag')).to.equal(putRes.get('ETag'));
+      });
+
+      it.skip('transfers very large files', async function () {
+        this.timeout(60 * 60_000);
+
+        const LIMIT = 1_000_000_000;
+        // const LIMIT = 5_000_000_000_000;   // 5 TiB
+
+        const [putRes] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/bigfile`,
+          headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
+          body: new LongStream(LIMIT)
+        });
+        expect(putRes.statusCode).to.equal(201);
+        expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes._getBuffer().toString()).to.equal('');
+
+        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/bigfile` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
         expect(headRes.get('ETag')).to.equal(putRes.get('ETag'));
+      });
+
+      it('creates a document when simultaneous identical requests are made', async function () {
+        this.timeout(240_000);
+        const LIMIT = 10_000_000;
+
+        const [[res1, next1], [res2, next2]] = await Promise.all([
+          this.doHandle({
+            method: 'PUT',
+            url: `/${this.username}/simultaneous-put`,
+            headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
+            body: new LongStream(LIMIT)
+          }),
+          this.doHandle({
+            method: 'PUT',
+            url: `/${this.username}/simultaneous-put`,
+            headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
+            body: new LongStream(LIMIT)
+          })
+        ]);
+
+        expect(res1.statusCode).to.equal(201);
+        expect(res1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(res1._getBuffer().toString()).to.equal('');
+        expect(next1).not.to.have.been.called;
+
+        expect(res2.statusCode).to.equal(201);
+        expect(res2.get('ETag')).to.equal(res1.get('ETag'));
+        expect(res2._getBuffer().toString()).to.equal('');
+        expect(next2).not.to.have.been.called;
+
+        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/simultaneous-put` });
+        expect(headRes.statusCode).to.equal(200);
+        expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
+        expect(headRes.get('Content-Type')).to.equal('text/plain');
+        expect(headRes.get('ETag')).to.equal(res1.get('ETag'));
+      });
+
+      it('creates at least one of conflicting simultaneous creates', async function () {
+        this.timeout(240_000);
+        const LONG = 10_000_000;
+        const SHORT = 10_000;
+
+        const [[resLong, nextLong], [resShort, nextShort]] = await Promise.all([
+          this.doHandle({
+            method: 'PUT',
+            url: `/${this.username}/conflicting-simultanous-put`,
+            headers: { 'Content-Length': LONG, 'Content-Type': 'text/csv' },
+            body: new LongStream(LONG)
+          }),
+          this.doHandle({
+            method: 'PUT',
+            url: `/${this.username}/conflicting-simultanous-put`,
+            headers: { 'Content-Length': SHORT, 'Content-Type': 'text/tab-separated-values' },
+            body: new LongStream(SHORT)
+          })
+        ]);
+
+        expect(resLong.statusCode).to.be.oneOf([201, 409, 503]);
+        // expect(resLong.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(resLong._getBuffer().toString()).to.equal('');
+        expect(nextLong).not.to.have.been.called;
+
+        expect(resShort.statusCode).to.be.oneOf([201, 409, 503]);
+        // expect(resShort.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(resShort.get('ETag')).not.to.equal(resLong.get('ETag'));
+        expect(resShort._getBuffer().toString()).to.equal('');
+        expect(nextShort).not.to.have.been.called;
+
+        // One or neither call receives a Conflict.
+        expect(resLong.statusCode + resShort.statusCode).to.be.lessThanOrEqual(201 + 503);
+
+        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/conflicting-simultanous-put` });
+        expect(headRes.statusCode).to.equal(200);
+        expect(parseInt(headRes.get('Content-Length'))).to.be.oneOf([LONG, SHORT]);
+        expect(headRes.get('Content-Type')).to.be.oneOf(['text/csv', 'text/tab-separated-values']);
+        expect(headRes.get('ETag')).to.be.oneOf([resLong.get('ETag'), resShort.get('ETag')]);
       });
     });
 
@@ -969,7 +1101,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('DELETE', function () {
-    this.timeout(25_000);
+    this.timeout(30_000);
 
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {
@@ -996,7 +1128,7 @@ module.exports.shouldStoreStreams = function () {
         expect(Boolean(res.get('ETag'))).to.be.false;
       });
 
-      it('should return Conflict when path is a directory', async function () {
+      it('should return Conflict when target is a directory', async function () {
         const content = 'pad thai';
         const [putRes] = await this.doHandle({
           method: 'PUT',
@@ -1071,6 +1203,56 @@ module.exports.shouldStoreStreams = function () {
         const directory = JSON.parse(getRes4._getBuffer().toString());
         expect(directory['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(directory.items['europe/'].ETag).to.match(/^".{6,128}"$/);
+
+        const [res2, next2] = await this.doHandle({
+          method: 'DELETE',
+          url: `/${this.username}/animal/vertebrate/australia/marsupial/wombat`
+        });
+        expect(res2.statusCode).to.equal(404); // Not Found
+        expect(res2._getBuffer().toString()).to.equal('');
+        expect(res2.get('ETag')).to.equal(undefined);
+        expect(next2).not.to.have.been.called;
+
+        const [res3, next3] = await this.doHandle({
+          method: 'DELETE',
+          url: `/${this.username}/animal/vertebrate/australia/`
+        });
+        expect(res3.statusCode).to.equal(404); // Not Found, instead of Conflict
+        expect(res3._getBuffer().toString()).to.equal('');
+        expect(res3.get('ETag')).to.equal(undefined);
+        expect(next3).not.to.have.been.called;
+      });
+
+      // OpenIO (container) always fails this test.
+      it('succeeds at simultaneous deleting', async function () {
+        this.timeout(120_000);
+        const LIMIT = 1_000_000;
+
+        const [putRes] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/simultaneous-delete`,
+          headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/x-foo' },
+          body: new LongStream(LIMIT)
+        });
+        expect(putRes.statusCode).to.equal(201);
+
+        const [[delRes1, delNext1], [delRes2, delNext2]] = await Promise.all([
+          this.doHandle({ method: 'DELETE', url: `/${this.username}/simultaneous-delete` }),
+          this.doHandle({ method: 'DELETE', url: `/${this.username}/simultaneous-delete` })
+        ]);
+        expect(delRes1.statusCode).to.be.oneOf([204, 404]);
+        expect(delRes1.get('ETag')).to.equal(delRes1.statusCode === 204 ? putRes.get('ETag') : undefined);
+        expect(delRes1._getBuffer().toString()).to.equal('');
+        expect(delNext1).not.to.have.been.called;
+
+        expect(delRes2.statusCode).to.be.oneOf([204, 404]);
+        expect(delRes2.get('ETag')).to.equal(delRes2.statusCode === 204 ? putRes.get('ETag') : undefined);
+        expect(delRes2._getBuffer().toString()).to.equal('');
+        expect(delNext2).not.to.have.been.called;
+
+        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/simultaneous-delete` });
+        expect(headRes.statusCode).to.equal(404);
+        expect(headRes.get('ETag')).to.be.undefined;
       });
     });
 

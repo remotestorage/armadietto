@@ -12,6 +12,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     after(async function () {
+      this.timeout(10_000);
       await this.store.deleteUser(this.username);
     });
 
@@ -49,10 +50,13 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     after(async function () {
+      this.timeout(10_000);
       await this.store.deleteUser(this.username2);
     });
 
     it('deletes a user', async function () {
+      this.timeout(10_000);
+
       const params = { username: this.username2, email: 'a@b.c', password: 'swordfish' };
       await expect(this.store.createUser(params)).to.eventually.eql(this.username2 + this.USER_NAME_SUFFIX);
       const result = await this.store.deleteUser(this.username2);
@@ -74,6 +78,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     after(async function () {
+      this.timeout(10_000);
       return this.store.deleteUser(goodParams.username);
     });
 

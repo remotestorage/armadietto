@@ -43,3 +43,11 @@ The bucket **MAY** contain non-remoteStorage blobs outside these prefixes:
 
 * remoteStorageBlob/
 * remoteStorageAuth/
+
+## Limits
+
+The maximum document size is 10,000 * 20 MiB ≅ 200 GiB
+
+Only the first 942 characters in a document path are used.
+
+The characters allowed in paths are limited to what the provider supports. For MinIO, this is the filesystem characters.

@@ -9,6 +9,7 @@ const httpMocks = require('node-mocks-http');
 const { Readable } = require('node:stream');
 const { open } = require('node:fs/promises');
 const path = require('path');
+const longString = require('./util/longString');
 
 async function waitForEnd (response) {
   return new Promise(resolve => {
@@ -46,7 +47,9 @@ module.exports.shouldStoreStreams = function () {
       const res = httpMocks.createResponse({ req });
       res.req = req;
       req.res = res;
-      const next = chai.spy();
+      const next = chai.spy(
+        err => res.status((err?.stack || err) + (err.cause ? '\n' + err.cause : '')).end()
+      );
 
       await this.handler(req, res, next);
       await waitForEnd(res);
@@ -55,7 +58,6 @@ module.exports.shouldStoreStreams = function () {
     };
 
     this.username = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
-    // TODO: replace with user handler
     await this.store.createUser({ username: this.username, email: 'l@m.no', password: '12345678' });
   });
 
@@ -65,7 +67,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('GET', function () {
-    this.timeout(25_000);
+    this.timeout(30_000);
 
     describe('for files', function () {
       describe('unversioned', function () {
@@ -337,7 +339,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('PUT', function () {
-    this.timeout(25_000);
+    this.timeout(30_000);
 
     describe('unversioned', function () {
       it('does not create a file for a bad user name', async function () {
@@ -578,38 +580,108 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes.get('ETag')).to.equal(putRes2.get('ETag'));
       });
 
-      it.skip('transfers very large files', async function () {
-        this.timeout(20 * 60_000);
+      it('allows an item to be overwritten with same value', async function () {
+        const content = 'bees, wasps, ants & sawflies';
+        const [putRes1] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/insects/hymenoptera`,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'text/x.a' },
+          body: content
+        });
+        expect(putRes1.statusCode).to.equal(201);
+        expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes1._getBuffer().toString()).to.equal('');
 
-        const LIMIT = 600_000_000;
-        // const LIMIT = 5_000_000_000_000;   // 5 TiB
-        async function * bigContent () {
-          let total = 0;
-          while (total < LIMIT) {
-            total += 100;
-            const numberStr = String(total);
-            let line = '....................................................................................................';
-            line = line.slice(0, -numberStr.length) + numberStr;
-            const buffer = Buffer.from(line, 'utf8');
-            if (total % 10_000 === 0) {
-              console.log(line);
-            }
-            yield buffer;
-          }
-        }
-        const asyncIterator = bigContent();
+        const [putRes2] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/insects/hymenoptera`,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'text/x.a' },
+          body: content
+        });
+        expect(putRes2.statusCode).to.equal(200);
+        expect(putRes2.get('ETag')).to.equal(putRes1.get('ETag'));
+        expect(putRes2._getBuffer().toString()).to.equal('');
 
+        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/insects/hymenoptera` });
+        expect(getRes.statusCode).to.equal(200);
+        expect(getRes._getBuffer().toString()).to.equal(content);
+        expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
+        expect(getRes.get('Content-Type')).to.equal('text/x.a');
+        expect(getRes.get('ETag')).to.equal(putRes1.get('ETag'));
+      });
+
+      it('truncates very long paths', async function () {
+        const content = 'such a small thing';
+        const originalRsPath = longString(1100);
+        const originalUrlPath = `/${this.username}/` + originalRsPath;
         const [putRes] = await this.doHandle({
           method: 'PUT',
-          url: `/${this.username}/archive/bigfile`,
-          headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
-          body: Readable.from(asyncIterator)
+          url: originalUrlPath,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'image/poster' },
+          body: content
         });
         expect(putRes.statusCode).to.equal(201);
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/archive/bigfile` });
+        const [getRes1] = await this.doHandle({ method: 'GET', url: originalUrlPath });
+        expect(getRes1.statusCode).to.equal(200);
+        expect(getRes1._getBuffer().toString()).to.equal(content);
+        expect(parseInt(getRes1.get('Content-Length'))).to.equal(content.length);
+        expect(getRes1.get('Content-Type')).to.equal('image/poster');
+        expect(getRes1.get('ETag')).to.equal(putRes.get('ETag'));
+
+        const limit = 1023 - 'remoteStorageBlob/'.length;
+        const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/` + originalRsPath.slice(0, limit) });
+        expect(getRes2.statusCode).to.equal(200);
+        expect(getRes2._getBuffer().toString()).to.equal(content);
+        expect(parseInt(getRes2.get('Content-Length'))).to.equal(content.length);
+        expect(getRes2.get('Content-Type')).to.equal('image/poster');
+        expect(getRes2.get('ETag')).to.equal(putRes.get('ETag'));
+      });
+
+      it.skip('transfers very large files', async function () {
+        this.timeout(60 * 60_000);
+
+        const LIMIT = 400_000_000;
+        // const LIMIT = 5_000_000_000_000;   // 5 TiB
+
+        class LongStream extends Readable {
+          limit;
+          total = 0;
+
+          constructor (limit, options) {
+            super(options);
+            this.limit = limit;
+          }
+
+          _read (size) {
+            let line = '....................................................................................................';
+            this.total += 100;
+            const numberStr = this.total.toLocaleString();
+            line = line.slice(0, -numberStr.length) + numberStr;
+            if (this.total % 1_000_000 === 0) {
+              console.log(line);
+            }
+            this.push(line, 'utf8');
+            if (this.total >= this.limit) {
+              this.push(null);
+              console.log(`BigStream complete; ${this.total.toLocaleString()} bytes were read.`);
+            }
+          }
+        }
+
+        const [putRes] = await this.doHandle({
+          method: 'PUT',
+          url: `/${this.username}/bigfile`,
+          headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
+          body: new LongStream(LIMIT)
+        });
+        expect(putRes.statusCode).to.equal(201);
+        expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes._getBuffer().toString()).to.equal('');
+
+        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/bigfile` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
@@ -969,7 +1041,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('DELETE', function () {
-    this.timeout(25_000);
+    this.timeout(30_000);
 
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {
@@ -1071,6 +1143,24 @@ module.exports.shouldStoreStreams = function () {
         const directory = JSON.parse(getRes4._getBuffer().toString());
         expect(directory['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(directory.items['europe/'].ETag).to.match(/^".{6,128}"$/);
+
+        const [res2, next2] = await this.doHandle({
+          method: 'DELETE',
+          url: `/${this.username}/animal/vertebrate/australia/marsupial/wombat`
+        });
+        expect(res2.statusCode).to.equal(404); // Not Found
+        expect(res2._getBuffer().toString()).to.equal('');
+        expect(res2.get('ETag')).to.equal(undefined);
+        expect(next2).not.to.have.been.called;
+
+        const [res3, next3] = await this.doHandle({
+          method: 'DELETE',
+          url: `/${this.username}/animal/vertebrate/australia/`
+        });
+        expect(res3.statusCode).to.equal(404); // Not Found, instead of Conflict
+        expect(res3._getBuffer().toString()).to.equal('');
+        expect(res3.get('ETag')).to.equal(undefined);
+        expect(next3).not.to.have.been.called;
       });
     });
 

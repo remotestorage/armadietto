@@ -127,7 +127,7 @@ describe('Storage (modular)', function () {
     );
     this.root_token = jwt.sign(
       {
-        scopes: 'root:rw'
+        scopes: '*:rw'
       },
       JWT_SECRET,
       { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }

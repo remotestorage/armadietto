@@ -122,16 +122,29 @@ describe('OAuth (modular)', function () {
       });
     });
 
-    describe('with multiple read/write permissions', async function () {
-      it('authorizes the client to read and write nonexplicit scopes', async function () {
-        this.auth_params.scope = 'first_scope second_scope:r third_scope:rw fourth_scope';
+    describe('with implicit root permission', async function () {
+      it('authorizes the client to read and write', async function () {
+        this.auth_params.scope = '*';
         const res = await post(this.app, '/oauth', this.auth_params);
         expect(res).to.redirect;
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
         const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
-        expect(scopes).to.equal('first_scope:rw second_scope:r third_scope:rw fourth_scope:rw');
+        expect(scopes).to.equal('*:rw');
+      });
+    });
+
+    describe('with multiple read/write permissions', async function () {
+      it('authorizes the client to read and write nonexplicit scopes', async function () {
+        this.auth_params.scope = 'first_scope second_scope:r third_scope:rw fourth_scope *:r';
+        const res = await post(this.app, '/oauth', this.auth_params);
+        expect(res).to.redirect;
+        const redirect = new URL(res.get('location'));
+        const params = new URLSearchParams(redirect.hash.slice(1));
+        const token = params.get('access_token');
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
+        expect(scopes).to.equal('first_scope:rw second_scope:r third_scope:rw fourth_scope:rw *:r');
       });
     });
   });

@@ -226,31 +226,33 @@ module.exports.shouldStoreStreams = function () {
     });
 
     describe('for directories', function () {
-      it('returns Not Found for a non-existing category', async function () {
+      it('returns listing with no items for a non-existing category', async function () {
         const [res, next] = await this.doHandle({
           method: 'GET',
           url: `/${this.username}/non-existing-category/`
         });
 
-        expect(res.statusCode).to.equal(404);
-        expect(res._getBuffer().toString()).to.equal('');
-        expect(Boolean(res.get('Content-Length'))).to.be.false;
-        expect(Boolean(res.get('Content-Type'))).to.be.false;
-        expect(Boolean(res.get('ETag'))).to.be.false;
+        expect(res.statusCode).to.equal(200);
+        expect(res.get('Content-Type')).to.equal('application/ld+json');
+        const directory = res._getJSONData();
+        expect(directory['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(directory.items).to.deep.equal({});
+        expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
         expect(next).not.to.have.been.called;
       });
 
-      it('returns Not Found for a non-existing directory in non-existing category', async function () {
+      it('returns listing with no items for a non-existing folder in non-existing category', async function () {
         const [res, next] = await this.doHandle({
           method: 'GET',
           url: `/${this.username}/non-existing-category/non-existing-directory/`
         });
 
-        expect(res.statusCode).to.equal(404);
-        expect(res._getBuffer().toString()).to.equal('');
-        expect(Boolean(res.get('Content-Length'))).to.be.false;
-        expect(Boolean(res.get('Content-Type'))).to.be.false;
-        expect(Boolean(res.get('ETag'))).to.be.false;
+        expect(res.statusCode).to.equal(200);
+        expect(res.get('Content-Type')).to.equal('application/ld+json');
+        const directory = res._getJSONData();
+        expect(directory['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(directory.items).to.deep.equal({});
+        expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
         expect(next).not.to.have.been.called;
       });
 
@@ -832,9 +834,19 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.be.undefined;
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [dirRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection/dramatic/` });
-        expect(dirRes.statusCode).to.equal(404);
-        expect(dirRes._getBuffer().toString()).to.equal('');
+        const [dirRes1] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection/dramatic/` });
+        expect(dirRes1.statusCode).to.equal(200);
+        expect(dirRes1.get('Content-Type')).to.equal('application/ld+json');
+        const directory = dirRes1._getJSONData();
+        expect(directory['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(directory.items).to.deep.equal({});
+        expect(dirRes1.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+
+        const [dirRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection/` });
+        expect(dirRes2.statusCode).to.equal(409);
+        expect(putRes2.get('ETag')).to.be.undefined;
+        expect(putRes2.get('Content-Type')).to.be.undefined;
+        expect(putRes2._getBuffer().toString()).to.equal('');
 
         const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection` });
         expect(getRes.statusCode).to.equal(200);
@@ -1189,12 +1201,20 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes1._getBuffer().toString()).to.equal('');
 
         const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/australia/marsupial/` });
-        expect(getRes2.statusCode).to.equal(404);
-        expect(getRes2._getBuffer().toString()).to.equal('');
+        expect(getRes2.statusCode).to.equal(200);
+        expect(getRes2.get('Content-Type')).to.equal('application/ld+json');
+        const directory1 = getRes2._getJSONData();
+        expect(directory1['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(directory1.items).to.deep.equal({});
+        expect(getRes2.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
         const [getRes3] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/australia/` });
-        expect(getRes3.statusCode).to.equal(404);
-        expect(getRes3._getBuffer().toString()).to.equal('');
+        expect(getRes3.statusCode).to.equal(200);
+        expect(getRes3.get('Content-Type')).to.equal('application/ld+json');
+        const directory2 = getRes3._getJSONData();
+        expect(directory2['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(directory2.items).to.deep.equal({});
+        expect(getRes3.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
         const [getRes4] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/` });
         expect(getRes4.statusCode).to.equal(200);

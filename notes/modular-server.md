@@ -12,7 +12,7 @@ Changing `host_identity` will invalidate all grants of access, and make unavaila
 
 ### Modular Server Factory
 
-The secret used to generate JWTs must have at least 32 cryptographically random ASCII characters.
+The secret used to generate JWTs must have at least 64 cryptographically random ASCII characters.
 
 The `account` object has methods to create users and check passwords.
 The streaming storage handler is Express middleware and does the actual storage.

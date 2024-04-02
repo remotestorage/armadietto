@@ -123,21 +123,21 @@ describe('Storage (modular)', function () {
         scopes: 'locog:rw books:r statuses:w deep:rw'
       },
       JWT_SECRET,
-      { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+      { algorithm: 'HS512', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
     );
     this.root_token = jwt.sign(
       {
         scopes: '*:rw'
       },
       JWT_SECRET,
-      { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+      { algorithm: 'HS512', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
     );
     this.bad_token = jwt.sign(
       {
         scopes: 'locog:rw books:r statuses:w deep:rw'
       },
       'some other secret',
-      { algorithm: 'HS256', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
+      { algorithm: 'HS512', issuer: this.hostIdentity, audience: 'https://rs-app.com:2112', subject: 'zebcoe', expiresIn: '30d' }
     );
   });
 

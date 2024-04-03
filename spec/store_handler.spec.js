@@ -48,6 +48,7 @@ module.exports.shouldStoreStreams = function () {
       const res = httpMocks.createResponse({ req });
       res.req = req;
       req.res = res;
+      res.logNotes = new Set();
       const next = chai.spy(err => {
         let status;
         if (err.Code === 'SlowDown') {
@@ -66,12 +67,12 @@ module.exports.shouldStoreStreams = function () {
     };
 
     this.username = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
-    await this.store.createUser({ username: this.username, email: 'l@m.no', password: '12345678' });
+    await this.store.createUser({ username: this.username, email: 'l@m.no', password: '12345678' }, new Set());
   });
 
   after(async function () {
     this.timeout(360_000);
-    await this.store.deleteUser(this.username);
+    await this.store.deleteUser(this.username, new Set());
   });
 
   describe('GET', function () {
@@ -845,8 +846,7 @@ module.exports.shouldStoreStreams = function () {
         const [dirRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection/` });
         expect(dirRes2.statusCode).to.equal(409);
         expect(putRes2.get('ETag')).to.be.undefined;
-        expect(putRes2.get('Content-Type')).to.be.undefined;
-        expect(putRes2._getBuffer().toString()).to.equal('');
+        expect(putRes2._getData()).to.match(/existing document/);
 
         const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection` });
         expect(getRes.statusCode).to.equal(200);

@@ -34,7 +34,6 @@
     "jsonwebtoken": "^9.0.2",
     "lockfile": "^1.0.4",
     "mkdirp": "^1.0.4",
-    "morgan": "^1.10.0",
     "node-mocks-http": "^1.14.1",
     "pug": "^3.0.2",
     "winston": "^3.11.0",

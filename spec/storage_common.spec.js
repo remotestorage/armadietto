@@ -249,7 +249,7 @@ module.exports.shouldCrudBlobs = function () {
       it('does not tell the store to save a directory', async function () {
         const res = await put(this.app, '/storage/zebcoe/locog/seats/', this.good_token, 'a value');
         expect(res).to.have.status(400);
-        expect(res.text).to.equal('');
+        expect(res.text).to.match(/can't write to directory|^$/);
         expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
       });
 

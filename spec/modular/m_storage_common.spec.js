@@ -111,6 +111,10 @@ describe('Storage (modular)', function () {
 
     this.hostIdentity = 'testhost';
     this.app = express();
+    this.app.use((_req, res, next) => {
+      res.logNotes = new Set();
+      next();
+    });
     this.app.use('/storage', streamingStorageRouter(this.hostIdentity, JWT_SECRET));
     this.app.use('/storage', mockStoreHandler);
     this.app.locals.title = 'Test Armadietto';

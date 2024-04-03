@@ -36,6 +36,10 @@ describe('OAuth (modular)', function () {
     this.app.set('view engine', 'html');
     this.app.set('views', path.join(__dirname, '../../lib/views'));
 
+    this.app.use((_req, res, next) => {
+      res.logNotes = new Set();
+      next();
+    });
     this.app.use(helmet({
       contentSecurityPolicy: {
         directives: {

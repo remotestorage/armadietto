@@ -23,7 +23,8 @@ describe('S3 store handler', function () {
   describe('createUser (S3-specific)', function () {
     it('rejects a user with too long a name for the user name suffix', async function () {
       const params = { username: 'a-------10--------20--------30--------40-', email: 'a@b.c', password: 'swordfish' };
-      await expect(this.store.createUser(params)).to.be.rejectedWith(Error, '3–40 characters long');
+      const logNotes = new Set();
+      await expect(this.store.createUser(params, logNotes)).to.be.rejectedWith(Error, '3–40 characters long');
     });
   });
 

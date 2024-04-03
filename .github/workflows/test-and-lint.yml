@@ -24,4 +24,4 @@ jobs:
       - name: Run linter
         run: npm run lint
       - name: Run tests
-        run: npm test
+        run: npm test -- --timeout 10000

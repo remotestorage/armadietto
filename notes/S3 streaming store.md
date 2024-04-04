@@ -28,8 +28,11 @@ For AWS, you must also pass a fifth argument — a user name suffix so bucket na
 Creating an app server then resembles:
 
 ```javascript
-const s3handler = new S3Handler(process.env.S3_ENDPOINT,
-    process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY);
+const s3handler = new S3Handler({
+  endPoint: process.env.S3_ENDPOINT,
+  accessKey: process.env.S3_ACCESS_KEY,
+  secretKey: process.env.S3_SECRET_KEY,
+  userNameSuffix});
 const app = require('../../lib/appFactory')({account: s3handler, store: s3handler, ...});
 ```
 

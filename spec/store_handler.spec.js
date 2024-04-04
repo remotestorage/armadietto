@@ -1,6 +1,7 @@
 /* eslint-env mocha, chai, node */
 /* eslint-disable no-unused-expressions */
 
+const errToMessages = require('../lib/util/errToMessages');
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-spies'));
@@ -55,7 +56,7 @@ module.exports.shouldStoreStreams = function () {
           status = err.$metadata?.httpStatusCode;
         }
         if (!status) {
-          status = (err?.stack || err) + (err.cause ? '\n' + err.cause : '');
+          status = Array.from(errToMessages(err, new Set())).join(' ') + (err?.stack ? '|' + err.stack : '');
         }
         res.status(status).end();
       });

@@ -14,7 +14,7 @@ describe('S3 store handler', function () {
     configureLogger({ stdout: [], log_dir: './test-log', log_files: ['debug'] });
     this.USER_NAME_SUFFIX = '-java.extraordinary.org';
     // If the environment variables aren't set, tests are run using a shared public account on play.min.io
-    this.handler = s3storeHandler(process.env.S3_ENDPOINT, process.env.S3_ACCESS_KEY, process.env.S3_SECRET_KEY, undefined, this.USER_NAME_SUFFIX);
+    this.handler = s3storeHandler({ endPoint: process.env.S3_ENDPOINT, accessKey: process.env.S3_ACCESS_KEY, secretKey: process.env.S3_SECRET_KEY, userNameSuffix: this.USER_NAME_SUFFIX });
     this.store = this.handler;
   });
 

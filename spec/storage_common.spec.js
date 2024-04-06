@@ -118,7 +118,7 @@ module.exports.shouldCrudBlobs = function () {
         ]);
       });
 
-      it('returns Forbidden w/ OAuth insufficient_scope for an item in a read-unauthorized directory', async function () {
+      it('returns Forbidden w/ OAuth insufficient_scope for an item in a read-unauthorized folder', async function () {
         const res = await get(this.app, '/storage/zebcoe/statuses/first', this.good_token);
         expect(res).to.have.status(403);
         expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
@@ -142,7 +142,7 @@ module.exports.shouldCrudBlobs = function () {
         // expect(res.get('Cache-Control')).to.contain('public');
       });
 
-      it('returns Unauthorized w/ OAuth invalid_token error for a public directory', async function () {
+      it('returns Unauthorized w/ OAuth invalid_token error for a public folder', async function () {
         this.store.metadata = { ETag: '"12345888888"' };
         this.store.children = [
           { bla: { ETag: '1234544444' } },
@@ -186,7 +186,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store returns a directory listing', function () {
+    describe('when the store returns a folder listing', function () {
       before(function () {
         this.store.metadata = {
           ETag: '"12345888888"'
@@ -211,7 +211,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store returns an empty directory listing', function () {
+    describe('when the store returns an empty folder listing', function () {
       before(function () {
         this.store.metadata = { ETag: '"12345888888"' };
         this.store.children = [];
@@ -246,14 +246,14 @@ module.exports.shouldCrudBlobs = function () {
         expect(res.text).to.equal('');
       });
 
-      it('does not tell the store to save a directory', async function () {
+      it('does not tell the store to save a folder', async function () {
         const res = await put(this.app, '/storage/zebcoe/locog/seats/', this.good_token, 'a value');
         expect(res).to.have.status(400);
-        expect(res.text).to.match(/can't write to directory|^$/);
+        expect(res.text).to.match(/can't write to folder|^$/);
         expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
       });
 
-      it('returns Forbidden w/ OAuth insufficient scope error when saving in a write-unauthorized directory', async function () {
+      it('returns Forbidden w/ OAuth insufficient scope error when saving in a write-unauthorized folder', async function () {
         const res = await put(this.app, '/storage/zebcoe/books/house_of_leaves', this.good_token, 'a value');
         expect(res).to.have.status(403);
         expect(res.text).to.equal('');

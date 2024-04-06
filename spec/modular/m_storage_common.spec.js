@@ -155,7 +155,7 @@ describe('Storage (modular)', function () {
         expect(res.get('Cache-Control')).to.contain('public');
       });
 
-      it('does not return Cache-Control: public for a public directory', async function () {
+      it('does not return Cache-Control: public for a public folder', async function () {
         this.store.content = 'a value';
         this.store.metadata = { contentType: 'custom/type', ETag: '"j52l4j22"' };
         const res = await get(this.app, '/storage/zebcoe/public/locog/seats/', this.bad_token);

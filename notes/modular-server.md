@@ -14,11 +14,13 @@ Changing `host_identity` will invalidate all grants of access, and make unavaila
 
 The secret used to generate JWTs must have at least 64 cryptographically random ASCII characters.
 
-The `account` object has methods to create users and check passwords.
 The streaming storage handler is Express middleware and does the actual storage.
-They may be the same object (as they are for S3-compatible storage).
 
-S3-compatible storage is typically configured using environment variables; see the note for details.
+The `account` object has methods to create user accounts somewhere, and check passwords. When it is created, it should be passed the streaming storage handler.
+
+They may be the same object (S3-compatible storage can use itself for an account object, or a different type of account object).
+
+S3-compatible storage is typically configured using environment variables; see the note [S3-streaming-store.md](`./S3-streaming-store.md`) for details.
 
 If your server runs at a path other than root, you *MUST* pass the `basePath` argument to appFactory.
 
@@ -33,12 +35,47 @@ You *MUST* set `app.locals.title` and `app.locals.signup` or the web pages won't
 
 ## Proxies
 
-Production servers typically outsource TLS to a proxy server — nginx and Apache are both well-documented.  A proxy server can also cache static content. Armadietto sets caching headers to tell caches what they can and can't cache.
+Production servers typically outsource TLS to a proxy server — nginx and Apache are both well-documented.
+See the note [reverse-proxy-configuration.md](`./reverse-proxy-configuration.md`) for details.
+A proxy server can also cache static content. Armadietto sets caching headers to tell caches what they can and can't cache.
 
 If the modular server is behind a proxy, you **MUST** set
 `app.set('trust proxy', 1)`
 
 ## Development
+
+### Streaming Store Handler
+
+A streaming store handler is an instance of `Router` that
+implements `get`, `put` and `delete` for the path
+`'/:username/*'`. It is mounted after `storageCommon`:
+```javascript
+app.use(`${basePath}/storage`, storageCommon(hostIdentity, jwtSecret));
+app.use(`${basePath}/storage`, store);
+```
+
+It also has a method
+```
+router.allocateUserStorage = async function (username, logNotes)
+```
+which is called by the account object.
+
+### Account Object
+
+Accounts are managed by an object with methods
+`createUser({ username, email, password }, logNotes)`,
+`deleteUser(username, logNotes)` and
+`authenticate ({ username, password }, logNotes)`
+
+`createUser` MUST call `allocateUserStorage(username, logNotes)`
+on the streaming store handler.
+
+`logNotes` is a set of strings which methods can append to. The logging middleware will
+append everything in `logNotes` to the log entry for the current
+request.
+
+The account object may be the same object as the streaming
+store handler.
 
 ### Logging
 

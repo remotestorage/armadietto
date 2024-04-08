@@ -1,4 +1,5 @@
 {
+  "host_identity": "example.com",
   "basePath": "",
   "allow_signup": true,
   "storage_path": "./dev-storage",
@@ -6,12 +7,21 @@
   "lock_stale_after_ms": 60000,
   "cache_views": true,
   "http": {
-    "host": "127.0.0.1",
+    "host": "0.0.0.0",
     "port": 8000
+  },
+  "https": {
+    "enable": true,
+    "portXXX": 4443,
+    "key": "../../example.com+5-key.pem",
+    "cert": "../../example.com+5.pem"
   },
   "logging": {
     "log_dir": "./dev-log",
-    "stdout": ["debug"],
+    "stdout": ["info"],
     "log_files": ["notice"]
+  },
+  "s3": {
+    "user_name_suffix": null
   }
 }

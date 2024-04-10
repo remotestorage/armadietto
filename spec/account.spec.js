@@ -53,22 +53,49 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
   describe('deleteUser', function () {
     before(function () {
       this.username2 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
-    });
-
-    after(async function () {
-      this.timeout(10_000);
-      await this.store.deleteUser(this.username2, new Set());
+      this.username3 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
+      this.username4 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
     });
 
     it('deletes a user', async function () {
       this.timeout(10_000);
-
       const params = { username: this.username2, email: 'a@b.c', password: 'swordfish' };
+      await expect(this.store.createUser(params, new Set())).to.eventually.eql(this.username2 + this.USER_NAME_SUFFIX);
+
       const logNotes = new Set();
-      await expect(this.store.createUser(params, logNotes)).to.eventually.eql(this.username2 + this.USER_NAME_SUFFIX);
-      const result = await this.store.deleteUser(this.username2, new Set());
-      await expect(result?.[0]).to.be.greaterThanOrEqual(2);
-      await expect(result?.[1]).to.equal(0);
+      const result = await this.store.deleteUser(this.username2, logNotes);
+      expect(result?.[0]).to.be.greaterThanOrEqual(2);
+      expect(result?.[1]).to.equal(0);
+      expect(result?.[2]).to.equal(1);
+      expect(logNotes.size).to.equal(0);
+    });
+
+    it('returns normally when user deleted twice at the same time', async function () {
+      this.timeout(10_000);
+      const params = { username: this.username3, email: 'a@b.c', password: 'swordfish' };
+      await expect(this.store.createUser(params, new Set())).to.eventually.eql(this.username3 + this.USER_NAME_SUFFIX);
+
+      const logNotes = new Set();
+      const results = await Promise.all(
+        [this.store.deleteUser(this.username3, logNotes), this.store.deleteUser(this.username3, logNotes)]);
+      expect(results[0]?.[0]).to.be.greaterThanOrEqual(0);
+      expect(results[0]?.[1]).to.equal(0);
+      expect(results[0]?.[2]).to.be.within(0, 1);
+      expect(results[1]?.[0]).to.be.greaterThanOrEqual(0);
+      expect(results[1]?.[1]).to.equal(0);
+      expect(results[1]?.[2]).to.be.within(0, 1);
+      expect(logNotes.size).to.equal(0);
+    });
+
+    it('returns normally when user doesn\'t exist', async function () {
+      this.timeout(10_000);
+
+      const logNotes = new Set();
+      const result = await this.store.deleteUser(this.username4, logNotes);
+      expect(result?.[0]).to.equal(0);
+      expect(result?.[1]).to.equal(0);
+      expect(result?.[2]).to.equal(0);
+      expect(logNotes.size).to.equal(0);
     });
   });
 

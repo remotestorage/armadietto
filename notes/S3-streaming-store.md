@@ -1,29 +1,44 @@
 # S3-compatible Streaming Store
 
-Streaming Stores can only be used with the modular server.
+Note: S3-compatible storage trades the strong consistency of a file system for higher performance and multi-datacenter capability, so this store only offers eventual consistency.
 
-You should be able to connect to any S3-compatible service that supports versioning. Tested services include:
+Streaming Stores like this can only be used with the modular server.
 
-Fully working implementations:
+## Compatible S3 Implementations
 
-* AWS S3
+Tested services include:
 
-Works, but web console can't be used with this:
+### AWS S3
 
-* min.io (both self-hosted and cloud)
+* Fully working
 
-Implementations with bugs that can't be worked around:
+### Garage
 
-* OpenIO [simultaneous delete]
+* doesn't implement versioning
+* doesn't implement If-Match for GET, which is not yet used but will be required to support Range requests
+
+### min.io (both self-hosted and cloud)
+
+* web console can't be used with this, and probably won't ever
 
 
-Configure the store by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world. Also, the Min.IO browser can't list your documents or folders.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
+### OpenIO
+Disrecommended — bugs can't be worked around
+
+*  fails simultaneous delete test
+* doesn't implement DeleteObjectsCommand
+
+
+## Configuration
+
+Configure the store by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world! Also, the Min.IO browser can't list your documents or folders.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
 
 * S3_ENDPOINT
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
+* S3_REGION
 
-For AWS, you must also pass a fifth argument — a user name suffix so bucket names don't collide with other users. By default, this is a dash plus `conf.host_identity`, but you can set `conf.user_name_suffix` to override.
+For AWS, you must also pass a fifth argument — a user name suffix so bucket names don't collide with other users. By default, this is a hyphen plus `conf.host_identity`, but you can set `conf.user_name_suffix` to override.
 
 Creating an app server then resembles:
 
@@ -36,13 +51,13 @@ const s3handler = new S3Handler({
 const app = require('../../lib/appFactory')({account: s3handler, store: s3handler, ...});
 ```
 
-Https is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.
+HTTPS is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.
 
 This one access key is used to create a bucket for each user.
-The bucket name is the username.
-If other buckets are created at that endpoint, those bucket names will be unavailable as usernames.
+The bucket name is the username plus the suffix, if any.
+If other non-remoteStorage buckets are created at that endpoint, those bucket names will be unavailable as usernames.
 Buckets can be administered using the service's tools, such as a webapp console or command-line tools.
-The bucket **MAY** contain non-remoteStorage blobs outside these prefixes:
+The bucket **SHOULD NOT** contain non-RS blobs with these prefixes:
 
 * remoteStorageBlob/
 * remoteStorageAuth/

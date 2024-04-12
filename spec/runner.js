@@ -18,10 +18,12 @@ require('./stores/file_tree_spec');
 require('./modular/m_root.spec');
 require('./modular/m_not_found.spec');
 require('./modular/m_static.spec');
-require('./modular/m_signup.spec');
+require('./modular/request_invite.spec');
+require('./modular/account.spec');
 require('./modular/m_web_finger.spec');
 require('./modular/m_oauth.spec');
 require('./modular/m_storage_common.spec');
+require('./modular/admin.spec');
 
 // If a local S3 store isn't running and configured, tests are run using a shared public account on play.min.io
 // require('./streaming_stores/S3.spec');

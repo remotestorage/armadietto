@@ -1,0 +1,30 @@
+<%- include('../begin.html'); %>
+
+<section class="hero">
+    <header><h1><%= title %></h1><h1><%= username %></h1></header>
+</section>
+
+<table class="fullwidth centeredText">
+    <tbody>
+    <tr><td>Account Privileges</td><td><%= Object.keys(accountPrivileges).join(', ') || '«none»' %></td></tr>
+    <tr><td>Session Privileges</td><td><%= Object.keys(privileges).join(', ') || '«none»' %></td></tr>
+    </tbody>
+</table>
+
+    <header class="centeredText"><h2>Passkeys</h2></header>
+        <table id="credentials" class="fullwidth centeredText">
+            <thead>
+                <tr><th>Created using</th><th>Created on</th><th>Last used</th></tr>
+            </thead>
+            <tbody>
+            <% for (const cred of credentials) { %>
+                <tr>
+                    <td><%= cred.name %></td>
+                    <td><%= new Date(cred.createdAt).toLocaleDateString() %></td>
+                    <td><%= cred.lastUsed ? new Date(cred.lastUsed).toLocaleString().replace(/:\d\d(?!:)/, '') : 'never' %></td>
+                </tr>
+            <% } %>
+            </tbody>
+        </table>
+
+<%- include('../end.html'); %>

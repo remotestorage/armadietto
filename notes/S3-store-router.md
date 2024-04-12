@@ -14,7 +14,7 @@ Tested services include:
 
 ### Garage
 
-* doesn't implement versioning
+* doesn't implement versioning (which would be nice for recovery)
 * doesn't implement If-Match for GET, which is not yet used but will be required to support Range requests
 
 ### min.io (both self-hosted and cloud)
@@ -25,7 +25,7 @@ Tested services include:
 ### OpenIO
 Disrecommended — bugs can't be worked around
 
-*  fails simultaneous delete test
+* fails simultaneous delete test
 * doesn't implement DeleteObjectsCommand
 
 
@@ -48,13 +48,13 @@ const s3handler = new S3Handler({
   accessKey: process.env.S3_ACCESS_KEY,
   secretKey: process.env.S3_SECRET_KEY,
   userNameSuffix});
-const app = require('../../lib/appFactory')({account: s3handler, storeRouter: s3handler, ...});
+const app = require('../../lib/appFactory')({accountMgr: s3handler, storeRouter: s3handler, ...});
 ```
 
 HTTPS is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.
 
 This one access key is used to create a bucket for each user.
-The bucket name is the username plus the suffix, if any.
+The bucket name is the id plus the suffix, if any.
 If other non-remoteStorage buckets are created at that endpoint, those bucket names will be unavailable as usernames.
 Buckets can be administered using the service's tools, such as a webapp console or command-line tools.
 The bucket **SHOULD NOT** contain non-RS blobs with these prefixes:

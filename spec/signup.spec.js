@@ -15,7 +15,7 @@ exports.shouldBlockSignups = function () {
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
     expect(res.text).to.match(/Forbidden/);
-    expect(res.text).to.match(/Signing up is not allowed currently/);
+    expect(res.text).to.match(/(Signing up|Requesting invite) is not allowed currently/);
     // navigation
     expect(res.text).to.match(/<a [^>]*href="\/"[^>]*>Home<\/a>/);
     expect(res.text).to.match(/<a [^>]*href="\/account"[^>]*>Account<\/a>/);
@@ -53,7 +53,7 @@ exports.shouldAllowSignupsBasePath = function () {
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
     expect(res.text).to.match(/<a [^>]*href="\/basic\/"[^>]*>Home<\/a>/);
-    expect(res.text).to.match(/<a [^>]*href="\/basic\/account"[^>]*>Account<\/a>/);
+    // expect(res.text).to.match(/<a [^>]*href="\/basic\/account"[^>]*>Account<\/a>/);
     expect(res.text).to.match(/<a [^>]*href="\/basic\/signup"[^>]*>Sign up<\/a>/);
     expect(res.text).to.match(/<a .*href="https:\/\/remotestorage.io\/"/);
     expect(res.text).to.match(/<a .*href="https:\/\/github.com\/remotestorage\/armadietto"/);

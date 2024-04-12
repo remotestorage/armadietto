@@ -115,7 +115,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: stretch;
   min-height: 100vh;
   background: var(--arma-bckgrd-color);
   background-image: var(--body-bckgrd-linear-gradient, transparent);
@@ -161,6 +161,17 @@ li {
 
 .text-center {
   text-align: center;
+}
+
+.centering-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.width10em {
+  width: 10em;
 }
 
 /* TOPBAR HEADER */
@@ -343,6 +354,98 @@ section.hero header + p {
   }
 }
 
+.centeredBoxContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.centeredText {
+  text-align: center;
+}
+
+.marginTop {
+  margin-top: 1em;
+}
+.marginSides {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+.padding {
+  padding: 1em;
+}
+
+.floatRight {
+  float: right;
+  margin-left: 1em;
+}
+
+.fullwidth {
+  width: 100%;
+}
+th {
+  background: #333;
+  color: white;
+  font-weight: bold;
+}
+tr:nth-of-type(odd) {
+  background: #c8c8c8;
+}
+/*
+Max width before this PARTICULAR table gets nasty
+This query will take effect for any screen smaller than 760px
+and also iPads specifically.
+*/
+@media
+only screen and (max-width: 525px)  {
+
+  /* Force table to not be like tables anymore */
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  /* Hide table headers (but not display: none;, for accessibility) */
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  tr { border: 1px solid #ccc; }
+
+  td {
+    /* Behave  like a "row" */
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 40%;
+  }
+
+  td:before {
+    /* Now like a table header */
+    position: absolute;
+    /* Top/left values mimic padding */
+    top: 6px;
+    left: 6px;
+    width: 35%;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+
+  /* Labels the data */
+  #credentials td:nth-of-type(1):before { content: "Created using"; }
+  #credentials td:nth-of-type(2):before { content: "Created on"; }
+  #credentials td:nth-of-type(3):before { content: "Last used"; }
+
+  #users td:nth-of-type(1):before { content: "Name"; }
+  #users td:nth-of-type(2):before { content: "Contact URL"; }
+  #users td:nth-of-type(3):before { content: "Last connected"; }
+}
+
+.borderSolid {
+  border: black 1px solid;
+}
+
 /* BODY FOOTER */
 
 body > footer > p {
@@ -471,9 +574,12 @@ form {
   margin-bottom: 1rem;
 }
 
-label {
+label.overLabel {
   color: var(--arma-extra-color);
   font-size: .875rem;
+}
+label.leftLabel {
+
 }
 
 input {
@@ -740,6 +846,13 @@ button[name="deny"]:focus {
   outline: 2pt dotted var(--arma-focus-border-color);
 }
 
+/* UTITLITY */
+.flexRowSpaceBetween {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
 
 /* ICONS */
 

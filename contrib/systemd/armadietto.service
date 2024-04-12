@@ -11,7 +11,7 @@ Restart=always
 RestartSec=1
 User=armadietto
 Group=armadietto
-Environment=
+Environment=NODE_ENV=production
 ExecStartPre=
 ExecStart=/usr/bin/armadietto -c /etc/armadietto/conf.json
 ExecStartPost=

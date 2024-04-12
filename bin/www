@@ -64,7 +64,7 @@ function start(network) {
   // to which anyone in the world can read and write!
   // It is not entirely compatible with S3Handler.
   const s3handler = new S3Handler({endPoint: process.env.S3_ENDPOINT,
-    accessKey: process.env.S3_ACCESS_KEY, secretKey: process.env.S3_SECRET_KEY,
+    accessKey: process.env.S3_ACCESS_KEY, secretKey: process.env.S3_SECRET_KEY, region: process.env.S3_REGION || 'us-east-1',
     userNameSuffix});
 
   const app = appFactory({hostIdentity, jwtSecret, account: s3handler, store: s3handler, basePath});

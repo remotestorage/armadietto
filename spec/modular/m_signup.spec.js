@@ -14,7 +14,7 @@ describe('Signup (modular)', function () {
     before(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-      const app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: mockAccount, store: (_req, _res, next) => next() });
+      const app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: mockAccount, storeRouter: (_req, _res, next) => next() });
       app.locals.title = 'Test Armadietto';
       app.locals.host = 'localhost:xxxx';
       app.locals.signup = false;
@@ -28,7 +28,7 @@ describe('Signup (modular)', function () {
     before(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-      this.store = {
+      this.storeRouter = {
         async createUser (params) {
           const errors = core.validateUser(params);
           if (errors.length > 0) throw new Error(errors[0]);
@@ -39,10 +39,10 @@ describe('Signup (modular)', function () {
       const app = require('../../lib/appFactory')({
         jwtSecret: 'swordfish',
         account: mockAccount,
-        store: (_req, _res, next) => next(),
+        storeRouter: (_req, _res, next) => next(),
         basePath: '/basic'
       });
-      app.set('account', this.store);
+      app.set('account', this.storeRouter);
       app.locals.title = 'Test Armadietto';
       app.locals.host = 'localhost:xxxx';
       app.locals.signup = true;

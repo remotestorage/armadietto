@@ -67,10 +67,10 @@ sharedExamplesFor('Stores', (store) => {
   describe('authorization methods', () => {
     def('permissions', { documents: ['w'], photos: ['r', 'w'], contacts: ['r'], 'deep/dir': ['r', 'w'] });
     before(async () => {
-      // await store.createUser({username: 'boris', email: 'boris@example.com', password: 'dangle'});
+      // await storeRouter.createUser({username: 'boris', email: 'boris@example.com', password: 'dangle'});
       this.accessToken = await store.authorize('www.example.com', 'boris', get.permissions);
 
-      // await store.createUser({username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
+      // await storeRouter.createUser({username: 'zebcoe', email: 'zeb@example.com', password: 'locog'});
       this.rootToken = await store.authorize('admin.example.com', 'zebcoe', { '': ['r', 'w'] });
     });
 

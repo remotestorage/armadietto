@@ -31,7 +31,7 @@ Disrecommended — bugs can't be worked around
 
 ## Configuration
 
-Configure the store by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world! Also, the Min.IO browser can't list your documents or folders.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
+Configure the store router by passing to the constructor the endpoint (host name, and port if not 9000), access key (admin user name) and secret key (password). (If you don't pass any arguments, S3 will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world! Also, the Min.IO browser can't list your documents or folders.) If you're using a AWS and a region other than `us-east-1`, include that as a fourth argument.  You can provide these however you like, but typically they are stored in these environment variables:
 
 * S3_ENDPOINT
 * S3_ACCESS_KEY
@@ -48,7 +48,7 @@ const s3handler = new S3Handler({
   accessKey: process.env.S3_ACCESS_KEY,
   secretKey: process.env.S3_SECRET_KEY,
   userNameSuffix});
-const app = require('../../lib/appFactory')({account: s3handler, store: s3handler, ...});
+const app = require('../../lib/appFactory')({account: s3handler, storeRouter: s3handler, ...});
 ```
 
 HTTPS is used if the endpoint is not localhost.  If you must use http, you can include the scheme in the endpoint: `http://myhost.example.org`.

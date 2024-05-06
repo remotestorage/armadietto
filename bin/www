@@ -6,7 +6,7 @@ const path = require("path");
 const {ArgumentParser} = require("argparse");
 const appFactory = require('../lib/appFactory');
 const {configureLogger, getLogger} = require("../lib/logger");
-const S3Handler = require("../lib/routes/S3_store_handler");
+const S3Handler = require("../lib/routes/S3_store_router");
 const process = require("process");
 const https = require("https");
 
@@ -67,7 +67,7 @@ function start(network) {
     accessKey: process.env.S3_ACCESS_KEY, secretKey: process.env.S3_SECRET_KEY, region: process.env.S3_REGION || 'us-east-1',
     userNameSuffix});
 
-  const app = appFactory({hostIdentity, jwtSecret, account: s3handler, store: s3handler, basePath});
+  const app = appFactory({hostIdentity, jwtSecret, account: s3handler, storeRouter: s3handler, basePath});
 
   const port = normalizePort( network?.port || '8000');
   app.set('port', port);

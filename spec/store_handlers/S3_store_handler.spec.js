@@ -4,12 +4,12 @@
 
 const chai = require('chai');
 const expect = chai.expect;
-const s3storeHandler = require('../../lib/routes/S3_store_handler');
+const s3storeHandler = require('../../lib/routes/S3_store_router');
 const { shouldStoreStreams } = require('../store_handler.spec');
 const { configureLogger } = require('../../lib/logger');
 const { shouldCreateDeleteAndReadAccounts } = require('../account.spec');
 
-describe('S3 store handler', function () {
+describe('S3 store router', function () {
   before(function () {
     configureLogger({ stdout: ['notice'], log_dir: './test-log', log_files: ['debug'] });
     this.USER_NAME_SUFFIX = '-java.extraordinary.org';

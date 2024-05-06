@@ -60,7 +60,7 @@ describe('OAuth (modular)', function () {
         }
       }
     }));
-    this.app.use(express.urlencoded({ extended: false }));
+    this.app.use(express.urlencoded({ extended: true }));
     this.app.use('/oauth', oAuthRouter(this.hostIdentity, 'swordfish'));
     this.app.set('account', mockAccount);
     this.app.locals.title = 'Test Armadietto';

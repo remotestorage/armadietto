@@ -170,7 +170,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store returns an item', function () {
+    describe('when the store router returns an item', function () {
       it('returns the value in the response', async function () {
         this.store.content = 'a value';
         this.store.metadata = { contentType: 'custom/type', ETag: '"1330177020000"' };
@@ -186,7 +186,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store returns a folder listing', function () {
+    describe('when the store router returns a folder listing', function () {
       before(function () {
         this.store.metadata = {
           ETag: '"12345888888"'
@@ -211,7 +211,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store returns an empty folder listing', function () {
+    describe('when the store router returns an empty folder listing', function () {
       before(function () {
         this.store.metadata = { ETag: '"12345888888"' };
         this.store.children = [];
@@ -231,7 +231,7 @@ module.exports.shouldCrudBlobs = function () {
 
   describe('PUT', function () {
     describe('when a valid access token is used', function () {
-      it('tells the store to save the given value', async function () {
+      it('tells the store router to save the given value', async function () {
         const content = 'a value';
         const res = await chai.request(this.app).put('/storage/zebcoe/locog/seats').buffer(true).type('text/plain')
           .set('Content-Length', content.length.toString()).set('Authorization', 'Bearer ' + this.good_token)
@@ -240,13 +240,13 @@ module.exports.shouldCrudBlobs = function () {
         expect(res.text).to.equal('');
       });
 
-      it('tells the store to save a public value', async function () {
+      it('tells the store router to save a public value', async function () {
         const res = await put(this.app, '/storage/zebcoe/public/locog/seats', this.good_token, 'a value');
         expect(res.status).to.be.oneOf([200, 201, 204]);
         expect(res.text).to.equal('');
       });
 
-      it('does not tell the store to save a folder', async function () {
+      it('does not tell the store router to save a folder', async function () {
         const res = await put(this.app, '/storage/zebcoe/locog/seats/', this.good_token, 'a value');
         expect(res).to.have.status(400);
         expect(res.text).to.match(/can't write to folder|^$/);
@@ -275,7 +275,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store says the item was created', function () {
+    describe('when the store router says the item was created', function () {
       before(function () {
         this.store.content = this.store.metadata = this.store.children = null;
       });
@@ -289,7 +289,7 @@ module.exports.shouldCrudBlobs = function () {
       });
     });
 
-    describe('when the store says the item was not created but updated', function () {
+    describe('when the store router says the item was not created but updated', function () {
       before(function () {
         this.store.content = 'Old value';
         this.store.metadata = { contentType: 'text/html', ETag: '"ETag|Old value"' };
@@ -312,7 +312,7 @@ module.exports.shouldCrudBlobs = function () {
     });
 
     describe('when a valid access token is used', function () {
-      it('tells the store to delete the given item unconditionally', async function () {
+      it('tells the store router to delete the given item unconditionally', async function () {
         this.store.content = 'old value';
         this.store.metadata = { ETag: '"ETag|old value' };
         const res = await del(this.app, '/storage/zebcoe/locog/seats', this.good_token);
@@ -320,7 +320,7 @@ module.exports.shouldCrudBlobs = function () {
         expect(res.text).to.equal('');
       });
 
-      it('tells the store to delete an item conditionally based on If-Match (doesn\'t match)', async function () {
+      it('tells the store router to delete an item conditionally based on If-Match (doesn\'t match)', async function () {
         this.store.content = 'old value';
         this.store.metadata = { ETag: '"ETag|old value' };
         const res = await del(this.app, '/storage/zebcoe/locog/seats', this.good_token).set('If-Match', `"${modifiedTimestamp}"`);
@@ -328,11 +328,11 @@ module.exports.shouldCrudBlobs = function () {
         expect(res.text).to.equal('');
       });
 
-      it('tells the store to delete an item conditionally based on If-Match (does match)', async function () {
+      it('tells the store router to delete an item conditionally based on If-Match (does match)', async function () {
         this.store.content = 'old value';
         this.store.metadata = { ETag: `"${modifiedTimestamp}"` };
         const res = await del(this.app, '/storage/zebcoe/locog/seats', this.good_token).set('If-Match', `"${modifiedTimestamp}"`);
-        // expect(this.store.delete).to.have.been.called.with('zebcoe', '/locog/seats');
+        // expect(this.storeRouter.delete).to.have.been.called.with('zebcoe', '/locog/seats');
         expect(res.status).to.be.oneOf([200, 204]);
         expect(res.text).to.equal('');
       });

@@ -14,13 +14,14 @@ Changing `host_identity` will invalidate all grants of access, and make unavaila
 
 The secret used to generate JWTs must have at least 64 cryptographically random ASCII characters.
 
-The streaming storage handler is Express middleware and does the actual storage.
+The streaming storage handler is an Express Router and does the actual storage.
 
-The `account` object has methods to create user accounts somewhere, and check passwords. When it is created, it should be passed the streaming storage handler.
+The `account` object has methods to create user accounts somewhere, and check passwords.
+When it is created, it should be passed the streaming storage router.
 
 They may be the same object (S3-compatible storage can use itself for an account object, or a different type of account object).
 
-S3-compatible storage is typically configured using environment variables; see the note [S3-streaming-store.md](`./S3-streaming-store.md`) for details.
+S3-compatible storage is typically configured using environment variables; see the note [S3-store-router.md](`./S3-store-router.md`) for details.
 
 If your server runs at a path other than root, you *MUST* pass the `basePath` argument to appFactory.
 
@@ -44,14 +45,14 @@ If the modular server is behind a proxy, you **MUST** set
 
 ## Development
 
-### Streaming Store Handler
+### Streaming Store Router
 
-A streaming store handler is an instance of `Router` that
+A streaming store router is an instance of `Router` that
 implements `get`, `put` and `delete` for the path
-`'/:username/*'`. It is mounted after `storageCommon`:
+`'/:username/*'`. It is mounted after `storageCommonRouter`:
 ```javascript
-app.use(`${basePath}/storage`, storageCommon(hostIdentity, jwtSecret));
-app.use(`${basePath}/storage`, store);
+app.use(`${basePath}/storage`, storageCommonRouter(hostIdentity, jwtSecret));
+app.use(`${basePath}/storage`, storeRouter);
 ```
 
 It also has a method
@@ -68,14 +69,14 @@ Accounts are managed by an object with methods
 `authenticate ({ username, password }, logNotes)`
 
 `createUser` MUST call `allocateUserStorage(username, logNotes)`
-on the streaming store handler.
+on the streaming store router.
 
 `logNotes` is a set of strings which methods can append to. The logging middleware will
 append everything in `logNotes` to the log entry for the current
 request.
 
 The account object may be the same object as the streaming
-store handler.
+store router.
 
 ### Logging
 

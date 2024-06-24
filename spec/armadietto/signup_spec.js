@@ -53,7 +53,7 @@ describe('Home w/o signup and no base path', () => {
   it('returns a style sheet', async () => {
     const res = await get('/assets/style.css');
     expect(res).to.have.status(200);
-    expect(res).to.have.header('Content-Type', 'text/css; charset=utf8');
+    expect(res).to.have.header('Content-Type', 'text/css; charset=utf-8');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
   });
 

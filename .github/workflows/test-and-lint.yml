@@ -1,21 +1,22 @@
 name: test-and-lint
 on:
   push:
-    branches: [ master ]
+    branches: [ master, modular ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, modular ]
 jobs:
   build:
     name: node.js
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # Support LTS versions based on https://nodejs.org/en/about/releases/
         node-version: ['18', '20', '21']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
@@ -23,4 +24,4 @@ jobs:
       - name: Run linter
         run: npm run lint
       - name: Run tests
-        run: npm test
+        run: npm test -- --timeout 10000

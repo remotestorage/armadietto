@@ -1,4 +1,6 @@
-<h2>Sign up </h2>
+<%- include('header.html'); %>
+
+<h2>Sign up</h2>
 
 <form method="post" action="<%= basePath %>/signup">
   <% if (error) { %>
@@ -23,3 +25,5 @@
 
   <button type="submit" name="signup" value="Go">Create account</button>
 </form>
+
+<%- include('footer.html'); %>

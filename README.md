@@ -151,7 +151,7 @@ See `DEVELOPMENT.md`
 (The MIT License)
 
 Copyright © 2012–2015 James Coglan
-Copyright © 2018–2022 remoteStorage contributors
+Copyright © 2018–2024 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in

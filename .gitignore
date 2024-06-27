@@ -8,7 +8,6 @@ bin/test-suite-storage/rs/rs-test/storage
 test-log
 dev-log
 dev-storage
-dev-admin
 .vscode
 .idea
 

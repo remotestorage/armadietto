@@ -402,6 +402,7 @@ describe('admin module', function () {
 
       const usernameContact = await this.storeRouter.readAdminBlob(path.join(CONTACT_URL_DIR, encodeURIComponent(contactURL1) + '.yaml'));
       expect(usernameContact).to.equal(username1);
+      await agent.close();
     });
 
     it('rejects expired token', async function () {

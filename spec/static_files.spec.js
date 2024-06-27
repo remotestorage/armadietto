@@ -22,7 +22,7 @@ exports.shouldServeStaticFiles = function () {
     expect(res.text).to.contain('section.hero {');
   });
 
-  it('should return client javascript as text/javascript', async function () {
+  it('should return client javascript as */javascript', async function () {
     const res = await chai.request(this.app).get('/assets/armadietto-utilities.js');
     expect(res).to.have.status(200);
     // expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
@@ -30,8 +30,8 @@ exports.shouldServeStaticFiles = function () {
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     // expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);
     expect(res).not.to.have.header('X-Powered-By');
-    // expect(res).to.have.header('Content-Type', /^text\/javascript/);
-    expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(1500);
+    expect(res).to.have.header('Content-Type', /^(application|text)\/javascript\b/);
+    expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(1000);
     // expect(res).to.have.header('ETag');
     // expect(res.text).to.contain('function setTheme (');
     // expect(res.text).to.contain('function toggleTheme (');

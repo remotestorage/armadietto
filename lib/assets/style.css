@@ -23,7 +23,9 @@
 
   /*  Armadietto colors */
   --arma-black-color:  #171614;
+  --arma-darkgray-color: #424239;
   --arma-whitesmoke-color: #e6e2da;
+  --arma-lightgray-color: #c8c8c8;
   --arma-wheat-color: #c7b9bd;
   --arma-orange-color: #f4a903;
   --arma-orangered-color: #f07b0d;
@@ -40,6 +42,7 @@
   --rs-bckgrd-color: var(--rs-black-color);
 
   --arma-bckgrd-color:  var(--arma-whitesmoke-color);
+  --arma-bckgrd-color-alt:  var(--arma-lightgray-color);
   --arma-title-color: #0d0608;
   --arma-text-color: var(--arma-black-color);
   --arma-brand-color: var(--arma-orange-color);
@@ -81,6 +84,7 @@
     --rs-bckgrd-color: var(--rs-white-color);
 
     --arma-bckgrd-color:  var(--arma-black-color);
+    --arma-bckgrd-color-alt:  var(--arma-darkgray-color);
     --arma-title-color: var(--arma-whitesmoke-color);
     --arma-text-color: var(--arma-wheat-color);
     --arma-brand-color: var(--arma-orange-color);
@@ -263,8 +267,8 @@ header.topbar h1 a:focus {
 header.topbar nav ul {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: .5rem;
+  flex-wrap: wrap;
+  column-gap: .5rem;
   margin: 0;
   padding: 0;
 }
@@ -279,7 +283,7 @@ header.topbar .navitem {
 	color: var(--arma-text-color);
 	transition: all .2s linear;
   text-decoration: none;
-  height: 3rem;
+  height: 2.5rem;
 }
 
 header.topbar .signup::before {
@@ -388,8 +392,8 @@ th {
   color: white;
   font-weight: bold;
 }
-tr:nth-of-type(odd) {
-  background: #c8c8c8;
+tr:nth-of-type(even) {
+  background: var(--arma-bckgrd-color-alt);
 }
 /*
 Max width before this PARTICULAR table gets nasty
@@ -846,11 +850,18 @@ button[name="deny"]:focus {
   outline: 2pt dotted var(--arma-focus-border-color);
 }
 
-/* UTITLITY */
+/* UTILITY */
 .flexRowSpaceBetween {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
+}
+
+.flexRowSpaceAround {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
   align-items: center;
 }
 

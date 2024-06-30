@@ -35,6 +35,6 @@ exports.shouldServeStaticFiles = function () {
     // expect(res).to.have.header('ETag');
     // expect(res.text).to.contain('function setTheme (');
     // expect(res.text).to.contain('function toggleTheme (');
-    // expect(res.text).to.contain('document.getElementById(\'switch\').addEventListener(\'click\'');
+    // expect(res.text).to.contain('document.getElementById(\'switch\')?.addEventListener(\'click\'');
   });
 };

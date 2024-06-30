@@ -28,16 +28,10 @@
   <% } %>
 
   <form method="POST" action="<%= basePath %>/oauth">
-    <input type="hidden" name="username" value="<%= username %>">
-    <input type="hidden" name="client_id" value="<%= client_id %>">
-    <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
-    <input type="hidden" name="response_type" value="<%= response_type %>">
-    <input type="hidden" name="scope" value="<%= scope %>">
-    <input type="hidden" name="state" value="<%= state %>">
     <input type="hidden" id="credential" name="credential">
 
     <div class="actions">
-      <button type="submit" name="allow" value="Allow">Allow</button>
+      <button type="submit" name="allow" value="Allow" <%= options === '{}' ? 'disabled' : '' %>>Allow</button>
       <button type="submit" name="deny" value="Deny">Deny</button>
     </div>
   </form>

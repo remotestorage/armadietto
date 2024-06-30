@@ -266,7 +266,7 @@ describe('admin module', function () {
       expect(res).to.have.status(201);
       expect(res).to.have.header('Content-Type', 'application/json; charset=utf-8');
       expect(res.body.title).to.match(new RegExp(`${HOST_IDENTITY} User Invite`));
-      expect(res.body.text).to.match(new RegExp(`${USERNAME}, to create a passkey for ${HOST_IDENTITY} on a new device, copy and paste this URL into the browser on that device:`));
+      expect(res.body.text).to.match(new RegExp(`${USERNAME}, to create a passkey for ${HOST_IDENTITY} on a new device or browser, copy and paste this URL into the browser on that device:`));
       expect(res.body.url).to.match(new RegExp(`https://${HOST_IDENTITY}/admin/acceptInvite\\?token=`));
     });
   });

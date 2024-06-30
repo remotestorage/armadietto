@@ -40,6 +40,8 @@ const CREDENTIAL_PRESENTED_RIGHT = {
     userHandle: Buffer.from(USER.username, 'utf8').toString('base64url')
   }
 };
+const CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE = structuredClone(CREDENTIAL_PRESENTED_RIGHT);
+CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE.response.userHandle = undefined;
 const CREDENTIAL_PRESENTED_WRONG = {
   id: 'E1wdWNIfF6QkykG4Nmmknb74tKQ',
   rawId: 'E1wdWNIfF6QkykG4Nmmknb74tKQ',
@@ -58,6 +60,7 @@ module.exports = {
   USER,
   CREDENTIAL_STORED,
   CREDENTIAL_PRESENTED_RIGHT,
+  CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE,
   CREDENTIAL_PRESENTED_WRONG,
 
   mockAccountFactory: function (hostIdentity) {

@@ -1,0 +1,46 @@
+<%- include('header.html'); %>
+
+<script type="module" src="<%= basePath %>/assets/oauth.mjs"></script>
+
+<h2>Authorize</h2>
+
+<div class="oauth-form">
+  <p>The application <em><%= client_id %></em> hosted at
+    <em><%= client_host %></em> wants to access these resources for user
+    <em><%= username %></em>:
+  </p>
+
+  <ul>
+    <% for (var path in permissions) { %>
+      <% var flags = permissions[path].join('') %>
+      <li><em><%= access_strings[flags] %></em> <span>access to</span> <em><%= path.replace(/^\/*/, '/') %></em></li>
+    <% } %>
+  </ul>
+
+  <div class="centering-container">
+    <p id="message">Use your passkey to authorize</p>
+    <input type="hidden" id="options" value="<%= options %>">
+    <div id="progress" hidden><label>Authorizing: <progress></progress></label></div>
+  </div>
+
+  <% if (typeof error !== 'undefined') { %>
+    <p class="error"><%= error %></p>
+  <% } %>
+
+  <form method="POST" action="<%= basePath %>/oauth">
+    <input type="hidden" name="username" value="<%= username %>">
+    <input type="hidden" name="client_id" value="<%= client_id %>">
+    <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
+    <input type="hidden" name="response_type" value="<%= response_type %>">
+    <input type="hidden" name="scope" value="<%= scope %>">
+    <input type="hidden" name="state" value="<%= state %>">
+    <input type="hidden" id="credential" name="credential">
+
+    <div class="actions">
+      <button type="submit" name="allow" value="Allow">Allow</button>
+      <button type="submit" name="deny" value="Deny">Deny</button>
+    </div>
+  </form>
+</div>
+
+<%- include('footer.html'); %>

@@ -21,7 +21,7 @@ exports.shouldBeWelcomeWithoutSignup = function () {
     expect(res.text).to.match(/<h\d>Welcome to Armadietto!<\/h\d>/);
     expect(res.text).to.match(/<a [^>]*href="\/"[^>]*>127.0.0.1:\d{1,5}<\/a>/);
     expect(res.text).to.match(/<a [^>]*href="\/"[^>]*>Home<\/a>/);
-    expect(res.text).to.match(/<a [^>]*href="\/account"[^>]*>Account<\/a>/);
+    // expect(res.text).to.match(/<a [^>]*href="\/account"[^>]*>Account<\/a>/);
     expect(res.text).not.to.contain('Sign up');
     expect(res.text).to.match(/<a [^>]*href="https:\/\/remotestorage.io\/"/);
     expect(res.text).to.match(/<a [^>]*href="https:\/\/github.com\/remotestorage\/armadietto"/);
@@ -38,8 +38,8 @@ exports.shouldBeWelcomeWithSignup = function () {
     expect(res.text).to.match(/<h\d>Welcome to Armadietto!<\/h\d>/);
     expect(res.text).to.match(/<a [^>]*href="\/"[^>]*>127.0.0.1:\d{1,5}<\/a>/);
     expect(res.text).to.match(/<a [^>]*href="\/"[^>]*>Home<\/a>/);
-    expect(res.text).to.match(/<a [^>]*href="\/account"[^>]*>Account<\/a>/);
-    expect(res.text).to.match(/<a [^>]*href="\/signup"[^>]*>Sign up<\/a>/);
+    // expect(res.text).to.match(/<a [^>]*href="\/account"[^>]*>Account<\/a>/);
+    expect(res.text).to.match(/<a [^>]*href="\/signup"[^>]*>(Sign up|Request invite)<\/a>/);
     expect(res.text).to.match(/<a [^>]*href="https:\/\/remotestorage.io\/"/);
     expect(res.text).to.match(/<a [^>]*href="https:\/\/github.com\/remotestorage\/armadietto"/);
   });

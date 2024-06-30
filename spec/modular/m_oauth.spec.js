@@ -8,12 +8,14 @@ chai.use(chaiHttp);
 const spies = require('chai-spies');
 chai.use(spies);
 const { configureLogger } = require('../../lib/logger');
-const { shouldImplementOAuth } = require('../oauth.spec');
 const express = require('express');
 const oAuthRouter = require('../../lib/routes/oauth');
 const path = require('path');
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const crypto = require('crypto');
+const { mockAccountFactory, USER, CREDENTIAL_PRESENTED_WRONG, CREDENTIAL_PRESENTED_RIGHT } = require('../util/mockAccount');
 
 async function post (app, url, params) {
   return chai.request(app).post(url).type('form').send(params).redirects(0);
@@ -23,23 +25,15 @@ describe('OAuth (modular)', function () {
   before(async function () {
     configureLogger({ log_dir: './test-log', stdout: [], log_files: ['debug'] });
 
-    const mockAccount = {
-      authenticate ({ username, email, password }) {
-        if (username === 'zebcoe' && password === 'locog') { return; }
-        throw new Error('Password and username do not match');
-      }
-    };
+    const mockAccount = mockAccountFactory('autotest');
+    this.user = USER;
 
-    this.hostIdentity = 'automated test';
+    this.hostIdentity = 'psteniusubi.github.io';
     this.app = express();
     this.app.engine('.html', require('ejs').__express);
     this.app.set('view engine', 'html');
     this.app.set('views', path.join(__dirname, '../../lib/views'));
 
-    this.app.use((_req, res, next) => {
-      res.logNotes = new Set();
-      next();
-    });
     this.app.use(helmet({
       contentSecurityPolicy: {
         directives: {
@@ -61,27 +55,140 @@ describe('OAuth (modular)', function () {
       }
     }));
     this.app.use(express.urlencoded({ extended: true }));
-    this.app.use('/oauth', oAuthRouter(this.hostIdentity, 'swordfish'));
-    this.app.set('account', mockAccount);
+
+    const developSession = session({
+      secret: crypto.randomBytes(32 / 8).toString('base64')
+    });
+    this.app.use(developSession);
+    this.sessionValues = {};
+    this.app.use((req, res, next) => { // shim for testing
+      Object.assign(req.session, this.sessionValues);
+      res.logNotes = new Set();
+      next();
+    });
+
+    this.app.use('/oauth', oAuthRouter(this.hostIdentity, 'swordfish', mockAccount));
+    this.app.set('accountMgr', mockAccount);
     this.app.locals.title = 'Test Armadietto';
     this.app.locals.basePath = '';
     this.app.locals.host = 'localhost:xxxx';
     this.app.locals.signup = false;
   });
 
-  shouldImplementOAuth();
+  beforeEach(function () {
+    this.sessionValues = { };
+  });
 
-  describe('with valid login credentials (new account module)', async function () {
+  describe('authorization form', function () {
     beforeEach(function () {
       this.auth_params = {
-        username: 'zebcoe',
-        password: 'locog',
+        client_id: 'the_client_id',
+        redirect_uri: 'http://example.com/cb',
+        response_type: 'token',
+        scope: 'data:rw',
+        state: 'the_state'
+      };
+    });
+
+    it('should ask for passkey, not password', async function () {
+      const res = await chai.request(this.app).get('/oauth/' + this.user.username).query(this.auth_params);
+      expect(res).to.have.status(200);
+      expect(res.text).to.contain('>Authorize<');
+      expect(res.text).to.contain('>the_client_id<');
+      expect(res.text).to.contain('>example.com<');
+      expect(res.text).to.match(/Read\/write.*access to.*\/data/);
+      expect(res.text).not.to.contain('password');
+      expect(res.text).to.contain('Use your passkey to authorize');
+    });
+  });
+
+  describe('with invalid client input', function () {
+    beforeEach(function () {
+      this.auth_params = {
+        // username: this.user.username,
+        client_id: 'the_client_id',
+        redirect_uri: 'http://example.com/cb',
+        response_type: 'token',
+        scope: 'the_scope'
+        // no state
+      };
+    });
+
+    it('returns an error if redirect_uri is missing', async function () {
+      delete this.auth_params.redirect_uri;
+      const res = await chai.request(this.app).get('/oauth/me').query(this.auth_params);
+      expect(res).to.have.status(400);
+      expect(res.text).to.equal('error=invalid_request&error_description=Required%20parameter%20%22redirect_uri%22%20is%20missing');
+    });
+
+    it('returns an error if client_id is missing', async function () {
+      delete this.auth_params.client_id;
+      const res = await chai.request(this.app).get('/oauth/me').query(this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=invalid_request&error_description=Required%20parameter%20%22client_id%22%20is%20missing');
+    });
+
+    it('returns an error if response_type is missing', async function () {
+      delete this.auth_params.response_type;
+      const res = await chai.request(this.app).get('/oauth/me').query(this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=invalid_request&error_description=Required%20parameter%20%22response_type%22%20is%20missing');
+    });
+
+    it('returns an error if response_type is not recognized', async function () {
+      this.auth_params.response_type = 'wrong';
+      const res = await chai.request(this.app).get('/oauth/me').query(this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=unsupported_response_type&error_description=Response%20type%20%22wrong%22%20is%20not%20supported');
+    });
+
+    it('returns an error if scope is missing', async function () {
+      delete this.auth_params.scope;
+      const res = await chai.request(this.app).get('/oauth/me').query(this.auth_params);
+      expect(res).to.redirectTo('http://example.com/cb#error=invalid_scope&error_description=Parameter%20%22scope%22%20is%20invalid');
+    });
+
+    it('returns an error if username is missing', async function () {
+      const res = await post(this.app, '/oauth/', this.auth_params);
+      expect(res).to.have.status(400);
+    });
+  });
+
+  describe('with invalid login credentials', async function () {
+    beforeEach(function () {
+      this.auth_params = {
+        username: this.user.username,
         client_id: 'the_client_id',
         redirect_uri: 'http://example.com/cb',
         response_type: 'token',
         scope: 'the_scope',
-        state: 'the_state'
+        state: 'the_state',
+        credential: JSON.stringify(CREDENTIAL_PRESENTED_WRONG)
       };
+      this.sessionValues.oauthChallenge = '2LRuM9KrEZ-EkZHxOwu1w0TJEKQ';
+    });
+
+    it('returns a 401 response with the login form', async function () {
+      const res = await post(this.app, '/oauth', this.auth_params);
+      expect(res).to.have.status(401);
+      expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+      expect(res).to.have.header('Referrer-Policy', 'no-referrer');
+      expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
+      expect(res.text).to.contain('application <em>the_client_id</em> hosted');
+      expect(res.text).to.contain('Presented credential does not belong to user.');
+    });
+  });
+
+  describe('with valid login credentials (new accountMgr module)', async function () {
+    beforeEach(function () {
+      this.auth_params = {
+        username: this.user.username,
+        client_id: 'the_client_id',
+        redirect_uri: 'http://example.com/cb',
+        response_type: 'token',
+        scope: 'the_scope',
+        state: 'the_state',
+        credential: JSON.stringify(CREDENTIAL_PRESENTED_RIGHT)
+      };
+      this.sessionValues.oauthChallenge = 'mJXERSBetL-NRL7AMozeWfnobXk';
     });
 
     describe('without explicit read/write permissions', async function () {
@@ -95,7 +202,7 @@ describe('OAuth (modular)', function () {
         expect(params.get('token_type')).to.equal('bearer');
         expect(params.get('state')).to.equal('the_state');
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
         expect(scopes).to.equal('the_scope:rw');
       });
     });
@@ -108,7 +215,7 @@ describe('OAuth (modular)', function () {
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
         expect(scopes).to.equal('the_scope:r');
       });
     });
@@ -121,7 +228,7 @@ describe('OAuth (modular)', function () {
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
         expect(scopes).to.equal('the_scope:rw');
       });
     });
@@ -134,7 +241,7 @@ describe('OAuth (modular)', function () {
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
         expect(scopes).to.equal('*:rw');
       });
     });
@@ -147,7 +254,7 @@ describe('OAuth (modular)', function () {
         const redirect = new URL(res.get('location'));
         const params = new URLSearchParams(redirect.hash.slice(1));
         const token = params.get('access_token');
-        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: 'zebcoe' });
+        const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
         expect(scopes).to.equal('first_scope:rw second_scope:r third_scope:rw fourth_scope:rw *:r');
       });
     });

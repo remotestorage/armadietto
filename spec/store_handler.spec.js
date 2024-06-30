@@ -1,79 +1,121 @@
 /* eslint-env mocha, chai, node */
 /* eslint-disable no-unused-expressions */
+/* eslint no-unused-vars: ["warn", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }]  */
 
-const errToMessages = require('../lib/util/errToMessages');
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-spies'));
 chai.use(require('chai-as-promised'));
 const httpMocks = require('node-mocks-http');
-const { Readable } = require('node:stream');
 const { open } = require('node:fs/promises');
 const path = require('path');
 const longString = require('./util/longString');
 const LongStream = require('./util/LongStream');
+const callMiddleware = require('./util/callMiddleware');
+const YAML = require('yaml');
+const NoSuchBlobError = require('../lib/util/NoSuchBlobError');
 
-async function waitForEnd (response) {
-  return new Promise(resolve => {
-    setTimeout(checkEnd, 100);
-    function checkEnd () {
-      if (response._isEndCalled()) {
-        resolve();
-      } else {
-        setTimeout(checkEnd, 100);
-      }
-    }
-  });
-}
+const ADMIN_INVITE_DIR_NAME = 'adminInvites';
+const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
 
 module.exports.shouldStoreStreams = function () {
   before(async function () {
     this.timeout(15_000);
 
-    this.doHandle = async reqOpts => {
-      const req = Object.assign(reqOpts.body instanceof Readable
-        ? reqOpts.body
-        : Readable.from([reqOpts.body], { objectMode: false }), reqOpts);
-      req.originalUrl ||= req.url;
-      req.baseUrl ||= req.url;
-      req.headers = {};
-      for (const [key, value] of Object.entries(reqOpts.headers || {})) {
-        req.headers[key.toLowerCase()] = String(value);
-      }
-      req.get = headerName => req.headers[headerName?.toLowerCase()];
-      req.query ||= {};
-      req.files ||= {};
-      req.socket ||= {};
-      req.ips = [req.ip = '127.0.0.1'];
-
-      const res = httpMocks.createResponse({ req });
-      res.req = req;
-      req.res = res;
-      res.logNotes = new Set();
-      const next = chai.spy(err => {
-        let status;
-        if (err.Code === 'SlowDown') {
-          status = err.$metadata?.httpStatusCode;
-        }
-        if (!status) {
-          status = Array.from(errToMessages(err, new Set())).join(' ') + (err?.stack ? '|' + err.stack : '');
-        }
-        res.status(status).end();
-      });
-
-      await this.handler(req, res, next);
-      await waitForEnd(res);
-
-      return [res, next];
-    };
-
-    this.username = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
-    await this.store.createUser({ username: this.username, email: 'l@m.no', password: '12345678' }, new Set());
+    const usernameStore = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
+    const user = await this.store.createUser({ username: usernameStore, contactURL: 'l@m.no' }, new Set());
+    this.userIdStore = user.username;
   });
 
   after(async function () {
     this.timeout(360_000);
-    await this.store.deleteUser(this.username, new Set());
+    await this.store.deleteUser(this.userIdStore, new Set());
+  });
+
+  describe('upsertAdminBlob & readAdminBlob', function () {
+    this.timeout(30_000);
+
+    it('should store and retrieve blobs', async function () {
+      const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Atestname%40testhost.org.yaml');
+      const value = { foo: 'bar', spam: [42, 69, 'hut', 'hut', 'hike!'] };
+      const content = YAML.stringify(value);
+
+      const putResp = await this.handler.upsertAdminBlob(relativePath, 'application/yaml', content);
+      expect(putResp).to.equal(content.length);
+
+      const getResp = await this.handler.readAdminBlob(relativePath);
+      expect(YAML.parse(getResp)).to.deep.equal(value);
+    });
+  });
+
+  describe('metadataAdminBlob', function () {
+    this.timeout(30_000);
+
+    it('should retrieve metadata', async function () {
+      const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Asomename%40somehost.edu.yaml');
+      const content = YAML.stringify({ frotz: 'frell' });
+
+      const putResp = await this.handler.upsertAdminBlob(relativePath, 'application/yaml', content);
+      expect(putResp).to.equal(content.length);
+
+      const headResp = await this.handler.metadataAdminBlob(relativePath);
+      expect(headResp).to.have.property('contentType', 'application/yaml');
+      expect(headResp).to.have.property('contentLength', content.length);
+    });
+
+    it('should throw NoSuchBlobError if no blob at path', async function () {
+      await expect(this.handler.metadataAdminBlob('foo/bar/spam')).to.be.rejectedWith(NoSuchBlobError);
+    });
+  });
+
+  describe('deleteAdminBlob', function () {
+    this.timeout(30_000);
+
+    it('should delete blob', async function () {
+      const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Asomename%40somehost.edu.yaml');
+      const content = YAML.stringify({ frotz: 'frell' });
+
+      const putResp = await this.handler.upsertAdminBlob(relativePath, 'application/yaml', content);
+      expect(putResp).to.equal(content.length);
+
+      await this.handler.deleteAdminBlob(relativePath);
+
+      await expect(this.handler.metadataAdminBlob(relativePath)).to.be.rejectedWith(Error);
+
+      await this.handler.deleteAdminBlob(relativePath);
+    });
+
+    it('should succeed if no blob at path', async function () {
+      await expect(this.handler.deleteAdminBlob('foo/bar/spam')).to.eventually.be.fulfilled;
+    });
+  });
+
+  describe('listAdminBlobs', function () {
+    it('should list blobs', async function () {
+      const blobs = await this.handler.listAdminBlobs(LIST_DIR_NAME);
+      expect(blobs).to.have.length(0);
+
+      const content = 'indifferent content';
+      this.listBlobPath = path.join(LIST_DIR_NAME, 'some-file.yaml');
+      await this.handler.upsertAdminBlob(this.listBlobPath, 'text/plain', content);
+
+      const blobs2 = await this.handler.listAdminBlobs(LIST_DIR_NAME);
+      expect(blobs2).to.have.length(1);
+      expect(blobs2[0].path).to.equal('some-file.yaml');
+      // contentType is optional
+      expect(blobs2[0].contentLength).to.equal(content.length);
+      expect(typeof blobs2[0].ETag).to.equal('string');
+      expect(new Date(blobs2[0].lastModified)).to.be.lessThanOrEqual(new Date());
+
+      await this.handler.deleteAdminBlob(this.listBlobPath);
+
+      const blobs3 = await this.handler.listAdminBlobs(LIST_DIR_NAME);
+      expect(blobs3).to.have.length(0);
+    });
+
+    after(async function () {
+      await this.handler.deleteAdminBlob(this.listBlobPath);
+    });
   });
 
   describe('GET', function () {
@@ -82,9 +124,10 @@ module.exports.shouldStoreStreams = function () {
     describe('for files', function () {
       describe('unversioned', function () {
         it('returns Not Found for a non-existing path', async function () {
-          const [res, next] = await this.doHandle({
+          this.timeout(360_000);
+          const [_req, res, next] = await callMiddleware(this.handler, {
             method: 'GET',
-            url: `/${this.username}/non-existing/non-existing`
+            url: `/${this.userIdStore}/non-existing/non-existing`
           });
 
           expect(res.statusCode).to.equal(404);
@@ -97,9 +140,9 @@ module.exports.shouldStoreStreams = function () {
 
         it('returns Not Found for a non-existing path in an existing category', async function () {
           const content = 'filename';
-          const [putRes] = await this.doHandle({
+          const [_putReq, putRes] = await callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/existing/document`,
+            url: `/${this.userIdStore}/existing/document`,
             headers: { 'Content-Length': content.length, 'Content-Type': 'text/cache-manifest' },
             body: content
           });
@@ -107,9 +150,9 @@ module.exports.shouldStoreStreams = function () {
           expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
           expect(putRes._getBuffer().toString()).to.equal('');
 
-          const [res, next] = await this.doHandle({
+          const [_req, res, next] = await callMiddleware(this.handler, {
             method: 'GET',
-            url: `/${this.username}/existing/not-existing`
+            url: `/${this.userIdStore}/existing/not-existing`
           });
           expect(res.statusCode).to.equal(404);
           expect(res._getBuffer().toString()).to.equal('');
@@ -123,9 +166,9 @@ module.exports.shouldStoreStreams = function () {
       describe('versioned', function () {
         it('should return file for If-None-Match with old ETag', async function () {
           const content = 'VEVENT';
-          const [putRes] = await this.doHandle({
+          const [_putReq, putRes] = await callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/existing/file`,
+            url: `/${this.userIdStore}/existing/file`,
             headers: { 'Content-Length': content.length, 'Content-Type': 'text/calendar' },
             body: content
           });
@@ -133,9 +176,9 @@ module.exports.shouldStoreStreams = function () {
           expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
           expect(putRes._getBuffer().toString()).to.equal('');
 
-          const [res, next] = await this.doHandle({
+          const [_req, res, next] = await callMiddleware(this.handler, {
             method: 'GET',
-            url: `/${this.username}/existing/file`,
+            url: `/${this.userIdStore}/existing/file`,
             headers: { 'If-None-Match': '"l5j3lk5j65lj3"' }
           });
 
@@ -149,9 +192,9 @@ module.exports.shouldStoreStreams = function () {
 
         it('should return Not Modified for If-None-Match with matching ETag', async function () {
           const content = 'VEVENT';
-          const [putRes] = await this.doHandle({
+          const [_putReq, putRes] = await callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/existing/thing`,
+            url: `/${this.userIdStore}/existing/thing`,
             headers: { 'Content-Length': content.length, 'Content-Type': 'text/plain' },
             body: content
           });
@@ -159,9 +202,9 @@ module.exports.shouldStoreStreams = function () {
           expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
           expect(putRes._getBuffer().toString()).to.equal('');
 
-          const [res, next] = await this.doHandle({
+          const [_req, res, next] = await callMiddleware(this.handler, {
             method: 'GET',
-            url: `/${this.username}/existing/thing`,
+            url: `/${this.userIdStore}/existing/thing`,
             headers: { 'If-None-Match': putRes.get('ETag') }
           });
 
@@ -175,9 +218,9 @@ module.exports.shouldStoreStreams = function () {
 
         it('should return file for If-Match with matching ETag', async function () {
           const content = 'VEVENT';
-          const [putRes] = await this.doHandle({
+          const [_putReq, putRes] = await callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/existing/novel`,
+            url: `/${this.userIdStore}/existing/novel`,
             headers: { 'Content-Length': content.length, 'Content-Type': 'text/calendar' },
             body: content
           });
@@ -185,9 +228,9 @@ module.exports.shouldStoreStreams = function () {
           expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
           expect(putRes._getBuffer().toString()).to.equal('');
 
-          const [res, next] = await this.doHandle({
+          const [_req, res, next] = await callMiddleware(this.handler, {
             method: 'GET',
-            url: `/${this.username}/existing/novel`,
+            url: `/${this.userIdStore}/existing/novel`,
             headers: { 'If-Match': putRes.get('ETag') }
           });
 
@@ -201,9 +244,9 @@ module.exports.shouldStoreStreams = function () {
 
         it('should return Precondition Failed for If-Match with mismatched ETag', async function () {
           const content = 'VEVENT';
-          const [putRes] = await this.doHandle({
+          const [_putReq, putRes] = await callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/existing/short-story`,
+            url: `/${this.userIdStore}/existing/short-story`,
             headers: { 'Content-Length': content.length, 'Content-Type': 'text/plain' },
             body: content
           });
@@ -211,9 +254,9 @@ module.exports.shouldStoreStreams = function () {
           expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
           expect(putRes._getBuffer().toString()).to.equal('');
 
-          const [res, next] = await this.doHandle({
+          const [_req, res, next] = await callMiddleware(this.handler, {
             method: 'GET',
-            url: `/${this.username}/existing/short-story`,
+            url: `/${this.userIdStore}/existing/short-story`,
             headers: { 'If-Match': '"6kjl35j6365k"' }
           });
 
@@ -229,9 +272,9 @@ module.exports.shouldStoreStreams = function () {
 
     describe('for folders', function () {
       it('returns listing with no items for a non-existing category', async function () {
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'GET',
-          url: `/${this.username}/non-existing-category/`
+          url: `/${this.userIdStore}/non-existing-category/`
         });
 
         expect(res.statusCode).to.equal(200);
@@ -244,9 +287,9 @@ module.exports.shouldStoreStreams = function () {
       });
 
       it('returns listing with no items for a non-existing folder in non-existing category', async function () {
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'GET',
-          url: `/${this.username}/non-existing-category/non-existing-folder/`
+          url: `/${this.userIdStore}/non-existing-category/non-existing-folder/`
         });
 
         expect(res.statusCode).to.equal(200);
@@ -260,9 +303,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('returns JSON-LD unconditionally & Not Modified when If-None-Match has a matching ETag', async function () {
         const content1 = 'yellow, red';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/color-category/color-folder/yellow-red`,
+          url: `/${this.userIdStore}/color-category/color-folder/yellow-red`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/csv' },
           body: content1
         });
@@ -271,9 +314,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'blue & green';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/color-category/color-folder/blue-green`,
+          url: `/${this.userIdStore}/color-category/color-folder/blue-green`,
           headers: { 'Content-Length': content2.length, 'Content-Type': 'text/n3' },
           body: content2
         });
@@ -282,9 +325,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2._getBuffer().toString()).to.equal('');
 
         const content3 = 'purple -> ultraviolet';
-        const [putRes3] = await this.doHandle({
+        const [_putReq3, putRes3] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/color-category/color-folder/subfolder/purple-ultraviolet`,
+          url: `/${this.userIdStore}/color-category/color-folder/subfolder/purple-ultraviolet`,
           headers: { 'Content-Length': content3.length, 'Content-Type': 'text/plain' },
           body: content3
         });
@@ -292,9 +335,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes3.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes3._getBuffer().toString()).to.equal('');
 
-        const [getRes1] = await this.doHandle({
+        const [_getReq1, getRes1] = await callMiddleware(this.handler, {
           method: 'GET',
-          url: `/${this.username}/color-category/color-folder/`
+          url: `/${this.userIdStore}/color-category/color-folder/`
         });
         expect(getRes1.statusCode).to.equal(200);
         expect(getRes1.get('Content-Type')).to.equal('application/ld+json');
@@ -311,9 +354,9 @@ module.exports.shouldStoreStreams = function () {
         expect(Date.now() - new Date(folder.items['blue-green']['Last-Modified'])).to.be.lessThan(9_000);
         expect(folder.items['subfolder/'].ETag).to.match(/^".{6,128}"$/);
 
-        const [getRes2] = await this.doHandle({
+        const [_getReq2, getRes2] = await callMiddleware(this.handler, {
           method: 'GET',
-          url: `/${this.username}/color-category/color-folder/`,
+          url: `/${this.userIdStore}/color-category/color-folder/`,
           headers: { 'If-None-Match': getRes1.get('ETag') }
         });
         expect(getRes2.statusCode).to.equal(304);
@@ -322,9 +365,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('returns folder when If-None-Match has an old ETag', async function () {
         const content = 'mud';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/fill-category/fill-folder/mud`,
+          url: `/${this.userIdStore}/fill-category/fill-folder/mud`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.qq' },
           body: content
         });
@@ -332,9 +375,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({
+        const [_getReq, getRes] = await callMiddleware(this.handler, {
           method: 'GET',
-          url: `/${this.username}/fill-category/fill-folder/`,
+          url: `/${this.userIdStore}/fill-category/fill-folder/`,
           headers: { 'If-None-Match': '"l6l56jl5j6lkl63jkl6jk"' }
         });
         expect(getRes.statusCode).to.equal(200);
@@ -367,7 +410,7 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not create a file for a bad path', async function () {
         const content = 'microbe';
-        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.username}//`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
+        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}//`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
         const next = chai.spy();
 
@@ -378,7 +421,7 @@ module.exports.shouldStoreStreams = function () {
 
       it('responds with Conflict for folder', async function () {
         const content = 'thing';
-        const [res, next] = await this.doHandle({ method: 'PUT', url: `/${this.username}/not-created/`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
+        const [_req, res, next] = await callMiddleware(this.handler, { method: 'PUT', url: `/${this.userIdStore}/not-created/`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
 
         expect(res.statusCode).to.equal(409);
         expect(res._getBuffer().toString()).to.equal('');
@@ -400,7 +443,7 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not create a file for an empty path', async function () {
         const content = 'microbe';
-        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.username}/`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
+        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}/`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
         const next = chai.spy();
 
@@ -411,7 +454,7 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not create a file for a path with a bad character', async function () {
         const content = 'microbe';
-        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.username}/foo\0bar`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
+        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}/foo\0bar`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
         const next = chai.spy();
 
@@ -422,7 +465,7 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not create a file for a path with a bad element', async function () {
         const content = 'microbe';
-        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.username}/foo/../bar`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
+        const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}/foo/../bar`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
         const next = chai.spy();
 
@@ -433,9 +476,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('sets the value of an item', async function () {
         const content = 'vertibo';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/zipwire`,
+          url: `/${this.userIdStore}/photos/zipwire`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'image/poster' },
           body: content
         });
@@ -443,7 +486,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/zipwire` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/zipwire` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -453,9 +496,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('sets the value of an item, without length', async function () {
         const content = 'vertibo';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/summer`,
+          url: `/${this.userIdStore}/photos/summer`,
           headers: { 'Content-Type': 'image/poster' },
           body: content
         });
@@ -463,7 +506,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/summer` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/summer` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -473,9 +516,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('set the type to application/binary if no type passed', async function () {
         const content = 'um num num';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/no-type/doc`,
+          url: `/${this.userIdStore}/no-type/doc`,
           headers: { 'Content-Length': content.length },
           body: content
         });
@@ -483,7 +526,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/no-type/doc` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/no-type/doc` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -495,9 +538,9 @@ module.exports.shouldStoreStreams = function () {
         const fileHandle = await open(path.join(__dirname, 'whut2.jpg'));
         const stat = await fileHandle.stat();
         const fileStream = fileHandle.createReadStream();
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/election`,
+          url: `/${this.userIdStore}/photos/election`,
           headers: { 'Content-Length': stat.size, 'Content-Type': 'image/jpeg' },
           body: fileStream
         });
@@ -506,7 +549,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes._getBuffer().toString()).to.equal('');
         await fileHandle.close();
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/election` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/election` });
         expect(getRes.statusCode).to.equal(200);
         // expect(putRes._getBuffer().length).to.equal(stat.size);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(stat.size);
@@ -518,9 +561,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('sets the value of a public item', async function () {
         const content = 'vertibo';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/public/photos/zipwire2`,
+          url: `/${this.userIdStore}/public/photos/zipwire2`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'image/poster' },
           body: content
         });
@@ -528,23 +571,23 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/public/photos/zipwire2` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/public/photos/zipwire2` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
         expect(getRes.get('Content-Type')).to.equal('image/poster');
         expect(getRes.get('ETag')).to.equal(putRes.get('ETag'));
 
-        const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/zipwire2` });
+        const [_getReq2, getRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/zipwire2` });
         expect(getRes2.statusCode).to.equal(404);
         expect(getRes2._getBuffer().toString()).to.equal('');
       });
 
       it('sets the value of a root item', async function () {
         const content = 'gizmos';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/manifesto`,
+          url: `/${this.userIdStore}/manifesto`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/plain' },
           body: content
         });
@@ -552,7 +595,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/manifesto` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/manifesto` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -562,9 +605,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('updates the value of an item', async function () {
         const content1 = 'abracadabra';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/magic/sterotypical`,
+          url: `/${this.userIdStore}/magic/sterotypical`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
           body: content1
         });
@@ -573,9 +616,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'alakazam';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/magic/sterotypical`,
+          url: `/${this.userIdStore}/magic/sterotypical`,
           headers: { 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
           body: content2
         });
@@ -584,7 +627,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).not.to.equal(putRes1.get('ETag'));
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/magic/sterotypical` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/magic/sterotypical` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content2);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
@@ -594,9 +637,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('allows an item to be overwritten with same value', async function () {
         const content = 'bees, wasps, ants & sawflies';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/insects/hymenoptera`,
+          url: `/${this.userIdStore}/insects/hymenoptera`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/x.a' },
           body: content
         });
@@ -604,9 +647,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes1._getBuffer().toString()).to.equal('');
 
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/insects/hymenoptera`,
+          url: `/${this.userIdStore}/insects/hymenoptera`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/x.a' },
           body: content
         });
@@ -614,7 +657,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.equal(putRes1.get('ETag'));
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/insects/hymenoptera` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/insects/hymenoptera` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -625,8 +668,8 @@ module.exports.shouldStoreStreams = function () {
       it('truncates very long paths', async function () {
         const content = 'such a small thing';
         const originalRsPath = longString(1100);
-        const originalUrlPath = `/${this.username}/` + originalRsPath;
-        const [putRes] = await this.doHandle({
+        const originalUrlPath = `/${this.userIdStore}/` + originalRsPath;
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
           url: originalUrlPath,
           headers: { 'Content-Length': content.length, 'Content-Type': 'image/poster' },
@@ -636,7 +679,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes1] = await this.doHandle({ method: 'GET', url: originalUrlPath });
+        const [_getReq1, getRes1] = await callMiddleware(this.handler, { method: 'GET', url: originalUrlPath });
         expect(getRes1.statusCode).to.equal(200);
         expect(getRes1._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes1.get('Content-Length'))).to.equal(content.length);
@@ -644,7 +687,7 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes1.get('ETag')).to.equal(putRes.get('ETag'));
 
         const limit = 1023 - 'remoteStorageBlob/'.length;
-        const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/` + originalRsPath.slice(0, limit) });
+        const [_getReq2, getRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` + originalRsPath.slice(0, limit) });
         expect(getRes2.statusCode).to.equal(200);
         expect(getRes2._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes2.get('Content-Length'))).to.equal(content.length);
@@ -658,9 +701,9 @@ module.exports.shouldStoreStreams = function () {
         const LIMIT = 1_000_000_000;
         // const LIMIT = 5_000_000_000_000;   // 5 TiB
 
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/bigfile`,
+          url: `/${this.userIdStore}/bigfile`,
           headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
           body: new LongStream(LIMIT)
         });
@@ -668,7 +711,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/bigfile` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/bigfile` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
@@ -679,16 +722,16 @@ module.exports.shouldStoreStreams = function () {
         this.timeout(240_000);
         const LIMIT = 10_000_000;
 
-        const [[res1, next1], [res2, next2]] = await Promise.all([
-          this.doHandle({
+        const [[_req1, res1, next1], [_req2, res2, next2]] = await Promise.all([
+          callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/simultaneous-put`,
+            url: `/${this.userIdStore}/simultaneous-put`,
             headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
             body: new LongStream(LIMIT)
           }),
-          this.doHandle({
+          callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/simultaneous-put`,
+            url: `/${this.userIdStore}/simultaneous-put`,
             headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
             body: new LongStream(LIMIT)
           })
@@ -704,7 +747,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res2._getBuffer().toString()).to.equal('');
         expect(next2).not.to.have.been.called;
 
-        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/simultaneous-put` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
@@ -716,16 +759,16 @@ module.exports.shouldStoreStreams = function () {
         const LONG = 10_000_000;
         const SHORT = 10_000;
 
-        const [[resLong, nextLong], [resShort, nextShort]] = await Promise.all([
-          this.doHandle({
+        const [[_, resLong, nextLong], [_reqShort, resShort, nextShort]] = await Promise.all([
+          callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/conflicting-simultanous-put`,
+            url: `/${this.userIdStore}/conflicting-simultanous-put`,
             headers: { 'Content-Length': LONG, 'Content-Type': 'text/csv' },
             body: new LongStream(LONG)
           }),
-          this.doHandle({
+          callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.username}/conflicting-simultanous-put`,
+            url: `/${this.userIdStore}/conflicting-simultanous-put`,
             headers: { 'Content-Length': SHORT, 'Content-Type': 'text/tab-separated-values' },
             body: new LongStream(SHORT)
           })
@@ -745,7 +788,7 @@ module.exports.shouldStoreStreams = function () {
         // One or neither call receives a Conflict.
         expect(resLong.statusCode + resShort.statusCode).to.be.lessThanOrEqual(201 + 503);
 
-        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/conflicting-simultanous-put` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/conflicting-simultanous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.be.oneOf([LONG, SHORT]);
         expect(headRes.get('Content-Type')).to.be.oneOf(['text/csv', 'text/tab-separated-values']);
@@ -756,9 +799,9 @@ module.exports.shouldStoreStreams = function () {
     describe('for a nested document', function () {
       it('sets the value of a deep item & creates the ancestor folders', async function () {
         const content = 'mindless content';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/foo/bar/qux`,
+          url: `/${this.userIdStore}/photos/foo/bar/qux`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/example' },
           body: content
         });
@@ -766,14 +809,14 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/foo/bar/qux` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/foo/bar/qux` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
         expect(getRes.get('Content-Type')).to.equal('text/example');
         expect(getRes.get('ETag')).to.equal(putRes.get('ETag'));
 
-        const [folderRes1] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/foo/bar/` });
+        const [_folderReq1, folderRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/foo/bar/` });
         expect(folderRes1.statusCode).to.equal(200);
         expect(folderRes1.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes1.get('ETag')).to.match(/^".{6,128}"$/);
@@ -783,7 +826,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder1.items.qux.ETag).to.be.equal(putRes.get('ETag'));
         expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(5000);
 
-        const [folderRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/foo/` });
+        const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/foo/` });
         expect(folderRes2.statusCode).to.equal(200);
         expect(folderRes2.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes2.get('ETag')).to.match(/^".{6,128}"$/);
@@ -793,7 +836,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder2.items['bar/'].ETag).to.be.equal(folderRes1.get('ETag'));
         expect(folder2.items['bar/']['Last-Modified']).to.be.undefined;
 
-        const [folderRes3] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/` });
+        const [_folderReq3, folderRes3] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/` });
         expect(folderRes3.statusCode).to.equal(200);
         expect(folderRes3.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes3.get('ETag')).to.match(/^".{6,128}"$/);
@@ -803,7 +846,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder3.items['foo/'].ETag).to.be.equal(folderRes2.get('ETag'));
         expect(folder3.items['foo/']['Last-Modified']).to.be.undefined;
 
-        const [folderRes4] = await this.doHandle({ method: 'GET', url: `/${this.username}/` });
+        const [_folderReq4, folderRes4] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
         expect(folderRes4.statusCode).to.equal(200);
         expect(folderRes4.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes4.get('ETag')).to.match(/^".{6,128}"$/);
@@ -816,9 +859,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not create folder where a document exists', async function () {
         const content = 'Londonderry';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/collection`,
+          url: `/${this.userIdStore}/photos/collection`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'application/zip' },
           body: content
         });
@@ -826,9 +869,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes1._getData()).to.equal('');
 
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/collection/dramatic/winter`,
+          url: `/${this.userIdStore}/photos/collection/dramatic/winter`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'image/jxl' },
           body: content
         });
@@ -836,7 +879,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.be.undefined;
         expect(putRes2._getData()).to.match(/existing document/);
 
-        const [folderRes1] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection/dramatic/` });
+        const [_folderReq1, folderRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection/dramatic/` });
         expect(folderRes1.statusCode).to.equal(200); // folder with no items returns empty listing
         expect(folderRes1.get('Content-Type')).to.equal('application/ld+json');
         const folder = folderRes1._getJSONData();
@@ -844,12 +887,12 @@ module.exports.shouldStoreStreams = function () {
         expect(folder.items).to.deep.equal({});
         expect(folderRes1.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
-        const [folderRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection/` });
+        const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection/` });
         expect(folderRes2.statusCode).to.equal(409);
         expect(folderRes2.get('ETag')).to.be.undefined;
         expect(folderRes2._getData()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/collection` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -859,9 +902,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not create a document where a folder exists', async function () {
         const content = 'Dublin';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/album/movie-posters/Make Way for Tomorrow`,
+          url: `/${this.userIdStore}/photos/album/movie-posters/Make Way for Tomorrow`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'image/jp2' },
           body: content
         });
@@ -869,9 +912,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes1._getBuffer().toString()).to.equal('');
 
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/album`,
+          url: `/${this.userIdStore}/photos/album`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'application/archive' },
           body: content
         });
@@ -879,12 +922,12 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.be.undefined;
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes1] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/album` });
+        const [_getReq1, getRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/album` });
         expect(getRes1.statusCode).to.equal(409);
         expect(getRes1._getBuffer().toString()).to.equal('');
         expect(getRes1.get('ETag')).to.be.undefined;
 
-        const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/album/movie-posters/Make Way for Tomorrow` });
+        const [_getReq2, getRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/album/movie-posters/Make Way for Tomorrow` });
         expect(getRes2.statusCode).to.equal(200);
         expect(getRes2._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes2.get('Content-Length'))).to.equal(content.length);
@@ -896,9 +939,9 @@ module.exports.shouldStoreStreams = function () {
     describe('versioning', function () {
       it('does not create a file when If-Match has an ETag', async function () {
         const content = 'Norm ate lunch.';
-        const [putRes, next] = await this.doHandle({
+        const [_putReq, putRes, next] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/photos/zipwire3`,
+          url: `/${this.userIdStore}/photos/zipwire3`,
           body: content,
           headers: { 'If-Match': '"lk356l"', 'Content-Type': 'image/poster', 'Content-Length': content.length }
         });
@@ -907,16 +950,16 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes._getBuffer().toString()).to.equal('');
         expect(next).not.to.have.been.called;
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/photos/zipwire3` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/zipwire3` });
         expect(getRes.statusCode).to.equal(404);
         expect(getRes._getBuffer().toString()).to.equal('');
       });
 
       it('updates a file when If-Match has a matching ETag', async function () {
         const content1 = 'Nemo';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/existing/if-match`,
+          url: `/${this.userIdStore}/existing/if-match`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
           body: content1
         });
@@ -925,9 +968,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'Bligh';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/existing/if-match`,
+          url: `/${this.userIdStore}/existing/if-match`,
           headers: { 'If-Match': putRes1.get('ETag'), 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
           body: content2
         });
@@ -936,7 +979,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).not.to.equal(putRes1.get('ETag'));
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/existing/if-match` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/existing/if-match` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content2);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
@@ -946,9 +989,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not update a file when If-Match has an old ETag', async function () {
         const content1 = 'Nemo';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/put/if-match/not equal`,
+          url: `/${this.userIdStore}/put/if-match/not equal`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
           body: content1
         });
@@ -957,9 +1000,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'Bligh';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/put/if-match/not equal`,
+          url: `/${this.userIdStore}/put/if-match/not equal`,
           headers: { 'If-Match': '"l5k3l5j6l"', 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
           body: content2
         });
@@ -967,7 +1010,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.be.undefined;
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/put/if-match/not equal` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/put/if-match/not equal` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content1);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content1.length);
@@ -977,9 +1020,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('creates the document if If-None-Match * is given for a non-existent item', async function () {
         const content = 'crocodile';
-        const [putRes, next] = await this.doHandle({
+        const [_putReq, putRes, next] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/if-none-match/new-star`,
+          url: `/${this.userIdStore}/if-none-match/new-star`,
           body: content,
           headers: { 'If-None-Match': '*', 'Content-Type': 'image/poster', 'Content-Length': content.length }
         });
@@ -988,7 +1031,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes._getBuffer().toString()).to.equal('');
         expect(next).not.to.have.been.called;
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/if-none-match/new-star` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/if-none-match/new-star` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -998,9 +1041,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not update a file when If-None-Match is *', async function () {
         const content1 = 'Nemo';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/existing/if-none-match/update-star`,
+          url: `/${this.userIdStore}/existing/if-none-match/update-star`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
           body: content1
         });
@@ -1009,9 +1052,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'Bligh';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/existing/if-none-match/update-star`,
+          url: `/${this.userIdStore}/existing/if-none-match/update-star`,
           headers: { 'If-None-Match': '*', 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
           body: content2
         });
@@ -1019,7 +1062,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.be.undefined;
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/existing/if-none-match/update-star` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/existing/if-none-match/update-star` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content1);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content1.length);
@@ -1029,9 +1072,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('creates when If-None-Match is ETag (backup)', async function () {
         const content = 'crocodile';
-        const [putRes, next] = await this.doHandle({
+        const [_putReq, putRes, next] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/if-none-match/new-ETag`,
+          url: `/${this.userIdStore}/if-none-match/new-ETag`,
           body: content,
           headers: { 'If-None-Match': '"lk6jl5jlk35j6"', 'Content-Type': 'image/poster', 'Content-Length': content.length }
         });
@@ -1040,7 +1083,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes._getBuffer().toString()).to.equal('');
         expect(next).not.to.have.been.called;
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/if-none-match/new-ETag` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/if-none-match/new-ETag` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
@@ -1050,9 +1093,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('does not update a file when If-None-Match has same ETag (backup)', async function () {
         const content1 = 'Nemo';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/existing/if-none-match/ETag same`,
+          url: `/${this.userIdStore}/existing/if-none-match/ETag same`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
           body: content1
         });
@@ -1061,9 +1104,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'Bligh';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/existing/if-none-match/ETag same`,
+          url: `/${this.userIdStore}/existing/if-none-match/ETag same`,
           headers: { 'If-None-Match': putRes1.get('ETag'), 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
           body: content2
         });
@@ -1071,7 +1114,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.be.undefined;
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/existing/if-none-match/ETag same` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/existing/if-none-match/ETag same` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content1);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content1.length);
@@ -1081,9 +1124,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('overwrites a file when If-None-Match has a different ETag (newer backup)', async function () {
         const content1 = 'Nemo';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/put/if-none-match/ETag not equal`,
+          url: `/${this.userIdStore}/put/if-none-match/ETag not equal`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
           body: content1
         });
@@ -1092,9 +1135,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'Bligh';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/put/if-none-match/ETag not equal`,
+          url: `/${this.userIdStore}/put/if-none-match/ETag not equal`,
           headers: { 'If-None-Match': '"lj6l5j6kl"', 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
           body: content2
         });
@@ -1103,7 +1146,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).not.to.equal(putRes1.get('ETag'));
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [getRes] = await this.doHandle({ method: 'GET', url: `/${this.username}/put/if-none-match/ETag not equal` });
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/put/if-none-match/ETag not equal` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content2);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
@@ -1118,7 +1161,7 @@ module.exports.shouldStoreStreams = function () {
 
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
           url: '/not-a-user/some-category/some-folder/some-thing'
         });
@@ -1130,9 +1173,9 @@ module.exports.shouldStoreStreams = function () {
       });
 
       it('should return Not Found for nonexistent path', async function () {
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/non-existent-category/non-existent-folder/non-existent-thing`
+          url: `/${this.userIdStore}/non-existent-category/non-existent-folder/non-existent-thing`
         });
 
         expect(next).not.to.have.been.called;
@@ -1143,9 +1186,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('should return Conflict when target is a folder', async function () {
         const content = 'pad thai';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/consumables/food/thai/noodles/pad-thai`,
+          url: `/${this.userIdStore}/consumables/food/thai/noodles/pad-thai`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.q' },
           body: content
         });
@@ -1153,9 +1196,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/consumables/food`
+          url: `/${this.userIdStore}/consumables/food`
         });
 
         expect(next).not.to.have.been.called;
@@ -1166,9 +1209,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('should remove a file, empty parent folders, and remove folder entries', async function () {
         const content1 = 'wombat';
-        const [putRes1] = await this.doHandle({
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/animal/vertebrate/australia/marsupial/wombat`,
+          url: `/${this.userIdStore}/animal/vertebrate/australia/marsupial/wombat`,
           headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.latex-z' },
           body: content1
         });
@@ -1177,9 +1220,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1._getBuffer().toString()).to.equal('');
 
         const content2 = 'Alpine Ibex';
-        const [putRes2] = await this.doHandle({
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/animal/vertebrate/europe/Capra ibex`,
+          url: `/${this.userIdStore}/animal/vertebrate/europe/Capra ibex`,
           headers: { 'Content-Length': content2.length, 'Content-Type': 'text/vnd.abc' },
           body: content2
         });
@@ -1187,9 +1230,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes2._getBuffer().toString()).to.equal('');
 
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/animal/vertebrate/australia/marsupial/wombat`
+          url: `/${this.userIdStore}/animal/vertebrate/australia/marsupial/wombat`
         });
 
         expect(res.statusCode).to.equal(204); // No Content
@@ -1197,11 +1240,11 @@ module.exports.shouldStoreStreams = function () {
         expect(res.get('ETag')).to.equal(putRes1.get('ETag'));
         expect(next).not.to.have.been.called;
 
-        const [getRes1] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/australia/marsupial/wombat` });
+        const [_getReq1, getRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/animal/vertebrate/australia/marsupial/wombat` });
         expect(getRes1.statusCode).to.equal(404);
         expect(getRes1._getBuffer().toString()).to.equal('');
 
-        const [getRes2] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/australia/marsupial/` });
+        const [_getReq2, getRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/animal/vertebrate/australia/marsupial/` });
         expect(getRes2.statusCode).to.equal(200);
         expect(getRes2.get('Content-Type')).to.equal('application/ld+json');
         const folder2 = getRes2._getJSONData();
@@ -1209,7 +1252,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder2.items).to.deep.equal({});
         expect(getRes2.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
-        const [getRes3] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/australia/` });
+        const [_getReq3, getRes3] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/animal/vertebrate/australia/` });
         expect(getRes3.statusCode).to.equal(200);
         expect(getRes3.get('Content-Type')).to.equal('application/ld+json');
         const folder3 = getRes3._getJSONData();
@@ -1217,7 +1260,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder3.items).to.deep.equal({});
         expect(getRes3.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
-        const [getRes4] = await this.doHandle({ method: 'GET', url: `/${this.username}/animal/vertebrate/` });
+        const [_getReq4, getRes4] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/animal/vertebrate/` });
         expect(getRes4.statusCode).to.equal(200);
         expect(getRes4.get('Content-Type')).to.equal('application/ld+json');
         expect(getRes4.get('ETag')).to.match(/^".{6,128}"$/);
@@ -1225,18 +1268,18 @@ module.exports.shouldStoreStreams = function () {
         expect(folder4['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(folder4.items['europe/'].ETag).to.match(/^".{6,128}"$/);
 
-        const [res2, next2] = await this.doHandle({
+        const [_req2, res2, next2] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/animal/vertebrate/australia/marsupial/wombat`
+          url: `/${this.userIdStore}/animal/vertebrate/australia/marsupial/wombat`
         });
         expect(res2.statusCode).to.equal(404); // Not Found
         expect(res2._getBuffer().toString()).to.equal('');
         expect(res2.get('ETag')).to.equal(undefined);
         expect(next2).not.to.have.been.called;
 
-        const [res3, next3] = await this.doHandle({
+        const [_req3, res3, next3] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/animal/vertebrate/australia/`
+          url: `/${this.userIdStore}/animal/vertebrate/australia/`
         });
         expect(res3.statusCode).to.equal(404); // Not Found, instead of Conflict
         expect(res3._getBuffer().toString()).to.equal('');
@@ -1249,17 +1292,17 @@ module.exports.shouldStoreStreams = function () {
         this.timeout(120_000);
         const LIMIT = 1_000_000;
 
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/simultaneous-delete`,
+          url: `/${this.userIdStore}/simultaneous-delete`,
           headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/x-foo' },
           body: new LongStream(LIMIT)
         });
         expect(putRes.statusCode).to.equal(201);
 
-        const [[delRes1, delNext1], [delRes2, delNext2]] = await Promise.all([
-          this.doHandle({ method: 'DELETE', url: `/${this.username}/simultaneous-delete` }),
-          this.doHandle({ method: 'DELETE', url: `/${this.username}/simultaneous-delete` })
+        const [[_delReq1, delRes1, delNext1], [_delReq2, delRes2, delNext2]] = await Promise.all([
+          callMiddleware(this.handler, { method: 'DELETE', url: `/${this.userIdStore}/simultaneous-delete` }),
+          callMiddleware(this.handler, { method: 'DELETE', url: `/${this.userIdStore}/simultaneous-delete` })
         ]);
         expect(delRes1.statusCode).to.be.oneOf([204, 404]);
         expect(delRes1.get('ETag')).to.equal(delRes1.statusCode === 204 ? putRes.get('ETag') : undefined);
@@ -1271,7 +1314,7 @@ module.exports.shouldStoreStreams = function () {
         expect(delRes2._getBuffer().toString()).to.equal('');
         expect(delNext2).not.to.have.been.called;
 
-        const [headRes] = await this.doHandle({ method: 'HEAD', url: `/${this.username}/simultaneous-delete` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-delete` });
         expect(headRes.statusCode).to.equal(404);
         expect(headRes.get('ETag')).to.be.undefined;
       });
@@ -1280,9 +1323,9 @@ module.exports.shouldStoreStreams = function () {
     describe('versioned', function () {
       it('deletes a document if the If-Match header is equal', async function () {
         const content = 'elbow';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/deleting/if-match/equal`,
+          url: `/${this.userIdStore}/deleting/if-match/equal`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.r' },
           body: content
         });
@@ -1290,9 +1333,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/deleting/if-match/equal`,
+          url: `/${this.userIdStore}/deleting/if-match/equal`,
           headers: { 'If-Match': putRes.get('ETag') }
         });
 
@@ -1304,9 +1347,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('should not delete a blob if the If-Match header isn\'t equal', async function () {
         const content = 'elbow';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/deleting/if-match/not-equal`,
+          url: `/${this.userIdStore}/deleting/if-match/not-equal`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.r' },
           body: content
         });
@@ -1314,9 +1357,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/deleting/if-match/not-equal`,
+          url: `/${this.userIdStore}/deleting/if-match/not-equal`,
           headers: { 'If-Match': '"6a6a6a6a6a6a6"' }
         });
 
@@ -1328,9 +1371,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('should not delete a blob if the If-None-Match header is equal', async function () {
         const content = 'elbow';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/deleting/if-none-match/equal`,
+          url: `/${this.userIdStore}/deleting/if-none-match/equal`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.r' },
           body: content
         });
@@ -1338,9 +1381,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/deleting/if-none-match/equal`,
+          url: `/${this.userIdStore}/deleting/if-none-match/equal`,
           headers: { 'If-None-Match': putRes.get('ETag') }
         });
 
@@ -1352,9 +1395,9 @@ module.exports.shouldStoreStreams = function () {
 
       it('deletes a blob if the If-None-Match header is not equal', async function () {
         const content = 'elbow';
-        const [putRes] = await this.doHandle({
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.username}/deleting/if-none-match/not-equal`,
+          url: `/${this.userIdStore}/deleting/if-none-match/not-equal`,
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.r' },
           body: content
         });
@@ -1362,9 +1405,9 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
 
-        const [res, next] = await this.doHandle({
+        const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'DELETE',
-          url: `/${this.username}/deleting/if-none-match/not-equal`,
+          url: `/${this.userIdStore}/deleting/if-none-match/not-equal`,
           headers: { 'If-None-Match': '"4l54jl5hio452"' }
         });
 

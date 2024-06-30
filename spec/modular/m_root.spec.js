@@ -1,6 +1,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const expect = chai.expect;
+const { mockAccountFactory } = require('../util/mockAccount');
 const appFactory = require('../../lib/appFactory');
 const { configureLogger } = require('../../lib/logger');
 const { shouldBeWelcomeWithoutSignup, shouldBeWelcomeWithSignup } = require('../root.spec');
@@ -11,10 +12,15 @@ chai.use(chaiHttp);
 
 describe('root page (modular)', function () {
   describe('w/o signup', function () {
-    beforeEach(function () {
+    beforeEach(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-      this.app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, storeRouter: (_req, _res, next) => next() });
+      this.app = await appFactory({
+        hostIdentity: 'autotest',
+        jwtSecret: 'swordfish',
+        accountMgr: mockAccountFactory('autotest'),
+        storeRouter: (_req, _res, next) => next()
+      });
       this.app.locals.title = 'Armadietto without Signup';
       this.app.locals.host = 'localhost:xxxx';
       this.app.locals.signup = false;
@@ -24,10 +30,15 @@ describe('root page (modular)', function () {
   });
 
   describe('with signup', function () {
-    beforeEach(function () {
+    beforeEach(async function () {
       configureLogger({ log_dir: './test-log', stdout: [], log_files: ['error'] });
 
-      this.app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, storeRouter: (_req, _res, next) => next() });
+      this.app = await appFactory({
+        hostIdentity: 'autotest',
+        jwtSecret: 'swordfish',
+        accountMgr: mockAccountFactory('autotest'),
+        storeRouter: (_req, _res, next) => next()
+      });
       this.app.locals.title = 'Armadietto with Signup';
       this.app.locals.host = 'localhost:xxxx';
       this.app.locals.signup = true;
@@ -41,7 +52,12 @@ describe('root page (modular)', function () {
     before(async () => {
       configureLogger({});
 
-      this.app = appFactory({ hostIdentity: 'autotest', jwtSecret: 'swordfish', account: {}, storeRouter: (_req, _res, next) => next() });
+      this.app = await appFactory({
+        hostIdentity: 'autotest',
+        jwtSecret: 'swordfish',
+        accountMgr: mockAccountFactory('autotest'),
+        storeRouter: (_req, _res, next) => next()
+      });
       this.app.locals.title = 'Armadietto with Signup';
       this.app.locals.host = 'localhost:xxxx';
       this.app.locals.signup = true;
@@ -59,7 +75,7 @@ describe('root page (modular)', function () {
       expect(res.get('Content-Security-Policy')).to.contain('font-src \'self\';');
       expect(res.get('Content-Security-Policy')).to.contain('object-src \'none\';');
       expect(res.get('Content-Security-Policy')).to.contain('child-src \'none\';');
-      expect(res.get('Content-Security-Policy')).to.contain('connect-src \'none\';');
+      expect(res.get('Content-Security-Policy')).to.contain('connect-src \'self\';');
       expect(res.get('Content-Security-Policy')).to.contain('base-uri \'self\';');
       expect(res.get('Content-Security-Policy')).to.contain('frame-ancestors \'none\';');
       expect(res.get('Content-Security-Policy')).to.contain('form-action https:'); // in dev may also allow http:

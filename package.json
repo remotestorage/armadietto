@@ -15,7 +15,7 @@
   "license": "MIT",
   "version": "0.5.0",
   "engines": {
-    "node": ">=18.0"
+    "node": ">=20.0"
   },
   "bin": {
     "armadietto": "./bin/armadietto.js"
@@ -24,19 +24,23 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.523.0",
     "@aws-sdk/lib-storage": "^3.525.1",
+    "@simplewebauthn/server": "^9.0.3",
     "@smithy/node-http-handler": "^2.5.0",
     "argparse": "^2.0.1",
     "cors": "^2.8.5",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-jwt": "^8.4.1",
+    "express-session": "^1.18.0",
+    "express-useragent": "^1.0.15",
     "helmet": "^7.1.0",
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "lockfile": "^1.0.4",
+    "memorystore": "^1.6.7",
     "mkdirp": "^1.0.4",
     "node-mocks-http": "^1.14.1",
-    "pug": "^3.0.2",
+    "proquint": "^0.0.1",
     "winston": "^3.11.0",
     "yaml": "^2.4.0"
   },

@@ -330,7 +330,6 @@ describe('admin module', function () {
       expect(body).to.have.deep.property('authenticatorSelection', {
         residentKey: 'preferred',
         userVerification: 'preferred',
-        authenticatorAttachment: 'platform',
         requireResidentKey: false
       });
       expect(body).to.have.deep.property('extensions', { credProps: true });
@@ -394,7 +393,6 @@ describe('admin module', function () {
       expect(body2).to.have.deep.property('authenticatorSelection', {
         residentKey: 'preferred',
         userVerification: 'preferred',
-        authenticatorAttachment: 'platform',
         requireResidentKey: false
       });
       expect(body2).to.have.deep.property('extensions', { credProps: true });
@@ -496,6 +494,10 @@ describe('admin module', function () {
     it('should display users', async function () {
       const res = await chai.request(this.app).get('/admin/users');
       expect(res).to.have.status(200);
+      expect(res).to.have.header('Content-Type', /^text\/html/);
+      expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(0);
+      expect(res).to.have.header('ETag');
+
       expect(res.text).to.contain('<h1>Users</h1>');
       expect(res.text).to.contain('<td>FirstUser');
       expect(res.text).to.contain('<td>mailto:​foo@bar.co</td>');

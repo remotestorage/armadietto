@@ -177,6 +177,9 @@ li {
 .width10em {
   width: 10em;
 }
+.width4em {
+  width: 4em;
+}
 
 /* TOPBAR HEADER */
 
@@ -638,7 +641,7 @@ input#password {
   font-weight: 700;
 }
 
-button[type="submit"] {
+button[type="submit"], button.mainAction {
   display: flex;
   place-content: center;
   width: auto;

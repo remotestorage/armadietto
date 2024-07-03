@@ -66,7 +66,7 @@ describe('root page (modular)', function () {
     it('should return Welcome page w/ security headers', async () => {
       const res = await chai.request(this.app).get('/');
       expect(res).to.have.status(200);
-      expect(res.get('Content-Security-Policy')).to.contain('sandbox allow-scripts allow-forms allow-popups allow-same-origin;');
+      expect(res.get('Content-Security-Policy')).to.contain('sandbox allow-scripts allow-forms allow-popups allow-same-origin allow-orientation-lock;');
       expect(res.get('Content-Security-Policy')).to.contain('default-src \'self\';');
       expect(res.get('Content-Security-Policy')).to.contain('script-src \'self\';');
       expect(res.get('Content-Security-Policy')).to.contain('script-src-attr \'none\';');

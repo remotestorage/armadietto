@@ -268,7 +268,7 @@ describe('OAuth (modular)', function () {
   });
 
   describe('GET then POST with valid login credentials', function () {
-    it('should save OAuth params', async function () {
+    it('should save OAuth params & read expiration from form input', async function () {
       const agent = chai.request.agent(this.app);
 
       const getAuthParams = {
@@ -283,8 +283,10 @@ describe('OAuth (modular)', function () {
       expect(getRes).to.have.status(200);
 
       this.sessionValues.oauthParams = { challenge: 'mJXERSBetL-NRL7AMozeWfnobXk' };
+      const GRANT_DURATION_DAYS = 13;
       const postAuthParams = {
-        credential: JSON.stringify(CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE)
+        credential: JSON.stringify(CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE),
+        grantDuration: String(GRANT_DURATION_DAYS)
       };
       const postRes = await agent.post('/oauth').type('form').send(postAuthParams).redirects(0);
 
@@ -292,8 +294,10 @@ describe('OAuth (modular)', function () {
       const redirect = new URL(postRes.get('location'));
       const params = new URLSearchParams(redirect.hash.slice(1));
       const token = params.get('access_token');
-      const { scopes } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
+      const { scopes, exp } = jwt.verify(token, 'swordfish', { issuer: this.hostIdentity, audience: 'http://example.com', subject: this.user.username });
       expect(scopes).to.equal(getAuthParams.scope);
+      expect(exp * 1000 - Date.now()).to.be.greaterThan(0.99 * GRANT_DURATION_DAYS * 24 * 60 * 60 * 1000);
+      expect(exp * 1000 - Date.now()).to.be.lessThan(1.01 * GRANT_DURATION_DAYS * 24 * 60 * 60 * 1000);
 
       await agent.close();
     });

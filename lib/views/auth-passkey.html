@@ -1,8 +1,8 @@
-<%- include('header.html'); %>
+<%- include('begin.html'); %>
 
 <script type="module" src="<%= basePath %>/assets/oauth.mjs"></script>
 
-<h2>Authorize</h2>
+<header class="centeredText"><h1>Authorize</h1></header>
 
 <div class="oauth-form">
   <p>The application <em><%= client_id %></em> hosted at
@@ -30,6 +30,17 @@
   <form method="POST" action="<%= basePath %>/oauth">
     <input type="hidden" id="credential" name="credential">
 
+    <label class="flexRowSpaceBetween">For &nbsp;
+      <input name="grantDuration" type="number" list="durations" min="1" max="366" step="1" value="7" required class="width4em">
+      <datalist id="durations">
+        <option value="1"></option>
+        <option value="7"></option>
+        <option value="30"></option>
+        <option value="90"></option>
+        <option value="365"></option>
+      </datalist>
+      &nbsp; days</label>
+
     <div class="actions">
       <button type="submit" name="allow" value="Allow" <%= options === '{}' ? 'disabled' : '' %>>Allow</button>
       <button type="submit" name="deny" value="Deny">Deny</button>
@@ -37,4 +48,4 @@
   </form>
 </div>
 
-<%- include('footer.html'); %>
+<%- include('end.html'); %>

@@ -90,11 +90,11 @@ module.exports = {
           throw new NoSuchUserError(`No user "${username}"`);
         }
       },
-      updateUser: async (username, user, _logNotes) => {
-        if (username in users) {
-          users[username] = { ...user };
+      updateUser: async (user, _logNotes) => {
+        if (user.username in users) {
+          users[user.username] = { ...user };
         } else {
-          throw new NoSuchUserError(`No user "${username}"`);
+          throw new NoSuchUserError(`No user "${user.username}"`);
         }
       }
     };

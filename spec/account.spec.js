@@ -60,7 +60,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
       const novelUsername = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
       const novelUser = { username: novelUsername, contactURL: 'j@kk.ll' };
 
-      await expect(this.accountMgr.updateUser(novelUsername, novelUser, new Set())).to.be.rejectedWith(NoSuchUserError);
+      await expect(this.accountMgr.updateUser(novelUser, new Set())).to.be.rejectedWith(NoSuchUserError);
     });
   });
 

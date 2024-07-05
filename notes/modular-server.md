@@ -113,7 +113,7 @@ If `allow_signup` is set in the configuration file, anyone can *request* an invi
 
 Changing the Contact URL of a user (not implemented yet) will *invalidate all of their passkeys*.
 
-In place of password reset functionality, you re-invite the user.  An invite for an existing account will allow a user to create a passkey on a device or browser where no passkey exists. Issuing an invite **does not invalidate** any existing passkeys. In general, a user will need one invite for each ecosystem (Apple, Google, Microsoft, FIDO hardware key, etc.) they use.
+In place of password reset functionality, you re-invite the user.  An invite for an existing account will allow a user to create a passkey for a device or browser where no passkey exists. Issuing an invite **does not invalidate** any existing passkeys. In general, a user will need one invite for each ecosystem (Apple, Google, Microsoft, FIDO hardware key, etc.) they use.
 
 If a user has valid passkeys for more than one account,
 the selected passkey will determine which account the user is logged in to.

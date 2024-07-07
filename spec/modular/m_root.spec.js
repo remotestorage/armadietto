@@ -91,6 +91,8 @@ describe('root page (modular)', function () {
       expect(res).to.have.header('Content-Type', /^text\/html/);
       expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(2500);
       expect(res).to.have.header('ETag');
+      expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+      expect(res).to.have.header('Cache-Control', /public/);
     });
   });
 });

@@ -99,6 +99,8 @@ describe('OAuth (modular)', function () {
     it('should ask for passkey, not password', async function () {
       const res = await chai.request(this.app).get('/oauth/' + this.user.username).query(this.auth_params);
       expect(res).to.have.status(200);
+      expect(res).to.have.header('Cache-Control', /\bprivate\b/);
+      expect(res).to.have.header('Cache-Control', /\bno-store\b/);
       expect(res.text).to.contain('>Authorize<');
       expect(res.text).to.contain('>the_client_id<');
       expect(res.text).to.contain('>example.com<');
@@ -267,6 +269,21 @@ describe('OAuth (modular)', function () {
     });
   });
 
+  describe('POSTing after session expired', async function () {
+    it('tells the user to reload the page', async function () {
+      this.auth_params = { credential: JSON.stringify(CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE) };
+
+      const res = await post(this.app, '/oauth', this.auth_params);
+
+      expect(res).to.have.status(401);
+      expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+
+      expect(res.text).to.contain('<title>Authorization Failure — Armadietto</title>');
+      expect(res.text).to.contain('<p class="message">Go back to the app then try again — your session expired</p>');
+    });
+  });
+
   describe('GET then POST with valid login credentials', function () {
     it('should save OAuth params & read expiration from form input', async function () {
       const agent = chai.request.agent(this.app);
@@ -281,6 +298,8 @@ describe('OAuth (modular)', function () {
       const getRes = await agent.get('/oauth/' + this.user.username).query(getAuthParams);
 
       expect(getRes).to.have.status(200);
+      expect(getRes).to.have.header('Cache-Control', /\bprivate\b/);
+      expect(getRes).to.have.header('Cache-Control', /\bno-store\b/);
 
       this.sessionValues.oauthParams = { challenge: 'mJXERSBetL-NRL7AMozeWfnobXk' };
       const GRANT_DURATION_DAYS = 13;

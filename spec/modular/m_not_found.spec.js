@@ -28,6 +28,27 @@ describe('Nonexistant resource (modular)', function () {
 
   shouldHandleNonexistingResource();
 
+  /** This extends the test in shouldHandleNonexistingResource */
+  it('should say cacheable for 25 minutes', async function () {
+    const res = await chai.request(this.app).get('/fizbin');
+    expect(res).to.have.status(404);
+    expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+    expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);
+    expect(res).to.have.header('ETag');
+
+    expect(res.text).to.contain('<title>Not Found — Armadietto</title>');
+    expect(res.text).to.contain('>“fizbin” doesn&#39;t exist<');
+  });
+
+  /** This tests that 404 for nonexistent assets is cache-able */
+  it('should return cache headers for asset', async function () {
+    const res = await chai.request(this.app).get('/assets/not-there').set('Origin', this.hostIdentity);
+    expect(res).to.have.status(404);
+    expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+    expect(res).to.have.header('Cache-Control', /public/);
+    expect(res.text).to.equal('');
+  });
+
   /** This tests that /storage paths have tighter security (except allow cross-origin) than other paths */
   it('should return security headers', async function () {
     const res = await chai.request(this.app).get('/storage/zebcoe/public/nonexistant')
@@ -58,8 +79,21 @@ describe('Nonexistant resource (modular)', function () {
     expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);
     expect(res).not.to.have.header('X-Powered-By');
     expect(res).to.have.header('X-XSS-Protection', '0'); // disabled because counterproductive
+
     expect(res).to.have.header('Content-Type', /^text\/html/);
     expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(0);
+
     expect(res).to.have.header('ETag');
+    expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
+    expect(res).to.have.header('Cache-Control', /\bpublic\b/);
+  });
+
+  /** This tests that the 404 for /favicon.ico is cacheable */
+  it('should curtly, finally & cache-ably refuse to serve /favicon.ico', async function () {
+    const res = await chai.request(this.app).get('/favicon.ico');
+    expect(res).to.have.status(404);
+    expect(res).to.have.header('Cache-Control', /max-age=\d{8}/);
+    expect(res).to.have.header('Cache-Control', /public/);
+    expect(res.text).to.equal('');
   });
 });

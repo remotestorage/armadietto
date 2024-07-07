@@ -111,6 +111,7 @@ describe('Storage (modular)', function () {
 
     this.hostIdentity = 'testhost';
     this.app = express();
+    this.app.disable('x-powered-by');
     this.app.use((_req, res, next) => {
       res.logNotes = new Set();
       next();
@@ -265,9 +266,8 @@ describe('Storage (modular)', function () {
     it('returns Unauthorized w/ OAuth realm & scope but no error', async function () {
       const res = await chai.request(this.app).get('/storage/zebcoe/statuses/')
         .set('Origin', 'https://rs-app.com:2112').buffer(true);
-      expect(res).to.have.status(401);
+      expect(res).to.have.status(401); // never cacheable
       expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
-      expect(res.get('Cache-Control')).to.contain('no-cache');
       expect(res).to.have.header('WWW-Authenticate', /^Bearer\b/);
       expect(res).to.have.header('WWW-Authenticate', /\srealm="127\.0\.0\.1:\d{1,5}"/);
       expect(res).to.have.header('WWW-Authenticate', /\sscope="statuses:r"/);

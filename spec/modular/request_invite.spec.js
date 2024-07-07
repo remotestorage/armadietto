@@ -71,6 +71,8 @@ describe('Request invite', function () {
       const res = await chai.request(this.app).get('/');
       expect(res).to.redirect;
       expect(res).to.redirectTo(/http:\/\/127.0.0.1:\d{1,5}\/basic/);
+      expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+      expect(res).to.have.header('Cache-Control', /public/);
     });
 
     it('returns a home page w/ invite request link', async function () {
@@ -98,6 +100,8 @@ describe('Request invite', function () {
       expect(res).to.be.html;
       expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(2000);
       expect(res).to.have.header('ETag');
+      expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+      expect(res).to.have.header('Cache-Control', /public/);
       // content
       expect(res.text).to.contain('<title>Request an Invitation — Armadietto</title>');
       expect(res.text).to.match(/<h\d>Request an Invitation<\/h\d>/i);

@@ -64,6 +64,8 @@ describe('account router', function () {
     const res = await chai.request(this.app).get('/account');
     expect(res).to.have.status(200);
     expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+    expect(res).to.have.header('Cache-Control', /\bprivate\b/);
+    expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
     const resText = res.text.replace(/&#34;/g, '"');
     expect(resText).to.contain('<h1>Your Account</h1>');
     expect(resText).to.contain(`<h1>${USER.username}</h1>`);
@@ -75,6 +77,7 @@ describe('account router', function () {
 
   it('account page, when not logged in, redirect to login page', async function () {
     const res = await chai.request(this.app).get('/account');
+    expect(res).to.redirectTo(/http:\/\/127.0.0.1:\d{1,5}\/account\/login/);
     expect(res).to.have.status(200);
     expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
     const resText = res.text.replace(/&#34;/g, '"');
@@ -85,6 +88,8 @@ describe('account router', function () {
     const res = await chai.request(this.app).get('/account/login');
     expect(res).to.have.status(200);
     expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+    expect(res).to.have.header('Cache-Control', /\bprivate\b/);
+    expect(res).to.have.header('Cache-Control', /\bno-store\b/);
     const resText = res.text.replace(/&#34;/g, '"');
     expect(resText).to.contain('<h1>Login</h1>');
     expect(resText).to.contain('<p id="message">select a passkey</p>');

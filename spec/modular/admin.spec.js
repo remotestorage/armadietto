@@ -456,6 +456,8 @@ describe('admin module', function () {
       const res = await chai.request(this.app).get('/admin/login');
       expect(res).to.have.status(200);
       expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+      expect(res).to.have.header('Cache-Control', /\bprivate\b/);
+      expect(res).to.have.header('Cache-Control', /\bno-store\b/);
       const resText = res.text.replace(/&#34;/g, '"');
       expect(resText).to.contain('<h1>Start Admin Session</h1>');
       expect(resText).to.contain('<p id="message">select a passkey</p>');
@@ -487,21 +489,66 @@ describe('admin module', function () {
   });
 
   describe('users list', function () {
-    beforeEach(function () {
-      this.sessionValues.privileges.ADMIN = true;
+    it('when user is not admin, should redirect to admin login page', async function () {
+      const res = await chai.request(this.app).get('/admin/users');
+      expect(res).to.redirectTo(/http:\/\/127.0.0.1:\d{1,5}\/admin\/login/);
+      expect(res).to.have.status(200);
+      expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+
+      const resText = res.text.replace(/&#34;/g, '"');
+      expect(resText).to.contain('<h1>Start Admin Session</h1>');
     });
 
-    it('should display users', async function () {
+    it('when user is admin, should display users', async function () {
+      this.sessionValues.privileges.ADMIN = true;
+
       const res = await chai.request(this.app).get('/admin/users');
       expect(res).to.have.status(200);
       expect(res).to.have.header('Content-Type', /^text\/html/);
       expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(0);
+      expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
+      expect(res).to.have.header('Cache-Control', /\bprivate\b/);
       expect(res).to.have.header('ETag');
 
       expect(res.text).to.contain('<h1>Users</h1>');
       expect(res.text).to.contain('<td>FirstUser');
       expect(res.text).to.contain('<td>mailto:​foo@bar.co</td>');
       expect(res.text).to.contain('<td>SecondUser');
+
+      expect(res.text).to.contain('<label for="protocol" class="overLabel">Protocol</label>');
+      expect(res.text).to.contain('<select name="protocol" id="protocol" value="" required>');
+      expect(res.text).to.match(/<label for="address" class="overLabel">[a-zA-Z ]+<\/label>/);
+      expect(res.text).to.match(/<input type="(text|tel|email)" id="address" name="address" value=""\s+placeholder="\P{Cc}+" required pattern="[ -~]+"/mu);
+      expect(res.text).to.match(/<button [^>]*type="submit"[^>]*>Create User Invitation<\/button>/);
+    });
+  });
+
+  describe('admin list', function () {
+    it('when not admin, should redirect to admin login page', async function () {
+      const res = await chai.request(this.app).get('/admin/admins');
+      expect(res).to.redirectTo(/http:\/\/127.0.0.1:\d{1,5}\/admin\/login/);
+      expect(res).to.have.status(200);
+      expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
+
+      const resText = res.text.replace(/&#34;/g, '"');
+      expect(resText).to.contain('<h1>Start Admin Session</h1>');
+    });
+
+    it('when admin, should display users', async function () {
+      this.sessionValues.privileges.ADMIN = true;
+
+      const res = await chai.request(this.app).get('/admin/admins');
+      expect(res).to.have.status(200);
+      expect(res).to.have.header('Content-Type', /^text\/html/);
+      expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(0);
+      expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
+      expect(res).to.have.header('Cache-Control', /\bprivate\b/);
+      expect(res).to.have.header('ETag');
+
+      expect(res.text).to.contain('<h1>Admins</h1>');
+      expect(res.text).to.contain('<td>FirstUser');
+      expect(res.text).to.contain('<td>mailto:​foo@bar.co</td>');
+      expect(res.text).not.to.contain('<td>SecondUser');
 
       expect(res.text).to.contain('<label for="protocol" class="overLabel">Protocol</label>');
       expect(res.text).to.contain('<select name="protocol" id="protocol" value="" required>');
@@ -530,6 +577,8 @@ describe('admin module', function () {
 
       res = await chai.request(this.app).get('/admin/inviteRequests');
       expect(res).to.have.status(200);
+      expect(res).to.have.header('Cache-Control', /\bprivate\b/);
+      expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
       const resText = res.text.replace(/&#34;/g, '"');
       expect(resText).to.contain('<h1>Requests for Invitation</h1>');
       expect(resText).to.contain('<td>xmpp:mine@jabber.org');

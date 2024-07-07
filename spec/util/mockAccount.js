@@ -80,7 +80,7 @@ module.exports = {
         return user;
       },
       listUsers: async () => [
-        { username: 'FirstUser', contactURL: 'mailto:foo@bar.co', storeId: 'firstuser-' + hostIdentity },
+        { username: 'FirstUser', contactURL: 'mailto:foo@bar.co', storeId: 'firstuser-' + hostIdentity, privileges: { ADMIN: true } },
         { username: 'SecondUser', contactURL: 'mailto:spam@frotz.edu', storeId: 'seconduser-' + hostIdentity }
       ],
       getUser: async (username, _logNotes) => {

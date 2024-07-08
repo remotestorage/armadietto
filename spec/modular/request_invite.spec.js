@@ -128,7 +128,7 @@ describe('Request invite', function () {
       expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
       expect(res).to.be.html;
       expect(res.text).to.contain('<title>Request Failure — Armadietto</title>');
-      expect(res.text).to.contain('<p class="error">Invalid protocol</p>');
+      expect(res.text).to.contain('<p class="error">Protocol “” not supported</p>');
       expect(res.text).to.match(/<form [^>]*method="post"[^>]*action="\/basic\/signup"/);
       expect(res.text).to.match(/<input [^>]*type="text"[^>]*name="address"[^>]*value="somebody@somewhere.org"/);
       expect(res.text).to.match(/<button [^>]*type="submit"[^>]*>Request invite<\/button>/);
@@ -189,7 +189,7 @@ describe('Request invite', function () {
       expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
       expect(res).to.be.html;
       expect(res.text).to.match(/<h\d>Invitation Requested<\/h\d>/i);
-      const EXPECTED_CONTACT_URL = 'skype:live:.cid.933e6f00';
+      const EXPECTED_CONTACT_URL = 'skype:live:.cid.933e6f00?chat';
       expect(res.text).to.contain(EXPECTED_CONTACT_URL);
 
       expect(this.storeRouter.upsertAdminBlob).to.have.been.called.with(path.join(INVITE_REQUEST_DIR, encodeURIComponent(EXPECTED_CONTACT_URL) + '.yaml'), 'application/yaml', EXPECTED_CONTACT_URL);

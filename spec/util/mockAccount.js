@@ -1,6 +1,6 @@
 const proquint = require('proquint');
 const { randomBytes } = require('node:crypto');
-const calcContactURL = require('../../lib/util/calcContactURL');
+const { calcContactURL } = require('../../lib/util/protocols');
 const NoSuchUserError = require('../../lib/util/NoSuchUserError');
 
 const CREDENTIAL_STORED = {

@@ -25,6 +25,7 @@ const crypto = require('crypto');
 const loginFactory = require('../../lib/routes/login');
 const NoSuchBlobError = require('../../lib/util/NoSuchBlobError');
 const requestInviteRouter = require('../../lib/routes/request-invite');
+const ParameterError = require('../../lib/util/ParameterError');
 const LOGIN_CHALLENGE = 'mJXERSBetL-NRL7AMozeWfnobXk';
 
 const mockStoreRouter = {
@@ -121,7 +122,7 @@ describe('admin module', function () {
     });
 
     it('throws an error for tel: URL', async function () {
-      await expect(this.admin.generateInviteURL('tel:+1-800-555-1212', undefined)).to.eventually.be.rejectedWith(Error, 'contact user');
+      await expect(this.admin.generateInviteURL('tel:+1-800-555-1212', undefined)).to.eventually.be.rejectedWith(ParameterError, 'not supported');
     });
 
     it('returns inviteURL for email address', async function () {
@@ -145,7 +146,7 @@ describe('admin module', function () {
     });
 
     it('returns inviteURL for sms: URL', async function () {
-      const [contactURL, inviteURL] = await this.admin.generateInviteURL('sms:+18664504185?&body=Hi%2520there', undefined);
+      const [contactURL, inviteURL] = await this.admin.generateInviteURL('sms:+18664504185?body=Hi%2520there', undefined);
 
       expect(contactURL.href).to.equal('sms:+18664504185');
 
@@ -223,7 +224,7 @@ describe('admin module', function () {
       });
       expect(res).to.have.status(400);
       expect(res).to.have.header('Content-Type', 'text/plain; charset=utf-8');
-      expect(res.text).to.contain('Invalid protocol');
+      expect(res.text).to.match(/\bprotocol\b/i);
     });
 
     it('rejects missing address', async function () {

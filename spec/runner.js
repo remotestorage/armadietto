@@ -17,6 +17,7 @@ require('./stores/file_tree_spec');
 
 require('./modular/m_root.spec');
 require('./modular/m_not_found.spec');
+require('./modular/robots.txt.spec');
 require('./modular/m_static.spec');
 require('./modular/request_invite.spec');
 require('./modular/account.spec');

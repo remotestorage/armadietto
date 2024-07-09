@@ -469,6 +469,19 @@ describe('admin module', function () {
   });
 
   describe('verification of passkeys', function () {
+    it('rejects an unknown user as a bad request', async function () {
+      this.sessionValues.loginChallenge = LOGIN_CHALLENGE;
+      const unknownUserCredential = structuredClone(CREDENTIAL_PRESENTED_RIGHT);
+      unknownUserCredential.response.userHandle = Buffer.from('anotherguy', 'utf8').toString('base64url');
+
+      const verifyRes = await chai.request(this.app).post('/admin/verify-authentication')
+        .type('application/json').send(JSON.stringify(unknownUserCredential));
+
+      expect(verifyRes).to.have.status(401);
+      expect(verifyRes).to.be.json;
+      expect(verifyRes.body.msg).to.match(/could not be validated/);
+    });
+
     it('rejects an unregistered passkey as a bad request', async function () {
       this.sessionValues.loginChallenge = LOGIN_CHALLENGE;
       const verifyRes = await chai.request(this.app).post('/admin/verify-authentication')

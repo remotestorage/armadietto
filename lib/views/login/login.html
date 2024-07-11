@@ -15,7 +15,10 @@
         <% } %>
         <h1><%= title %></h1>
     </header>
-    <p id="message"><%= message %></p>
+    <div class="flexRowWrapResponsive">
+        <p id="message"><%= message %></p>
+        <img src="/assets/passkeymajor-svgrepo-com.svg" class="passkeyIconLg" alt="">
+    </div>
     <input type="hidden" id="options" value="<%= options %>">
     <div><button id="login" class="mainAction">Log in</button></div>
     <div id="progress" hidden><label>Logging-in: <progress></progress></label></div>

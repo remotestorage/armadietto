@@ -6,7 +6,10 @@
     <h1><%= title %></h1>
     <p>Contact URL: <%= contactURL %> </p>
     <p>Privileges: <%= Object.keys(accountPrivileges).join(', ') || '«none»' %></p>
-    <p>You will always use a passkey to log into your account.</p>
+    <div class="flexRowSpaceBetween">
+        <p>You will always use a passkey to log into your account. &nbsp; </p>
+        <img src="/assets/passkeymajor-svgrepo-com.svg" class="passkeyIcon" alt="">
+    </div>
     <p id="message"><%= message %></p>
 </section>
 <main class="content">

@@ -18,7 +18,10 @@
   </ul>
 
   <div class="centering-container">
-    <p id="message">Use your passkey to authorize</p>
+    <div class="flexRowSpaceBetween">
+      <p id="message">Use your passkey to authorize. &nbsp; </p>
+      <img src="/assets/passkeymajor-svgrepo-com.svg" class="passkeyIcon" alt="">
+    </div>
     <input type="hidden" id="options" value="<%= options %>">
     <div id="progress" hidden><label>Authorizing: <progress></progress></label></div>
   </div>

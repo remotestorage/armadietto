@@ -405,7 +405,7 @@ This query will take effect for any screen smaller than 760px
 and also iPads specifically.
 */
 @media
-only screen and (max-width: 525px)  {
+only screen and (max-width: 400px)  {
 
   /* Force table to not be like tables anymore */
   table, thead, tbody, th, td, tr {
@@ -884,7 +884,7 @@ button[name="deny"]:focus {
 }
 
 @media
-only screen and (max-width: 525px)  {
+only screen and (max-width: 400px)  {
   .flexRowWrapResponsive {
     display: flex;
     flex-flow: row wrap;

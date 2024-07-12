@@ -73,6 +73,11 @@ describe('account router', function () {
     expect(resText).to.contain('<td>Apple Mac Firefox</td>');
     expect(resText).to.match(/<td>5\/\d\/2024<\/td>/);
     expect(resText).to.contain('<td>never</td>');
+
+    expect(resText).to.contain('To create a passkey on a new device, invite yourself to create another passkey');
+    expect(resText).to.contain('data-username="nisar-dazan-dafig-kanih"');
+    expect(resText).to.contain('data-contacturl="skype:skye"');
+    expect(resText).to.contain('>Invite yourself to create another passkey</button>');
   });
 
   it('account page, when not logged in, redirect to login page', async function () {

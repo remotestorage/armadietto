@@ -60,7 +60,7 @@ The following values in the configuration file must be set:
 The following values in the configuration file are optional:
 * `s3.user_name_suffix`
 
-Other value in the configuration files are ignored.
+Other values in the configuration files are ignored.
 
 ### Customizing `bin/www`
 
@@ -107,13 +107,19 @@ Contact URLs are used to identify users, when issuing invitations. Ideally, it s
 
 Armadietto can't send invitations itself yet; an admin must send the invitation manually, using their own account.  The Armadietto user interface allows you to send the invite via the system share functionality, or copy and paste from the user interface.
 You can send the invite by any means; it's not required that you use the contact info in the Contact URL.
-For example, you could send an invite to a person in the same room, using AirDrop or Nearby Share.
+For example, you could send an invite to a person in the same room, using AirDrop or Nearby Share, or save the invite in a file drop.
 
-If `allow_signup` is set in the configuration file, anyone can *request* an invite.  Admins can list these requests and grant them.
+If `allow_signup` is set in the configuration file, anyone can *request* an invite.
+Admins can list these requests and grant them.
+There is no notification of new requests for invites yet.
 
 Changing the Contact URL of a user (not implemented yet) will *invalidate all of their passkeys*.
 
-In place of password reset functionality, you re-invite the user.  An invite for an existing account will allow a user to create a passkey for a device or browser where no passkey exists. Issuing an invite **does not invalidate** any existing passkeys. In general, a user will need one invite for each ecosystem (Apple, Google, Microsoft, FIDO hardware key, etc.) they use.
+In place of password reset functionality, you re-invite the user.  An invite for an existing account will allow a user to create a passkey for a device or browser where no passkey exists.
+A logged-in user can re-invite themselves.
+Issuing an invite **does not invalidate** any existing passkeys.
+Typically, a user will need one invite for each ecosystem (Apple, Google, Microsoft, FIDO hardware key, etc.) they use.
+If the ecosystem backs up passkeys to the cloud, a user may not need to generate a new passkey for a new device.
 
 If a user has valid passkeys for more than one account,
 the selected passkey will determine which account the user is logged in to.
@@ -123,9 +129,9 @@ the selected passkey will determine which account the user is logged in to.
 To create an account with `OWNER` privilege, set the `BOOTSTRAP_OWNER` environment variable to the Contact URL followed by a space and the username. (If a Contact URL doesn't parse as a URL, the system will attempt to parse it as an email address.) Then start or re-start the server. The invite will be written using the store router and the log will contain the path to the blob. (It's in the `adminInvites` directory.)
 To re-send the invite, delete the blob in the `adminInvites` directory named with the contactURL.
 
-An account with `OWNER` privilege can invite others to be administrators.  An account with `ADMIN` privilege can invite regular users. At present, there is no way to upgrade a regular user to an administrator, nor an administrator to an owner. :-(
+An account with `OWNER` privilege can invite others to be administrators.  An account with `ADMIN` privilege can invite regular users. At present, there is no way to promote a regular user to an administrator, nor an administrator to an owner. :-(
 
-Admins can also see the list of users and list of other admins.
+Admins can also see the list of users, list of other admins and list of requests for an invite.
 
 ## Development
 

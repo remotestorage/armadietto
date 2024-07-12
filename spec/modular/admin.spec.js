@@ -204,14 +204,13 @@ describe('admin module', function () {
   });
 
   describe('sending invitation', function () {
-    it('rejects without admin privilege', async function () {
+    it('rejects when neither admin privilege nor for self', async function () {
       const res = await chai.request(this.app).post('/admin/sendInvite').type('form').send({
         protocol: 'mailto:',
         address: 'me@myplace.net',
         privilegegrant: JSON.stringify({ STORE: true })
       });
       expect(res).to.have.status(401);
-      expect(res.text).to.have.length(0);
     });
 
     it('rejects missing protocol', async function () {
@@ -263,6 +262,23 @@ describe('admin module', function () {
         username: USERNAME,
         contacturl: 'bubs@bluecollar.com',
         privilegegrant: JSON.stringify({ STORE: true, ADMIN: true })
+      });
+      expect(res).to.have.status(201);
+      expect(res).to.have.header('Content-Type', 'application/json; charset=utf-8');
+      expect(res.body.title).to.match(new RegExp(`${HOST_IDENTITY} User Invite`));
+      expect(res.body.text).to.match(new RegExp(`${USERNAME}, to create a passkey for ${HOST_IDENTITY} for a new device or browser, copy and paste this URL into the browser on that device:`));
+      expect(res.body.url).to.match(new RegExp(`https://${HOST_IDENTITY}/admin/acceptInvite\\?token=`));
+    });
+
+    it('Generates re-invite for self without ADMIN privilege', async function () {
+      const USERNAME = 'Heather';
+      const CONTACT_URL = 'skype:heath@hometown.hs';
+      this.sessionValues.user = { username: USERNAME, contactURL: CONTACT_URL };
+
+      const res = await chai.request(this.app).post('/admin/sendInvite').type('form').send({
+        username: USERNAME,
+        contacturl: CONTACT_URL,
+        privilegegrant: JSON.stringify({ STORE: true })
       });
       expect(res).to.have.status(201);
       expect(res).to.have.header('Content-Type', 'application/json; charset=utf-8');

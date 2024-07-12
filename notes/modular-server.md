@@ -118,7 +118,7 @@ Changing the Contact URL of a user (not implemented yet) will *invalidate all of
 In place of password reset functionality, you re-invite the user.  An invite for an existing account will allow a user to create a passkey for a device or browser where no passkey exists.
 A logged-in user can re-invite themselves.
 Issuing an invite **does not invalidate** any existing passkeys.
-Typically, a user will need one invite for each ecosystem (Apple, Google, Microsoft, FIDO hardware key, etc.) they use.
+Typically, a user will need one passkey (and thus one invite) for each ecosystem (Apple, Google, Microsoft, FIDO hardware key, password manager, etc.) they use.
 If the ecosystem backs up passkeys to the cloud, a user may not need to generate a new passkey for a new device.
 
 If a user has valid passkeys for more than one account,

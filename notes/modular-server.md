@@ -126,8 +126,8 @@ the selected passkey will determine which account the user is logged in to.
 
 ### Administrators
 
-To create an account with `OWNER` privilege, set the `BOOTSTRAP_OWNER` environment variable to the Contact URL followed by a space and the username. (If a Contact URL doesn't parse as a URL, the system will attempt to parse it as an email address.) Then start or re-start the server. The invite will be written using the store router and the log will contain the path to the blob. (It's in the `adminInvites` directory.)
-To re-send the invite, delete the blob in the `adminInvites` directory named with the contactURL.
+To create an account with `OWNER` privilege, set the `BOOTSTRAP_OWNER` environment variable to the Contact URL followed by a space and the username. (If a Contact URL doesn't parse as a URL, the system will attempt to parse it as an email address.) Then start or re-start the server. The invite will be written using the store router and the log will contain the path to the blob. (It's in the `invites` directory.)
+To re-send the invite, delete the blob in the `invites` directory named with the contactURL.
 
 An account with `OWNER` privilege can invite others to be administrators.  An account with `ADMIN` privilege can invite regular users. At present, there is no way to promote a regular user to an administrator, nor an administrator to an owner. :-(
 

@@ -68,7 +68,7 @@ describe('account router', function () {
     expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
     const resText = res.text.replace(/&#34;/g, '"');
     expect(resText).to.contain('<h1>Your Account</h1>');
-    expect(resText).to.contain(`<h1>${USER.username}</h1>`);
+    expect(resText).to.match(new RegExp('<h1>' + USER.username + '@'));
     expect(resText).to.contain('<td>STORE</td>');
     expect(resText).to.contain('<td>Apple Mac Firefox</td>');
     expect(resText).to.match(/<td>5\/\d\/2024<\/td>/);

@@ -17,7 +17,7 @@ const express = require('express');
 const session = require('express-session');
 
 const INVITE_REQUEST_DIR = 'inviteRequests';
-const ADMIN_INVITE_DIR_NAME = 'adminInvites';
+const ADMIN_INVITE_DIR_NAME = 'invites';
 const CONTACT_URL_DIR = 'contactUrls';
 const HOST_IDENTITY = 'psteniusubi.github.io';
 const { mockAccountFactory, CREDENTIAL_PRESENTED_RIGHT, CREDENTIAL_PRESENTED_WRONG, USER } = require('../util/mockAccount');

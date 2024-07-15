@@ -15,7 +15,7 @@ const callMiddleware = require('./util/callMiddleware');
 const YAML = require('yaml');
 const NoSuchBlobError = require('../lib/util/NoSuchBlobError');
 
-const ADMIN_INVITE_DIR_NAME = 'adminInvites';
+const ADMIN_INVITE_DIR_NAME = 'invites';
 const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
 
 module.exports.shouldStoreStreams = function () {

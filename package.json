@@ -41,6 +41,7 @@
     "mkdirp": "^1.0.4",
     "node-mocks-http": "^1.14.1",
     "proquint": "^0.0.1",
+    "rate-limiter-flexible": "^5.0.3",
     "robots.txt": "^1.1.0",
     "winston": "^3.11.0",
     "yaml": "^2.4.0"

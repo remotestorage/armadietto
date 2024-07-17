@@ -30,14 +30,21 @@ describe('Nonexistant resource (modular)', function () {
 
   /** This extends the test in shouldHandleNonexistingResource */
   it('should say cacheable for 25 minutes', async function () {
-    const res = await chai.request(this.app).get('/fizbin');
+    const res = await chai.request(this.app).get('/account/wildebeest/');
     expect(res).to.have.status(404);
     expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
     expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);
     expect(res).to.have.header('ETag');
 
     expect(res.text).to.contain('<title>Not Found — Armadietto</title>');
-    expect(res.text).to.contain('>“fizbin” doesn&#39;t exist<');
+    expect(res.text).to.contain('>“account/wildebeest/” doesn&#39;t exist<');
+  });
+
+  it('should curtly & cache-ably refuse to serve unlikely paths', async function () {
+    const res = await chai.request(this.app).get('/_profiler/phpinfo');
+    expect(res).to.have.status(404);
+    expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+    expect(res.text).to.equal('');
   });
 
   /** This tests that 404 for nonexistent assets is cache-able */

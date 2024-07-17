@@ -7,7 +7,7 @@ chai.use(chaiHttp);
 
 exports.shouldHandleNonexistingResource = function () {
   it('should return 404 Not Found', async function () {
-    const res = await chai.request(this.app).get('/zorp/gnu/');
+    const res = await chai.request(this.app).get('/account/wildebeest/');
     expect(res).to.have.status(404);
     expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
@@ -21,7 +21,7 @@ exports.shouldHandleNonexistingResource = function () {
     // expect(res.text).to.contain('<title>Not Found — Armadietto</title>');
     expect(res.text).to.match(/<h\d>Something went wrong<\/h\d>/);
     expect(res.text).to.contain('>404<');
-    expect(res.text).to.contain('>“zorp/gnu/” doesn&#39;t exist<');
+    expect(res.text).to.contain('>“account/wildebeest/” doesn&#39;t exist<');
 
     // navigation
     expect(res.text).to.match(/<a [^>]*href="\/"[^>]*>Home<\/a>/);

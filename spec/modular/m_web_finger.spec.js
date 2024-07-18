@@ -4,6 +4,9 @@ const { mockAccountFactory } = require('../util/mockAccount');
 const http = require('http');
 const { configureLogger } = require('../../lib/logger');
 const { shouldImplementWebFinger } = require('../web_finger.spec');
+const chai = require('chai');
+const expect = chai.expect;
+chai.use(require('chai-http'));
 
 describe('Web Finger (modular)', function () {
   before(async function () {
@@ -35,4 +38,9 @@ describe('Web Finger (modular)', function () {
   });
 
   shouldImplementWebFinger();
+
+  it('redirects change-password to /signup', async function () {
+    const res = await chai.request(this.app).get('/.well-known/change-password');
+    expect(res).to.redirectTo(/^http:\/\/127.0.0.1:\d{1,5}\/signup$/);
+  });
 });

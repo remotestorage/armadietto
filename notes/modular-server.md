@@ -96,8 +96,8 @@ Production servers typically outsource TLS to a proxy server — nginx and Apach
 See the note [reverse-proxy-configuration.md](`./reverse-proxy-configuration.md`) for details.
 A proxy server can also cache static content. Armadietto sets caching headers to tell caches what they can and can't cache.
 
-If the modular server is behind a proxy, you **MUST** set
-`app.set('trust proxy', 1)`
+If the modular server is behind a proxy, you **MUST** enable trusting the proxy by
+`app.set('trust proxy', 1)`, `app.set('trust proxy', 'loopback')` or another value that enables it.
 
 ## Operations
 

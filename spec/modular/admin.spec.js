@@ -477,7 +477,7 @@ describe('admin module', function () {
       expect(res).to.have.header('Cache-Control', /\bno-store\b/);
       const resText = res.text.replace(/&#34;/g, '"');
       expect(resText).to.contain('<h1>Start Admin Session</h1>');
-      expect(resText).to.contain('<p id="message">select a passkey</p>');
+      expect(resText).to.contain('<p id="message" class="preWrap">Click the button below to authenticate with a passkey.</p>');
       expect(resText).to.contain('"challenge":"');
       expect(resText).to.contain('"userVerification":"preferred"');
       expect(resText).to.contain('"rpId":"psteniusubi.github.io"');

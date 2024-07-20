@@ -2,23 +2,28 @@
 
 <script type="module" src="<%= basePath %>/assets/register.mjs"></script>
 
-<section class="centeredText">
-    <h1><%= title %></h1>
-    <p>Contact URL: <%= contactURL %> </p>
-    <p>Privileges: <%= Object.keys(accountPrivileges).join(', ') || '«none»' %></p>
-    <div class="flexRowSpaceBetween">
-        <p>You will always use a passkey to log into your account. &nbsp; </p>
-        <img src="/assets/passkeymajor-svgrepo-com.svg" class="passkeyIcon" alt="">
-    </div>
-    <p id="message"><%= message %></p>
-</section>
-<main class="content">
-    <div class="flexRowSpaceBetween">
+<section class="notTooWide">
+    <section class="centeredText marginSides">
+        <h1><%= title %></h1>
+        <p>Contact URL: <%= contactURL %> </p>
+        <p>Privileges: <%= Object.keys(accountPrivileges).join(', ') || '«none»' %></p>
+        <div class="flexRowSpaceBetween">
+            <p>You will always use a passkey to log into your account. &nbsp; </p>
+            <img src="/assets/passkeymajor-svgrepo-com.svg" class="passkeyIcon" alt="">
+        </div>
+        <p id="message"><%= message %></p>
+    </section>
+    <div class="flexRowSpaceBetween marginSides">
         <label for="username">Username: </label> &nbsp;
         <input type="text" id="username" value="<%= username %>" placeholder="Your choice" autofocus>
     </div>
     <input type="hidden" id="options" value="<%= options %>">
-    <div class="centeredBoxContent marginTop"><button id="register" class="mainAction" hidden>Create Passkey</button></div>
-    <div id="progress" hidden><label>Creating &amp; registering: <progress></progress></label></div>
-</main>
+    <div class="centeredBoxContent marginTop">
+        <button id="register" class="mainAction" hidden>Create Passkey</button>
+    </div>
+    <div class="centeredBoxContent marginTop marginSides">
+        <div id="progress" hidden><label>Creating &amp; registering: <progress></progress></label></div>
+    </div>
+</section>
+
 <%- include('../end.html'); %>

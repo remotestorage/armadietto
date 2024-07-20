@@ -191,7 +191,7 @@ header.topbar {
   width: 100%;
   max-width: calc(100vw - 2rem);
   min-height: 3rem;
-  margin: 1rem 0;
+  margin: 1rem 0 0 0;
 }
 
 header.topbar h1 {
@@ -308,6 +308,8 @@ header.topbar .signup:focus {
 section.hero {
   width: 50rem;
   max-width: calc(100vw - 2rem);
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
 }
 
@@ -362,6 +364,16 @@ section.hero header + p {
   }
 }
 
+.artwork {
+  margin-top: 1rem;
+}
+
+.fitName {
+  font-size: 1.3rem;
+  font-size: math;
+  overflow: scroll;
+}
+
 .centeredBoxContent {
   display: flex;
   justify-content: center;
@@ -399,29 +411,39 @@ th {
 tr:nth-of-type(even) {
   background: var(--arma-bckgrd-color-alt);
 }
+td:first-child {
+  padding-left: 0.67em;
+}
 /*
-Max width before this PARTICULAR table gets nasty
-This query will take effect for any screen smaller than 760px
-and also iPads specifically.
+Max width before these PARTICULAR tables gets nasty
+This query will take effect for any screen smaller than 500px
 */
 @media
-only screen and (max-width: 400px)  {
+only screen and (max-width: 500px)  {
 
   /* Force table to not be like tables anymore */
-  table, thead, tbody, th, td, tr {
+  table.adaptive, .adaptive thead, .adaptive tbody, .adaptive th, .adaptive td, .adaptive tr {
     display: block;
   }
 
   /* Hide table headers (but not display: none;, for accessibility) */
-  thead tr {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
+  .adaptive thead tr {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px 1px 1px 1px); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+    clip: rect(1px, 1px, 1px, 1px); /*maybe deprecated but we need to support legacy browsers */
+    clip-path: inset(50%); /*modern browsers, clip-path works inwards from each corner*/
+    white-space: nowrap; /* added line to stop words getting smushed together (as they go onto seperate lines and some screen readers do not understand line feeds as a space */
   }
 
-  tr { border: 1px solid #ccc; }
+  .adaptive tr { border: 1px solid #ccc; }
 
-  td {
+  .adaptive td {
     /* Behave  like a "row" */
     border: none;
     border-bottom: 1px solid #eee;
@@ -429,12 +451,11 @@ only screen and (max-width: 400px)  {
     padding-left: 40%;
   }
 
-  td:before {
+  .adaptive td:before {
     /* Now like a table header */
     position: absolute;
     /* Top/left values mimic padding */
-    top: 6px;
-    left: 6px;
+    left: 0.67em;
     width: 35%;
     padding-right: 10px;
     white-space: nowrap;
@@ -447,12 +468,13 @@ only screen and (max-width: 400px)  {
 
   #users td:nth-of-type(1):before { content: "Name"; }
   #users td:nth-of-type(2):before { content: "Contact URL"; }
-  #users td:nth-of-type(3):before { content: "Last connected"; }
+  #users td:nth-of-type(3):before { content: "Last logged-in"; }
   #users td:nth-of-type(4):before { content: "Privileges"; }
 }
 
-.borderSolid {
+#output {
   border: black 1px solid;
+  padding: 1em;
 }
 
 /* BODY FOOTER */
@@ -532,6 +554,11 @@ body > footer > p {
 
 /* MAIN CONTENT */
 
+main {
+  width: 100%;
+  max-width: 65rem;
+}
+
 main.content {
   margin: auto;
 }
@@ -560,6 +587,13 @@ main .status {
 main .message {
   font-size: 1.5rem;
   text-align: center;
+}
+
+.notTooWide {
+  width: 100%;
+  max-width: 30rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* FORMS */
@@ -709,6 +743,8 @@ button[name="signup"]:focus {
 }
 
 .oauth-form {
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -884,7 +920,7 @@ button[name="deny"]:focus {
 }
 
 @media
-only screen and (max-width: 400px)  {
+only screen and (max-width: 500px)  {
   .flexRowWrapResponsive {
     display: flex;
     flex-flow: row wrap;
@@ -893,6 +929,9 @@ only screen and (max-width: 400px)  {
   }
 }
 
+.preWrap {
+  white-space: pre-wrap;
+}
 
 /* ICONS */
 

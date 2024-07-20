@@ -68,7 +68,7 @@ describe('account router', function () {
     expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
     const resText = res.text.replace(/&#34;/g, '"');
     expect(resText).to.contain('<h1>Your Account</h1>');
-    expect(resText).to.match(new RegExp('<h1>' + USER.username + '@'));
+    expect(resText).to.match(new RegExp('<h1 class="fitName">' + USER.username + '@'));
     expect(resText).to.contain('<td>STORE</td>');
     expect(resText).to.contain('<td>Apple Mac Firefox</td>');
     expect(resText).to.match(/<td>5\/\d\/2024<\/td>/);
@@ -97,7 +97,7 @@ describe('account router', function () {
     expect(res).to.have.header('Cache-Control', /\bno-store\b/);
     const resText = res.text.replace(/&#34;/g, '"');
     expect(resText).to.contain('<h1>Login</h1>');
-    expect(resText).to.contain('<p id="message">select a passkey</p>');
+    expect(resText).to.contain('<p id="message" class="preWrap">Click the button below to log in with a passkey.\n\nIf you need to create a passkey for this device or browser, log in from your old device and invite yourself to create a new passkey.</p>');
     expect(resText).to.contain('"challenge":"');
     expect(resText).to.contain('"userVerification":"preferred"');
     expect(resText).to.contain('"rpId":"psteniusubi.github.io"');

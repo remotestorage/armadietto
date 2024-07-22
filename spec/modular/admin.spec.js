@@ -20,7 +20,10 @@ const INVITE_REQUEST_DIR = 'inviteRequests';
 const ADMIN_INVITE_DIR_NAME = 'invites';
 const CONTACT_URL_DIR = 'contactUrls';
 const HOST_IDENTITY = 'psteniusubi.github.io';
-const { mockAccountFactory, CREDENTIAL_PRESENTED_RIGHT, CREDENTIAL_PRESENTED_WRONG, USER } = require('../util/mockAccount');
+const {
+  mockAccountFactory, CREDENTIAL_PRESENTED_RIGHT, CREDENTIAL_PRESENTED_WRONG, USER,
+  CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE
+} = require('../util/mockAccount');
 const crypto = require('crypto');
 const loginFactory = require('../../lib/routes/login');
 const NoSuchBlobError = require('../../lib/util/NoSuchBlobError');
@@ -511,6 +514,17 @@ describe('admin module', function () {
       this.sessionValues.loginChallenge = LOGIN_CHALLENGE;
       const verifyRes = await chai.request(this.app).post('/admin/verify-authentication')
         .type('application/json').send(JSON.stringify(CREDENTIAL_PRESENTED_RIGHT));
+      expect(verifyRes).to.have.status(200);
+      expect(verifyRes).to.be.json;
+      expect(verifyRes.body.verified).to.equal(true);
+      expect(verifyRes.body.username).to.equal(USER.username);
+    });
+
+    it('accepts a registered passkey w/o userHandle when already logged in', async function () {
+      this.sessionValues.loginChallenge = LOGIN_CHALLENGE;
+      this.sessionValues.user = structuredClone(USER);
+      const verifyRes = await chai.request(this.app).post('/admin/verify-authentication')
+        .type('application/json').send(JSON.stringify(CREDENTIAL_PRESENTED_RIGHT_NO_USERHANDLE));
       expect(verifyRes).to.have.status(200);
       expect(verifyRes).to.be.json;
       expect(verifyRes.body.verified).to.equal(true);

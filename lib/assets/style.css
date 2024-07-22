@@ -23,7 +23,9 @@
 
   /*  Armadietto colors */
   --arma-black-color:  #171614;
+  --arma-darkgray-color: #424239;
   --arma-whitesmoke-color: #e6e2da;
+  --arma-lightgray-color: #c8c8c8;
   --arma-wheat-color: #c7b9bd;
   --arma-orange-color: #f4a903;
   --arma-orangered-color: #f07b0d;
@@ -40,6 +42,7 @@
   --rs-bckgrd-color: var(--rs-black-color);
 
   --arma-bckgrd-color:  var(--arma-whitesmoke-color);
+  --arma-bckgrd-color-alt:  var(--arma-lightgray-color);
   --arma-title-color: #0d0608;
   --arma-text-color: var(--arma-black-color);
   --arma-brand-color: var(--arma-orange-color);
@@ -81,6 +84,7 @@
     --rs-bckgrd-color: var(--rs-white-color);
 
     --arma-bckgrd-color:  var(--arma-black-color);
+    --arma-bckgrd-color-alt:  var(--arma-darkgray-color);
     --arma-title-color: var(--arma-whitesmoke-color);
     --arma-text-color: var(--arma-wheat-color);
     --arma-brand-color: var(--arma-orange-color);
@@ -115,7 +119,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: stretch;
   min-height: 100vh;
   background: var(--arma-bckgrd-color);
   background-image: var(--body-bckgrd-linear-gradient, transparent);
@@ -163,6 +167,20 @@ li {
   text-align: center;
 }
 
+.centering-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.width10em {
+  width: 10em;
+}
+.width4em {
+  width: 4em;
+}
+
 /* TOPBAR HEADER */
 
 header.topbar {
@@ -173,7 +191,7 @@ header.topbar {
   width: 100%;
   max-width: calc(100vw - 2rem);
   min-height: 3rem;
-  margin: 1rem 0;
+  margin: 1rem 0 0 0;
 }
 
 header.topbar h1 {
@@ -251,9 +269,10 @@ header.topbar h1 a:focus {
 
 header.topbar nav ul {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: .5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: .5rem;
   margin: 0;
   padding: 0;
 }
@@ -268,7 +287,7 @@ header.topbar .navitem {
 	color: var(--arma-text-color);
 	transition: all .2s linear;
   text-decoration: none;
-  height: 3rem;
+  height: 2.5rem;
 }
 
 header.topbar .signup::before {
@@ -289,6 +308,8 @@ header.topbar .signup:focus {
 section.hero {
   width: 50rem;
   max-width: calc(100vw - 2rem);
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
 }
 
@@ -341,6 +362,119 @@ section.hero header + p {
   section.hero h2 {
     font-size: 1.5rem;
   }
+}
+
+.artwork {
+  margin-top: 1rem;
+}
+
+.fitName {
+  font-size: 1.3rem;
+  font-size: math;
+  overflow: scroll;
+}
+
+.centeredBoxContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.centeredText {
+  text-align: center;
+}
+
+.marginTop {
+  margin-top: 1em;
+}
+.marginSides {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+.padding {
+  padding: 1em;
+}
+
+.floatRight {
+  float: right;
+  margin-left: 1em;
+}
+
+.fullwidth {
+  width: 100%;
+}
+th {
+  background: #333;
+  color: white;
+  font-weight: bold;
+}
+tr:nth-of-type(even) {
+  background: var(--arma-bckgrd-color-alt);
+}
+td:first-child {
+  padding-left: 0.67em;
+}
+/*
+Max width before these PARTICULAR tables gets nasty
+This query will take effect for any screen smaller than 500px
+*/
+@media
+only screen and (max-width: 500px)  {
+
+  /* Force table to not be like tables anymore */
+  table.adaptive, .adaptive thead, .adaptive tbody, .adaptive th, .adaptive td, .adaptive tr {
+    display: block;
+  }
+
+  /* Hide table headers (but not display: none;, for accessibility) */
+  .adaptive thead tr {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px 1px 1px 1px); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+    clip: rect(1px, 1px, 1px, 1px); /*maybe deprecated but we need to support legacy browsers */
+    clip-path: inset(50%); /*modern browsers, clip-path works inwards from each corner*/
+    white-space: nowrap; /* added line to stop words getting smushed together (as they go onto seperate lines and some screen readers do not understand line feeds as a space */
+  }
+
+  .adaptive tr { border: 1px solid #ccc; }
+
+  .adaptive td {
+    /* Behave  like a "row" */
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 40%;
+  }
+
+  .adaptive td:before {
+    /* Now like a table header */
+    position: absolute;
+    /* Top/left values mimic padding */
+    left: 0.67em;
+    width: 35%;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+
+  /* Labels the data */
+  #credentials td:nth-of-type(1):before { content: "Created using"; }
+  #credentials td:nth-of-type(2):before { content: "Created on"; }
+  #credentials td:nth-of-type(3):before { content: "Last used"; }
+
+  #users td:nth-of-type(1):before { content: "Name"; }
+  #users td:nth-of-type(2):before { content: "Contact URL"; }
+  #users td:nth-of-type(3):before { content: "Last logged-in"; }
+  #users td:nth-of-type(4):before { content: "Privileges"; }
+}
+
+#output {
+  border: black 1px solid;
+  padding: 1em;
 }
 
 /* BODY FOOTER */
@@ -420,6 +554,11 @@ body > footer > p {
 
 /* MAIN CONTENT */
 
+main {
+  width: 100%;
+  max-width: 65rem;
+}
+
 main.content {
   margin: auto;
 }
@@ -450,6 +589,13 @@ main .message {
   text-align: center;
 }
 
+.notTooWide {
+  width: 100%;
+  max-width: 30rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* FORMS */
 
 form {
@@ -471,9 +617,12 @@ form {
   margin-bottom: 1rem;
 }
 
-label {
+label.overLabel {
   color: var(--arma-extra-color);
   font-size: .875rem;
+}
+label.leftLabel {
+
 }
 
 input {
@@ -528,7 +677,7 @@ input#password {
   font-weight: 700;
 }
 
-button[type="submit"] {
+button[type="submit"], button.mainAction {
   display: flex;
   place-content: center;
   width: auto;
@@ -542,7 +691,6 @@ button[type="submit"] {
   color: var(--arma-btn-txt-color);
   font-family: 'Outfit', var(--font-fallback);
   font-size: 1.3rem;
-  margin-left: auto;
   font-weight: 700;
   line-height: 1.4;
   transition: all .3s ease;
@@ -595,6 +743,8 @@ button[name="signup"]:focus {
 }
 
 .oauth-form {
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -740,6 +890,48 @@ button[name="deny"]:focus {
   outline: 2pt dotted var(--arma-focus-border-color);
 }
 
+/* UTILITY */
+.flexRowSpaceBetween {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flexRowSpaceAround {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.flexRowCenter {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.flexRowWrapResponsive {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-around;
+  align-items: center;
+}
+
+@media
+only screen and (max-width: 500px)  {
+  .flexRowWrapResponsive {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+  }
+}
+
+.preWrap {
+  white-space: pre-wrap;
+}
 
 /* ICONS */
 
@@ -758,6 +950,15 @@ button[name="deny"]:focus {
   margin: auto;
 }
 
+.passkeyIcon {
+  height: 1.5em;
+  margin: 0.5em;
+}
+
+.passkeyIconLg {
+  height: 6.5em;
+  margin: 0.5em;
+}
 
 /* SWITCH */
 #switch {

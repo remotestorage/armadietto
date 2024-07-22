@@ -1,0 +1,62 @@
+<%- include('../begin.html'); %>
+
+<script type="module" src="<%= basePath %>/assets/admin-users.mjs"></script>
+<script type="module" src="<%= basePath %>/assets/contact-url.mjs"></script>
+
+<section class="hero">
+    <header class="centeredText"><h1><%= title %></h1></header>
+</section>
+
+<section class="fullwidth">
+    <table id="users" class="fullwidth adaptive">
+        <thead>
+        <tr><th>Username</th><th>Contact URL</th><th>Last logged-in</th><th>Privileges</th></tr>
+        </thead>
+        <tbody>
+        <% for (const user of users) { %>
+        <tr>
+            <td><%= user.username || " " %>
+                <% if (user.privileges) { %>
+                <button data-username="<%= user.username %>" data-contacturl="<%= user.contactURL %>" data-privilegegrant="<%= JSON.stringify(user.privileges) %>" class="floatRight">re-invite</button>
+                <% } %>
+            </td>
+            <td><%= user.contactURL?.split(':').join(':​') || " " %></td>
+            <td><%= user.lastUsed ? new Date(user.lastUsed).toLocaleString().replace(/:\d\d(?!:)/, '') : 'never' %></td>
+            <td><%= Object.keys(user.privileges || {}).join(', ') || '«none»' %></td>
+        </tr>
+        <% } %>
+        <% if (!users.length) { %>
+        <tr><td colspan="3">No users</td></tr>
+        <% } %>
+        </tbody>
+    </table>
+
+    &nbsp;
+    <hr>
+    &nbsp;
+
+    <%- include('../contact-url.html'); %>
+
+    &nbsp;
+    <hr>
+    &nbsp;
+
+    <div id="progress" hidden><label>Generating: <progress></progress></label></div>
+
+    <div id="sendFromMeContainer" class="marginTop marginSides centeredText" hidden>
+        <a id="sendFromMe" href="" target="_blank" rel="noreferrer">Send invite from my account</a>
+    </div>
+
+    <div id="shareContainer" class="marginTop marginSides centeredText" hidden>
+        <button id="share" type="button" class="mainAction width10em">Share Invite from an account of mine</button>
+    </div>
+
+    <div id="outputDiv" hidden>
+        <div class="marginTop marginSides">
+            <label id="outputLabel" for="output"></label>
+        </div>
+        <div id="output"></div>
+    </div>
+</section>
+
+<%- include('../end.html'); %>

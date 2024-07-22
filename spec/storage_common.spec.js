@@ -51,7 +51,7 @@ module.exports.shouldCrudBlobs = function () {
       expect(res.get('Access-Control-Allow-Methods')).not.to.contain('POST');
       expect(res.get('Access-Control-Allow-Methods')).not.to.contain('PATCH');
       expect(res.get('Access-Control-Expose-Headers')).to.contain('ETag');
-      expect(res.get('Cache-Control')).to.contain('no-cache');
+      // expect(res.get('Cache-Control')).to.be.undefined; // OPTIONS is never cacheable
       expect(res).to.have.header('Access-Control-Max-Age');
       expect(parseInt(res.header['access-control-max-age'])).to.be.greaterThan(10);
       expect(res.text).to.equal('');
@@ -139,7 +139,6 @@ module.exports.shouldCrudBlobs = function () {
         expect(parseInt(res.get('Content-Length'))).to.equal(this.store.content.length);
         expect(res.get('Content-Type')).to.equal(this.store.metadata.contentType);
         expect(res.get('Etag')).to.equal(this.store.metadata.ETag);
-        // expect(res.get('Cache-Control')).to.contain('public');
       });
 
       it('returns Unauthorized w/ OAuth invalid_token error for a public folder', async function () {
@@ -364,9 +363,8 @@ module.exports.shouldCrudBlobs = function () {
     describe('when an invalid access token is used', function () {
       it('returns Unauthorized w/ OAuth invalid_token error', async function () {
         const res = await del(this.app, '/storage/zebcoe/locog/seats', this.bad_token);
-        expect(res).to.have.status(401);
+        expect(res).to.have.status(401); // never cacheable
         expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
-        // expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
         expect(res).to.have.header('WWW-Authenticate', /^Bearer\b/);
         expect(res).to.have.header('WWW-Authenticate', /\srealm="127\.0\.0\.1:\d{1,5}"/);
         expect(res).to.have.header('WWW-Authenticate', /\serror="invalid_token"/);

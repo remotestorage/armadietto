@@ -8,17 +8,17 @@
   <% } %>
 
   <div class="form-group">
-    <label for="username">Username</label>
+    <label for="username" class="overLabel">Username</label>
     <input placeholder="Your choice" type="text" id="username" name="username" autofocus value="<%= params.username || '' %>" required>
   </div>
 
   <div class="form-group">
-    <label for="email">Email</label>
+    <label for="email" class="overLabel">Email</label>
     <input placeholder="valid email" type="text" id="email" name="email" value="<%= params.email || '' %>" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
   </div>
 
   <div class="form-group">
-    <label for="password">Password</label>
+    <label for="password" class="overLabel">Password</label>
     <input placeholder="Strong password's better" title="Eight or more characters" type="password" id="password" name="password" value="" required pattern=".{8,}" autocomplete="new-password">
     <button id="togglePassword" class="icon-eye icon-slash" type="button" tabindex="0" alt="on/off" title="show/hide password"></button>
   </div>

@@ -18,8 +18,8 @@ exports.shouldHandleNonexistingResource = function () {
     expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(1500);
     // expect(res).to.have.header('Cache-Control', /\bmax-age=\d{4}/);
     // expect(res).to.have.header('ETag');
-    // expect(res.text).to.contain('<title>Not Found — Armadietto</title>');
-    expect(res.text).to.match(/<h\d>Something went wrong<\/h\d>/);
+    expect(res.text).to.match(/<title>(Not Found|Something went wrong) — Armadietto<\/title>/i);
+    expect(res.text).to.match(/<h\d>(Not Found|Something went wrong)<\/h\d>/i);
     expect(res.text).to.contain('>404<');
     expect(res.text).to.contain('>“account/wildebeest/” doesn&#39;t exist<');
 

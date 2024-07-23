@@ -18,7 +18,7 @@ describe('Nonexistant resource (modular)', function () {
       hostIdentity: this.hostIdentity,
       jwtSecret: 'swordfish',
       accountMgr: mockAccountFactory(this.hostIdentity),
-      storeRouter: (_req, _res, next) => next()
+      storeRouter: (_req, res, _next) => { res.status(404).end(); }
     });
     app.locals.title = 'Test Armadietto';
     app.locals.host = 'localhost:xxxx';
@@ -44,6 +44,12 @@ describe('Nonexistant resource (modular)', function () {
     const res = await chai.request(this.app).get('/_profiler/phpinfo');
     expect(res).to.have.status(404);
     expect(res).to.have.header('Cache-Control', /max-age=\d{4}/);
+    expect(res.text).to.equal('');
+  });
+
+  it('should curtly refuse POSTs without a handler', async function () {
+    const res = await chai.request(this.app).post('/admin/login');
+    expect(res).to.have.status(404);
     expect(res.text).to.equal('');
   });
 
@@ -87,10 +93,6 @@ describe('Nonexistant resource (modular)', function () {
     expect(res).not.to.have.header('X-Powered-By');
     expect(res).to.have.header('X-XSS-Protection', '0'); // disabled because counterproductive
 
-    expect(res).to.have.header('Content-Type', /^text\/html/);
-    expect(parseInt(res.get('Content-Length'))).to.be.greaterThan(0);
-
-    expect(res).to.have.header('ETag');
     expect(res).to.have.header('Cache-Control', /\bno-cache\b/);
     expect(res).to.have.header('Cache-Control', /\bpublic\b/);
   });

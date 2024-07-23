@@ -147,6 +147,14 @@ describe('Storage (modular)', function () {
   });
 
   describe('GET (only implemented by modular)', function () {
+    describe('when the client uses double-dot for a username', function () {
+      it('blocks responses for a while', async function () {
+        const res = await get(this.app, '/storage/ /cracking', this.good_token);
+        expect(res).to.have.status(400);
+        expect(res).to.have.header('Access-Control-Allow-Origin', 'https://rs-app.com:2112');
+      });
+    });
+
     describe('when a valid access token is used', function () {
       it('returns Cache-Control: public for a public document', async function () {
         this.store.content = 'a value';

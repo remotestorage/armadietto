@@ -123,6 +123,21 @@ module.exports.shouldStoreStreams = function () {
 
     describe('for files', function () {
       describe('unversioned', function () {
+        it('returns Not Found for a non-existing user', async function () {
+          this.timeout(360_000);
+          const [_req, res, next] = await callMiddleware(this.handler, {
+            method: 'GET',
+            url: '/not-the-user/public/who-knows'
+          });
+
+          expect(res.statusCode).to.equal(404);
+          expect(res._getBuffer().toString()).to.equal('');
+          expect(Boolean(res.get('Content-Length'))).to.be.false;
+          expect(Boolean(res.get('Content-Type'))).to.be.false;
+          expect(Boolean(res.get('ETag'))).to.be.false;
+          expect(next).not.to.have.been.called;
+        });
+
         it('returns Not Found for a non-existing path', async function () {
           this.timeout(360_000);
           const [_req, res, next] = await callMiddleware(this.handler, {
@@ -275,6 +290,21 @@ module.exports.shouldStoreStreams = function () {
         const [_req, res, next] = await callMiddleware(this.handler, {
           method: 'GET',
           url: `/${this.userIdStore}/non-existing-category/`
+        });
+
+        expect(res.statusCode).to.equal(200);
+        expect(res.get('Content-Type')).to.equal('application/ld+json');
+        const folder = res._getJSONData();
+        expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(folder.items).to.deep.equal({});
+        expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+        expect(next).not.to.have.been.called;
+      });
+
+      it('returns listing with no items for a non-existing public folder', async function () {
+        const [_req, res, next] = await callMiddleware(this.handler, {
+          method: 'GET',
+          url: `/${this.userIdStore}/public/some-category/`
         });
 
         expect(res.statusCode).to.equal(200);

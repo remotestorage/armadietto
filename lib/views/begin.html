@@ -11,6 +11,30 @@
   <link rel="stylesheet" href="<%= basePath %>/assets/style.css">
 
   <script defer src="<%= basePath %>/assets/armadietto-utilities.js"></script>
+  <script type="application/ld+json" class="schemantra">{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": "https://github.com/remotestorage/armadietto/",
+    "aggregateRating": {"@type": "AggregateRating", "ratingValue": 5, "bestRating": 5, "worstRating":  1, "reviewCount": 1},
+    "applicationCategory": "productivity",
+    "applicationSubCategory": "storage",
+    "copyrightYear": "2012",
+    "description": "A remoteStorage server written for Node.js. The monolithic (old) variant stores documents in the server's file system and uses passwords for authentication; the modular (new) variant stores documents in S3-compatible storage and uses passkeys.",
+    "dateModified": "2024-07-30",
+    "dateCreated": "2012-06-03",
+    "discussionUrl": "https://community.remotestorage.io/c/server-development/",
+    "featureList": "https://remotestorage.io/",
+    "thumbnailUrl": "https://raw.githubusercontent.com/remotestorage/armadietto/master/lib/assets/armadietto.svg",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "isBasedOnUrl": "https://github.com/jcoglan/restore",
+    "keywords": "remoteStorage, per-user storage, Backend as a Service, synchronization, passkey",
+    "license": "https://opensource.org/license/MIT",
+    "name": "Armadietto",
+    "offers": {"@type": "Offer", "price": 0, "priceCurrency": "USD"},
+    "producer": {"@type": "Organization", "name": "Armadietto contributors", "keywords": "remoteStorage", "url": "https://github.com/remotestorage/armadietto/graphs/contributors"},
+    "url": "https://<%= host + basePath %>/"
+  }</script>
 </head>
 <body>
 

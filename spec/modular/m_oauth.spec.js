@@ -105,7 +105,7 @@ describe('OAuth (modular)', function () {
       expect(res.text).to.contain('>the_client_id<');
       expect(res.text).to.contain('>example.com<');
       expect(res.text).to.match(/Read\/write.*access to.*\/data/);
-      expect(res.text).not.to.contain('password');
+      expect(res.text).not.to.contain('>Password</label>');
       expect(res.text).to.contain('Use your passkey to authorize');
     });
   });

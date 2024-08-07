@@ -371,7 +371,6 @@ section.hero header + p {
 .fitName {
   font-size: 1.3rem;
   font-size: math;
-  overflow: scroll;
 }
 
 .centeredBoxContent {

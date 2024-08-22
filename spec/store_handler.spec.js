@@ -95,6 +95,7 @@ module.exports.shouldStoreStreams = function () {
       const blobs = await this.handler.listAdminBlobs(LIST_DIR_NAME);
       expect(blobs).to.have.length(0);
 
+      const startTime = new Date();
       const content = 'indifferent content';
       this.listBlobPath = path.join(LIST_DIR_NAME, 'some-file.yaml');
       await this.handler.upsertAdminBlob(this.listBlobPath, 'text/plain', content);
@@ -105,7 +106,9 @@ module.exports.shouldStoreStreams = function () {
       // contentType is optional
       expect(blobs2[0].contentLength).to.equal(content.length);
       expect(typeof blobs2[0].ETag).to.equal('string');
-      expect(new Date(blobs2[0].lastModified)).to.be.lessThanOrEqual(new Date());
+      // allows one second of clock skew between S3 server and this server
+      expect(new Date(blobs2[0].lastModified)).to.be.lessThanOrEqual(new Date(Date.now() + 1000));
+      expect(new Date(blobs2[0].lastModified)).to.be.greaterThanOrEqual(new Date(startTime - 1000));
 
       await this.handler.deleteAdminBlob(this.listBlobPath);
 

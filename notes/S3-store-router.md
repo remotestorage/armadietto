@@ -28,6 +28,10 @@ Disrecommended — bugs can't be worked around
 * fails simultaneous delete test
 * doesn't implement DeleteObjectsCommand
 
+### Other S3-compatible implementations
+
+Run the Mocha test `spec/store_handlers/S3_store_handler.spec.js` with environment variables set.  (See next section.)
+
 
 ## Configuration
 

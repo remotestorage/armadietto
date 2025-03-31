@@ -21,7 +21,7 @@ const args = parseArgs();
 let conf = {};
 
 if (args.exampleConf) {
-  console.info(fs.readFileSync(path.join(__dirname, '/conf.example.json'), 'utf8'));
+  console.info(fs.readFileSync(path.join(__dirname, '/conf.modular.json'), 'utf8'));
   return -1;
 }
 
@@ -56,7 +56,7 @@ if (conf.http?.port) {
   start( Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT})).catch(getLogger.error);
 }
 
-if (conf.https?.port) {
+if (conf.https?.enable) {
   start(conf.https).catch(getLogger.error);
 }
 

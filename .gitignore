@@ -5,6 +5,7 @@ node_modules
 bin/test-suite-storage/rs/rs-test/.lock
 bin/test-suite-storage/rs/rs-test/.~meta
 bin/test-suite-storage/rs/rs-test/storage
+logs
 test-log
 dev-log
 dev-storage

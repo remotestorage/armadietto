@@ -13,16 +13,19 @@ Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Nod
 
 This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
-## Installation
+## Containerized Installation, Usage & Development
+
+See [the Docker README](./docker/README.md)
+
+## Installation (non-containerized)
 
 1. Ensure you have [a maintained version of Node](https://nodejs.org/en/about/releases/) installed.
 2. If you will be using Apache as a reverse proxy, ensure it is [version 2.4.49 or later](https://community.remotestorage.io/t/avoid-apache-as-a-basis-for-your-server/139).
 3. Run `npm -g i armadietto`
 
-
 ## Usage
 
-See the `notes` directory for configuring a reverse proxy and other recipes.
+See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-configuration.md) and other recipes.
 
 ### Modular (new) Server
 
@@ -33,7 +36,7 @@ See the `notes` directory for configuring a reverse proxy and other recipes.
 * Bug Fix: returns empty listing for nonexistent folder
 * Implements current spec: draft-dejong-remotestorage-22
 
-See [the modular-server-specific documentation](./modular-server.md) for usage.
+See [the modular-server-specific documentation](./notes/modular-server.md) for usage.
 
 ### Monolithic (old) Server
 
@@ -41,7 +44,7 @@ See [the modular-server-specific documentation](./modular-server.md) for usage.
 * More thoroughly tested
 * Implements older spec: draft-dejong-remotestorage-01
 
-See [the monolithic-server-specific documentation](./monolithic-server.md) for usage.
+See [the monolithic-server-specific documentation](./notes/monolithic-server.md) for usage.
 
 ## Storage security
 
@@ -124,7 +127,7 @@ The `force: true` line in the `https` section means the app will:
 * Refuse to process POST authentication requests over insecure connections
 * Block insecure storage requests and revoke the client's access
 
-Armadietto considers a request to be secure if:
+Armadietto considers a request to be secure if one of the following is set:
 
 * armadietto itself acts as an SSL terminator and the connection to it is encrypted
 * The `X-Forwarded-SSL` header has the value `on`
@@ -144,14 +147,14 @@ Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadiet
 
 ## Development
 
-See `DEVELOPMENT.md`
+See [`DEVELOPMENT.md`](./DEVELOPMENT.md)
 
 ## License
 
 (The MIT License)
 
 Copyright © 2012–2015 James Coglan
-Copyright © 2018–2024 remoteStorage contributors
+Copyright © 2018–2025 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in

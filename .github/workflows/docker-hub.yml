@@ -35,7 +35,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./docker/Dockerfile
+        file: ./docker/Dockerfile-monolithic
         tags: ${{ env.DOCKER_USER }}/armadietto:${{ needs.version.outputs.version }}
         outputs: type=docker,dest=/tmp/docker.tar
     - name: Upload artifact

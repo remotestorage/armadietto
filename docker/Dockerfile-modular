@@ -1,0 +1,60 @@
+FROM alpine:latest AS build
+
+ARG PKG_MANAGER="npm"
+ARG INSTALL_COMMAND="npm ci --production"
+
+RUN mkdir /opt/armadietto
+WORKDIR /opt/armadietto
+
+RUN apk add nodejs $PKG_MANAGER
+
+COPY package.json ./
+COPY package-lock.json ./
+
+RUN $INSTALL_COMMAND
+
+FROM alpine:latest
+
+LABEL org.opencontainers.image.title="Armadietto (modular)"
+LABEL org.opencontainers.image.description="Armadietto Node.js web service (a remoteStorage server) (modular)"
+LABEL org.opencontainers.image.documentation="https://remotestorage.io/"
+LABEL org.opencontainers.image.source="https://github.com/remotestorage/armadietto"
+LABEL org.opencontainers.image.licenses="MIT"
+
+ARG CONFIG_PATH_DIR="/etc/armadietto"
+ARG CONFIG_PATH_LOGS="/opt/armadietto/logs"
+ARG USER="armadietto"
+ARG PORT="8000"
+
+ENV NODE_ENV=production
+ENV USER=$USER
+ENV PORT=$PORT
+
+RUN mkdir /opt/armadietto
+WORKDIR /opt/armadietto
+
+
+RUN apk add nodejs
+
+RUN adduser -u 6582 -HD $USER
+
+RUN mkdir -m 0700 $CONFIG_PATH_LOGS
+RUN chown $USER $CONFIG_PATH_LOGS
+
+COPY --from=build /opt/armadietto/node_modules/ node_modules/
+COPY package.json ./
+COPY README.md ./
+COPY lib/ lib/
+COPY bin/ bin/
+
+# Ensure bin file (esp the bang line) has unix eol
+RUN dos2unix bin/www
+
+VOLUME $CONFIG_PATH_DIR
+VOLUME $CONFIG_PATH_LOGS
+EXPOSE $PORT
+USER $USER
+
+CMD ["bin/www", "-c", "/etc/armadietto/conf.json"]
+
+HEALTHCHECK --start-period=10s CMD wget -q -O /dev/null http://127.0.0.1:$PORT/account/login

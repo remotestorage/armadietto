@@ -19,11 +19,11 @@ LABEL description="Armadietto Node.js web service (a remoteStorage server)"
 
 ARG CONFIG_PATH_STORAGE="/usr/share/armadietto"
 ARG CONFIG_PATH_LOGS="/opt/armadietto/logs"
-ARG PROJECT_NAME="armadietto"
+ARG USER="armadietto"
 ARG PORT="8000"
 
 ENV NODE_ENV=production
-ENV PROJECT_NAME=$PROJECT_NAME
+ENV USER=$USER
 ENV PORT=$PORT
 
 RUN mkdir /opt/armadietto
@@ -32,12 +32,12 @@ WORKDIR /opt/armadietto
 
 RUN apk add nodejs
 
-RUN adduser -u 6582 -HD $PROJECT_NAME
+RUN adduser -u 6582 -HD $USER
 
 RUN mkdir -m 0700 $CONFIG_PATH_STORAGE
 RUN mkdir -m 0700 $CONFIG_PATH_LOGS
-RUN chown $PROJECT_NAME $CONFIG_PATH_STORAGE
-RUN chown $PROJECT_NAME $CONFIG_PATH_LOGS
+RUN chown $USER $CONFIG_PATH_STORAGE
+RUN chown $USER $CONFIG_PATH_LOGS
 
 COPY --from=build /opt/armadietto/node_modules/ node_modules/
 COPY package.json ./
@@ -55,7 +55,7 @@ COPY bin/conf.example.json /etc/armadietto/conf.json
 VOLUME $CONFIG_PATH_STORAGE
 VOLUME $CONFIG_PATH_LOGS
 EXPOSE $PORT
-USER $PROJECT_NAME
+USER $USER
 
 CMD ["armadietto", "-c", "/etc/armadietto/conf.json"]
 

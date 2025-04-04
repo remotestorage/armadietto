@@ -393,6 +393,9 @@ section.hero header + p {
 .padding {
   padding: 1em;
 }
+.paddingBottom {
+  padding-bottom: 1em;
+}
 
 .floatRight {
   float: right;

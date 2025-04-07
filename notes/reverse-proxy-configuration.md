@@ -53,5 +53,5 @@ server {
 6. Create a configuration file at `/etc/armadietto/conf.json` (or elsewhere). See README.md for values and their meanings.
 7. Run `armadietto -c /etc/armadietto/conf.json` or configure systemd (or the equivalent in your OS) to run armadietto.  See [the systemd docs](../contrib/systemd/README.md).
 
-Don't use shell scripts to keep Armadietto running.
+Don't use shell scripts nor `nodemon` to keep Armadietto running.
 They respond much slower, are more fragile to unexpected situations, are harder to maintain, and can't be administered like other services.

@@ -7,7 +7,7 @@ Documentation=https://github.com/remotestorage/armadietto/
 
 [Service]
 Type=simple
-Restart=always
+Restart=on-failure
 RestartSec=1
 User=armadietto
 Group=armadietto

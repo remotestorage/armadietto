@@ -1,0 +1,22 @@
+{
+  "host_identity": "example.com",
+  "basePath": "",
+  "allow_signup": true,
+  "http": {
+    "host": "0.0.0.0",
+    "port": 8000
+  },
+  "https": {
+    "host": "0.0.0.0",
+    "enable": false,
+    "force": false,
+    "port": 4443,
+    "cert": "/etc/letsencrypt/live/example.com/cert.pem",
+    "key": "/etc/letsencrypt/live/example.com/privkey.pem"
+  },
+  "logging": {
+	  "log_dir": "logs",
+	  "stdout": ["info"],
+	  "log_files": ["notice"]
+  }
+}

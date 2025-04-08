@@ -36,7 +36,7 @@ const remoteStorageServer = {
     let conf = {};
 
     if (args.exampleConf) {
-      console.log(fs.readFileSync(path.join(__dirname, '/conf.example.json'), 'utf8'));
+      console.log(fs.readFileSync(path.join(__dirname, '/conf.monolithic.json'), 'utf8'));
       return -1;
     }
 

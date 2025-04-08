@@ -11,8 +11,8 @@
     "port": 8000
   },
   "https": {
-    "enable": true,
-    "portXXX": 4443,
+    "enable": false,
+    "port": 4443,
     "key": "../../example.com+5-key.pem",
     "cert": "../../example.com+5.pem"
   },

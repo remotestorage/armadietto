@@ -149,7 +149,7 @@ It also must implement a method
 ```
 router.allocateUserStorage = async function (id, logNotes)
 ```
-which is called by the accountMgr object.
+which is called by the accountMgr object. `id` is a string. `logNotes` is a Set.
 
 It also must implement methods
 ```javascript

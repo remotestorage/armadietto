@@ -14,6 +14,7 @@ describe('S3 store router', function () {
     configureLogger({ stdout: ['notice'], log_dir: './test-log', log_files: ['debug'] });
     this.USER_NAME_SUFFIX = '-java.extraordinary.org';
     // If the environment variables aren't set, tests are run using a shared public account on play.min.io
+    console.info(`creating s3storeHandler with endpoint “${process.env.S3_ENDPOINT}”, accessKey “${process.env.S3_ACCESS_KEY}”, & region “${process.env.S3_REGION}”`);
     this.handler = s3storeHandler({ endPoint: process.env.S3_ENDPOINT, accessKey: process.env.S3_ACCESS_KEY, secretKey: process.env.S3_SECRET_KEY, region: process.env.S3_REGION || 'us-east-1', userNameSuffix: this.USER_NAME_SUFFIX });
     this.accountMgr = this.store = this.handler;
   });

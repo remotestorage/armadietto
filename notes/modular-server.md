@@ -54,7 +54,7 @@ The following values in the configuration file must be set:
 * `basePath` [usually ""]
 * `allow_signup`
 * `http` [set `http.port` to serve using HTTP]
-* `https` [set `https.port` to serve using HTTPS]
+* `https` [set `https.port` and `https.enable` to serve using HTTPS]
 * `logging`
 
 The following values in the configuration file are optional:
@@ -149,7 +149,7 @@ It also must implement a method
 ```
 router.allocateUserStorage = async function (id, logNotes)
 ```
-which is called by the accountMgr object.
+which is called by the accountMgr object. `id` is a string. `logNotes` is a Set.
 
 It also must implement methods
 ```javascript

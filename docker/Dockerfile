@@ -50,7 +50,7 @@ RUN dos2unix bin/armadietto.js
 
 RUN ln -s /opt/armadietto/bin/armadietto.js /usr/local/bin/armadietto
 
-COPY bin/conf.example.json /etc/armadietto/conf.json
+COPY bin/conf.monolithic.json /etc/armadietto/conf.json
 
 VOLUME $CONFIG_PATH_STORAGE
 VOLUME $CONFIG_PATH_LOGS

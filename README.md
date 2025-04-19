@@ -13,7 +13,11 @@ Armadietto is a [RemoteStorage](https://remotestorage.io) server written for Nod
 
 This is a complete rewrite of [reStore](https://github.com/jcoglan/restore).
 
-## Installation
+## Containerized Installation, Usage & Development
+
+See [the Docker README](./docker/README.md)
+
+## Installation (non-containerized)
 
 1. Ensure you have [a maintained version of Node](https://nodejs.org/en/about/releases/) installed.
 2. If you will be using Apache as a reverse proxy, ensure it is [version 2.4.49 or later](https://community.remotestorage.io/t/avoid-apache-as-a-basis-for-your-server/139).
@@ -33,7 +37,7 @@ See the `notes` directory for configuring a reverse proxy and other recipes.
 * Bug Fix: returns empty listing for nonexistent folder
 * Implements current spec: draft-dejong-remotestorage-22
 
-See [the modular-server-specific documentation](./modular-server.md) for usage.
+See [the modular-server-specific documentation](./notes/modular-server.md) for usage.
 
 ### Monolithic (old) Server
 
@@ -41,7 +45,7 @@ See [the modular-server-specific documentation](./modular-server.md) for usage.
 * More thoroughly tested
 * Implements older spec: draft-dejong-remotestorage-01
 
-See [the monolithic-server-specific documentation](./monolithic-server.md) for usage.
+See [the monolithic-server-specific documentation](./notes/monolithic-server.md) for usage.
 
 ## Storage security
 
@@ -81,7 +85,7 @@ If armadietto is behind a reverse proxy on the same machine, the proxy can handl
 so armadietto only needs to set `enable` and `force` in the https configuration.
 The reverse proxy must set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header.
 
-This configuration boots the app on two ports, one secure and one
+This configuration (for the monolithic server) boots the app on two ports, one secure and one
 plaintext:
 
 ```js
@@ -151,7 +155,7 @@ See `DEVELOPMENT.md`
 (The MIT License)
 
 Copyright © 2012–2015 James Coglan
-Copyright © 2018–2024 remoteStorage contributors
+Copyright © 2018–2025 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in

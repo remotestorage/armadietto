@@ -33,8 +33,7 @@ User data will be discarded when the container is deleted.
 ### Configuration
 
 The default configuration file for armadietto can be found within the docker
-container in `/etc/armadietto/conf.json` and contains the following
-configuration:
+container in `/etc/armadietto/conf.json`.  For the monolithic server, it looks like:
 
 ```json
 {

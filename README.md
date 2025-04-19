@@ -85,7 +85,7 @@ If armadietto is behind a reverse proxy on the same machine, the proxy can handl
 so armadietto only needs to set `enable` and `force` in the https configuration.
 The reverse proxy must set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header.
 
-This configuration boots the app on two ports, one secure and one
+This configuration (for the monolithic server) boots the app on two ports, one secure and one
 plaintext:
 
 ```js

@@ -3,10 +3,11 @@
 <section>
 	<header class="centeredText">
 		<h2>Account Info</h2>
-		<p>Your storage account: <%= params.displayName %>@<%= host %></p>
+		<p>Your storage account: <%= params.username %>@<%= host %></p>
 	</header>
 
-	<table class="account-info">
+	<% if (sessions.length) { %>
+	<table class="account-info centering-container">
 		<thead>
 			<tr>
 				<th>Application</th>
@@ -30,6 +31,9 @@
 		<% }); %>
 		</tbody>
 	</table>
+	<% } else { %>
+	<div class="centeredText">No applications have been authorized</div>
+	<% } %>
 </section>
 
 <%- include('footer.html'); %>

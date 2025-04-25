@@ -70,7 +70,7 @@
     "test-s3-wo-configured-server": "mocha spec/store_handlers/S3_store_handler.spec.js",
     "lint": "eslint --max-warnings=0 \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
-    "build-monolithic": "docker build . -f docker/Dockerfile -t remotestorage/armadietto-monolithic"
+    "build-monolithic": "docker build . -f docker/Dockerfile-monolithic -t remotestorage/armadietto-monolithic"
   },
   "repository": {
     "type": "git",

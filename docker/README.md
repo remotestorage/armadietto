@@ -18,16 +18,22 @@ It is also available as the
 
 ## Usage of containerized Armadietto
 
-### Basic usage
+You may need to preface the `docker` commands below with `sudo`, depending on how Docker is installed on your host machine.
+
+### Quick test
+
+For a quick test server, run
+
 ```shell
-docker run -d -p 8000:8000 remotestorage/armadietto:latest
+docker run -d -p 8000:8000 remotestorage/armadietto-monolithic:latest
 ```
+It will serve over HTTP only on port 8000.
+User data will be discarded when the container is deleted.
 
 ### Configuration
 
 The default configuration file for armadietto can be found within the docker
-container in `/etc/armadietto/conf.json` and contains the following
-configuration:
+container in `/etc/armadietto/conf.json`.  For the monolithic server, it looks like:
 
 ```json
 {
@@ -58,20 +64,20 @@ configuration:
 A custom configuration file can be used by mounting it in the container
 
 ```shell
-docker run -d -v /my/custom/armadietto.conf.json:/etc/armadietto/conf.json:ro -p 8000:8000 remotestorage/armadietto:latest
+docker run -d -v /my/custom/armadietto.conf.json:/etc/armadietto/conf.json:ro -p 8000:8000 remotestorage/armadietto-monolithic:latest
 ```
 
 A suitable data directory should also be mounted in the container to
 ensure data is persisted.
 
 ```shell
-docker run -d -v /data/armadietto:/usr/share/armadietto -p 8000:8000 remotestorage/armadietto:latest
+docker run -d -v /data/armadietto:/usr/share/armadietto -p 8000:8000 remotestorage/armadietto-monolithic:latest
 ```
 
 To persist logs, mount their directory:
 
 ```shell
-docker run -d -v /data/armadietto-logs:/opt/armadietto/logs -p 8000:8000 remotestorage/armadietto:latest
+docker run -d -v /data/armadietto-logs:/opt/armadietto/logs -p 8000:8000 remotestorage/armadietto-monolithic:latest
 ```
 
 *Note:* The data and log folders and their contents must be writable and
@@ -88,9 +94,9 @@ folder in the armadietto git repository.
 
 ## Development
 
-The armadietto docker image is built using the
+The armadietto-monolithic docker image is built using the
 [armadietto](https://github.com/remotestorage/armadietto) git repository
-and the [`docker/Dockerfile`](./Dockerfile)
+and the [`docker/Dockerfile-monolithic`](./Dockerfile-monolithic)
 [Dockerfile](https://docs.docker.com/engine/reference/builder/). To build
 the image yourself, clone the git repository and use the
 [`docker build`](https://docs.docker.com/engine/reference/commandline/build/) command:
@@ -98,7 +104,7 @@ the image yourself, clone the git repository and use the
 ```shell
 git clone https://github.com/remotestorage/armadietto
 cd armadietto
-docker build -t remotestorage/armadietto -f docker/Dockerfile .
+npm run build-monolithic
 ```
 
 Further information about the development of armadietto can be found in the

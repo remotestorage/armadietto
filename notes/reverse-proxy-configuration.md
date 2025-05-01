@@ -3,7 +3,7 @@
 1. [optional] Set a DNS A record for a new domain name, if Armadietto will appear as a different host than other websites served by your reverse proxy.
 2. Ensure your TLS certificate includes the domain name Armadietto be will visible as.
 3. [optional] Set up a name-based virtual server, if Armadietto will appear as a different host than other websites served by your reverse proxy.
-4. Configure your reverse proxy, and have it set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header, nor the PROXY protocol. For Apache, the directives are `ProxyPass`, `ProxyPassReverse`, and `RequestHeader`. For Apache, a name-based virtual server and reverse proxy will resemble:
+4. Configure your reverse proxy, and have it set the header `x-forwarded-proto` (or `x-forwarded-ssl` or `x-forwarded-scheme`) in the request passed to Armadietto. Armadietto does not yet support the `Forwarded` header, nor the PROXY protocol. For Apache, the directives are `ProxyPass`, `ProxyPassReverse`, and `RequestHeader`. If the proxy is running on a different host than Armadietto, you must also set the `X-Forwarded-Host` header. For Apache, a name-based virtual server and reverse proxy on the same host will resemble:
 ```
 <VirtualHost *:443>
 ServerName storage.example.com
@@ -21,7 +21,7 @@ RequestHeader unset x-forwarded-scheme
 RequestHeader unset x-forwarded-host
 </VirtualHost>
 ```
-For nginx, a name-based virtual server and reverse proxy will resemble
+For nginx, a name-based virtual server and reverse proxy on the same host will resemble
 ```
 server {
     server_name storage.example.com
@@ -50,7 +50,7 @@ server {
 
 ```
 5. Run `armadietto -e` to see a sample configuration file.
-6. Create a configuration file at `/etc/armadietto/conf.json` (or elsewhere). See README.md for values and their meanings.
+6. Create a configuration file at `/etc/armadietto/conf.json` (or elsewhere). See [the modular-server-specific documentation](../notes/modular-server.md) or [the monolithic-server-specific documentation](../notes/monolithic-server.md) for values.
 7. Run `armadietto -c /etc/armadietto/conf.json` or configure systemd (or the equivalent in your OS) to run armadietto.  See [the systemd docs](../contrib/systemd/README.md).
 
 Don't use shell scripts nor `nodemon` to keep Armadietto running.

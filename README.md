@@ -23,10 +23,9 @@ See [the Docker README](./docker/README.md)
 2. If you will be using Apache as a reverse proxy, ensure it is [version 2.4.49 or later](https://community.remotestorage.io/t/avoid-apache-as-a-basis-for-your-server/139).
 3. Run `npm -g i armadietto`
 
-
 ## Usage
 
-See the `notes` directory for configuring a reverse proxy and other recipes.
+See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-configuration.md) and other recipes.
 
 ### Modular (new) Server
 
@@ -46,6 +45,13 @@ See [the modular-server-specific documentation](./notes/modular-server.md) for u
 * Implements older spec: draft-dejong-remotestorage-01
 
 See [the monolithic-server-specific documentation](./notes/monolithic-server.md) for usage.
+
+### In Production
+
+In production, configure systemd (or the equivalent in your OS) to run armadietto.  See [the systemd docs](../contrib/systemd/README.md).
+Don't use shell scripts nor `nodemon` to keep Armadietto running.
+They respond much slower, are more fragile to unexpected situations, are harder to maintain, and can't be administered like other services.
+
 
 ## Storage security
 
@@ -128,7 +134,7 @@ The `force: true` line in the `https` section means the app will:
 * Refuse to process POST authentication requests over insecure connections
 * Block insecure storage requests and revoke the client's access
 
-Armadietto considers a request to be secure if:
+Armadietto considers a request to be secure if one of the following is set:
 
 * armadietto itself acts as an SSL terminator and the connection to it is encrypted
 * The `X-Forwarded-SSL` header has the value `on`
@@ -148,7 +154,7 @@ Set the environment `DEBUG` to enable logging.  For example `DEBUG=true armadiet
 
 ## Development
 
-See `DEVELOPMENT.md`
+See [`DEVELOPMENT.md`](./DEVELOPMENT.md)
 
 ## License
 

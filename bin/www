@@ -31,6 +31,7 @@ try {
   console.error(`Unable to load config file “${args.conf}”:`, err);
   return -2;
 }
+console.debug(`config ${args.conf}: ` + JSON.stringify(conf));
 
 /** Configures application */
 
@@ -77,6 +78,10 @@ async function start(network) {
   app.set('forceSSL', Boolean(conf.https?.force));
   if (network?.port && conf.https?.port) {
     app.set('httpsPort', parseInt(conf.https?.port));   // only for redirecting to HTTPS
+  }
+
+  if (conf.trust_proxy) {
+    app.set('trust proxy', conf.trust_proxy);
   }
 
   app.locals.title = "Modular Armadietto";

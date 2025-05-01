@@ -1,5 +1,5 @@
 {
-  "host_identity": "example.com",
+  "host_identity": "localhost",
   "basePath": "",
   "allow_signup": true,
   "http": {
@@ -9,10 +9,10 @@
   "https": {
     "host": "0.0.0.0",
     "port": 4443,
-    "enable": false,
+    "enable": true,
     "force": false,
-    "cert": "/etc/letsencrypt/live/example.com/cert.pem",
-    "key": "/etc/letsencrypt/live/example.com/privkey.pem"
+    "cert": "/etc/armadietto/cert.pem",
+    "key": "/etc/armadietto/privkey.pem"
   },
   "trust_proxy": null,
   "logging": {

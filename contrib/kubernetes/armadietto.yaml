@@ -1,0 +1,248 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "storage"
+  annotations:
+    domain: "storage.example.com"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: armadietto-conf-dir
+  namespace: storage
+immutable: false
+data:
+  conf.json: |
+    {
+      "host_identity": "storage.example.com",
+      "basePath": "",
+      "allow_signup": true,
+      "http": {
+        "host": "0.0.0.0",
+        "port": 8000
+      },
+      "https": {
+        "host": "0.0.0.0",
+        "port": 4443,
+        "enable": false,
+        "force": false,
+        "cert": "/etc/armadietto/cert.pem",
+        "key": "/etc/armadietto/privkey.pem"
+      },
+      "trust_proxy": "10.0.0.0/8",
+      "logging": {
+        "log_dir": "logs",
+        "stdout": ["debug"],
+        "log_files": ["notice"]
+      }
+    }
+  cert.pem: ""
+  privkey.pem: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: armadietto
+  namespace: storage
+  labels:
+    app.kubernetes.io/name: armadietto
+    app.kubernetes.io/component: server
+  annotations:
+    description: Armadietto modular remoteStorage server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: armadietto
+  template:
+    metadata:
+      name: armadietto
+      labels:
+        app.kubernetes.io/name: armadietto
+        app.kubernetes.io/component: server
+      annotations:
+        description: Armadietto modular remoteStorage server
+    spec:
+      restartPolicy: Always
+      volumes:
+        # `name` here must match the name
+        # specified in the volume mount
+        - name: armadietto-conf-dir-volume
+          configMap:
+            # `name` here must match the name
+            # specified in the ConfigMap's YAML
+            name: armadietto-conf-dir
+      containers:
+        - name: armadietto
+          image: remotestorage/armadietto-modular:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            - name: S3_ENDPOINT
+              value: foo.bar.com
+            - name: S3_ACCESS_KEY
+              value: XXXX
+            - name: S3_SECRET_KEY
+              value: YYYY
+            - name: BOOTSTRAP_OWNER
+              value: admin@example.com
+#            - name: DEBUG
+#              value: "true"
+#          securityContext:
+#            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: armadietto-conf-dir-volume
+              mountPath: /etc/armadietto
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              port: 8000
+              path: /.well-known/host-meta.json?READINESS_PROBE   # distinctive to Armadietto
+            initialDelaySeconds: 1   # > min startup time
+            periodSeconds: 13   # not multiple of 2 nor 5
+            failureThreshold: 4   # period * threshold > S3 max response time
+          livenessProbe: # an imprecise test, so is very conservative
+            httpGet:
+              port: 8000
+              path: /.well-known/host-meta.json?LIVENESS_PROBE   # distinctive to Armadietto
+            initialDelaySeconds: 60   # > max startup time
+            periodSeconds: 13   # not multiple of 2 nor 5
+            failureThreshold: 15
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 10   # rule: distribute
+              podAffinityTerm:
+                # considers pods in nodes with matching label
+                topologyKey: "kubernetes.io/hostname"
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: armadietto
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: armadietto-min-1
+  namespace: storage
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: armadietto
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: armadietto-session
+  namespace: storage
+  labels:
+    app.kubernetes.io/name: armadietto
+    app.kubernetes.io/component: distributor
+  annotations:
+    description: remoteStorage server account/admin sessions
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: armadietto
+  ports:
+    - name: http-8000-8000
+      port: 8000
+      protocol: TCP
+      targetPort: 8000
+      appProtocol: http
+#  sessionAffinity: ClientIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: armadietto-documents
+  namespace: storage
+  labels:
+    app.kubernetes.io/name: armadietto
+    app.kubernetes.io/component: distributor
+  annotations:
+    description: remoteStorage server atomic requests
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: armadietto
+  ports:
+    - name: http-8000-8000
+      port: 8000
+      protocol: TCP
+      targetPort: 8000
+      appProtocol: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: armadietto-session
+  namespace: storage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/common-name: storage.example.com
+    cert-manager.io/subject-organizations: My Org
+    haproxy.org/cookie-persistence: "id2"
+spec:
+  ingressClassName: haproxy
+  rules:
+    - host: storage.example.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /oauth
+            backend:
+              service:
+                name: armadietto-session
+                port:
+                  number: 8000
+          - pathType: Prefix
+            path: /account
+            backend:
+              service:
+                name: armadietto-session
+                port:
+                  number: 8000
+          - pathType: Prefix
+            path: /admin
+            backend:
+              service:
+                name: armadietto-session
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - storage.example.com
+      secretName: certmgr-example
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: armadietto-documents
+  namespace: storage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/common-name: storage.example.com
+    cert-manager.io/subject-organizations: My Org
+    # most queries are streaming data from S3; some documents are very long
+    haproxy.org/load-balance: "leastconn"
+spec:
+  ingressClassName: haproxy
+  rules:
+    - host: storage.example.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: armadietto-documents
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - storage.example.com
+      secretName: certmgr-example
+---

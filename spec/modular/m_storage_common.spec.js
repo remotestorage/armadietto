@@ -162,6 +162,7 @@ describe('Storage (modular)', function () {
         const res = await get(this.app, '/storage/zebcoe/public/locog/seats', this.bad_token);
         expect(res).to.have.status(200);
         expect(res.get('Cache-Control')).to.contain('public');
+        expect(res.get('Cache-Control')).to.contain('no-cache');
       });
 
       it('does not return Cache-Control: public for a public folder', async function () {

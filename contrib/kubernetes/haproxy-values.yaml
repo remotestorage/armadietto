@@ -1,0 +1,46 @@
+# Edit the values here as needed, then install the HAProxy Ingress Controller with:
+# helm upgrade --install haproxy-controller haproxytech/kubernetes-ingress --create-namespace --namespace haproxy-controller -f haproxy-values.yaml
+
+controller:
+  ingressClassResource:
+    name: haproxy
+#    default: false
+#    parameters: {}
+  ingressClass: haproxy   # default name
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/do-loadbalancer-enable-backend-keepalive: "true"
+      kubernetes.digitalocean.com/load-balancer-id: armadietto   # recognizable name on DO
+      # additional annotations might be needed on other providers than DigitalOcean
+    enablePorts:
+      quic: false
+      stat: false
+      prometheus: false
+    tcpPorts:
+
+  ## Controller container listener port configuration
+  containerPort:
+    https: 4443
+
+  livenessProbe:
+    failureThreshold: 12
+
+#  extraArgs:
+#    - --log=warning
+
+  config:
+    ssl-redirect: "false"   # frontend-config-snippet does this better
+    frontend-config-snippet: |
+      acl acme_challenge path_beg /.well-known/acme-challenge/
+      http-request redirect scheme https code 308 unless { ssl_fc } || acme_challenge
+#    load-balance: "leastconn"
+    rate-limit: "ON"
+    rate-limit-period: "5s"
+    rate-limit-status-code: "429"
+    rate-limit-requests: "500"
+
+  extraEnvs:
+    ## Sets TZ env to configure timezone on controller containers
+     - name: TZ
+       value: "Etc/UTC"

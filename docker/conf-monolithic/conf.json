@@ -1,0 +1,23 @@
+{
+  "allow_signup": true,
+  "storage_path": "/usr/share/armadietto",
+  "cache_views": true,
+  "http": {
+    "host": "0.0.0.0",
+    "port": 8000
+  },
+  "https": {
+    "host": "0.0.0.0",
+    "enable": false,
+    "force": false,
+    "port": 4443,
+    "cert": "/etc/armadietto/cert.pem",
+    "key": "/etc/armadietto/privkey.pem"
+  },
+  "logging": {
+	  "log_dir": "logs",
+	  "stdout": ["info"],
+	  "log_files": ["notice", "crit"]
+  },
+  "basePath": ""
+}

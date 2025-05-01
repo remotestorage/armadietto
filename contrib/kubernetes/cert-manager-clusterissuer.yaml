@@ -1,0 +1,60 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: admin@example.org
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      # Secret resource that will be used to store the account's private key.
+      # This is your identity with your ACME provider. Any secret name
+      # may be chosen. It will be populated with data automatically,
+      # so generally nothing further needs to be done with
+      # the secret. If you lose this identity/secret, you will be able to
+      # generate a new one and generate certificates for any/all domains
+      # managed using your previous account, but you will be unable to revoke
+      # any certificates generated using that previous account.
+      name: cluster-issuer-account-key-staging
+    # Add a ACME HTTP01 challenge solver
+    solvers:
+    - http01:
+        ingress:
+          ingressClassName: haproxy
+#      - dns01:
+#          digitalocean:
+#            # Kubernetes secret that contains the DO API token.
+#            # Must be in the same namespace as the Issuer CRD.
+#            tokenSecretRef:
+#              name: digitalocean-dns
+#              key: access-token
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+spec:
+  acme:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: admin@example.org
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      # Secret resource that will be used to store the account's private key.
+      # This is your identity with your ACME provider. Any secret name
+      # may be chosen. It will be populated with data automatically,
+      # so generally nothing further needs to be done with
+      # the secret. If you lose this identity/secret, you will be able to
+      # generate a new one and generate certificates for any/all domains
+      # managed using your previous account, but you will be unable to revoke
+      # any certificates generated using that previous account.
+      name: cluster-issuer-account-key-production
+    # Add a ACME HTTP01 challenge solver
+    solvers:
+      - http01:
+        ingress:
+          ingressClassName: haproxy

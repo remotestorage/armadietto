@@ -70,6 +70,7 @@
     "test-s3-wo-configured-server": "mocha spec/store_handlers/S3_store_handler.spec.js",
     "lint": "eslint --max-warnings=0 \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
     "lint:fix": "eslint --fix \"lib/**/*.js\" \"bin/**/*.js\" \"spec/**/*.js\"",
+    "build-modular": "docker build . -f docker/Dockerfile-modular -t remotestorage/armadietto-modular:$(date -u +'%Y-%m-%d-%H-%M')",
     "build-monolithic": "docker build . -f docker/Dockerfile-monolithic -t remotestorage/armadietto-monolithic"
   },
   "repository": {

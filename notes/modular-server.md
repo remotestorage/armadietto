@@ -80,6 +80,7 @@ The following values in the configuration file must be set:
 * `logging`
 
 The following values in the configuration file are optional:
+* `trust_proxy`   See the [Express docs](https://expressjs.com/en/guide/behind-proxies.html)
 * `s3.user_name_suffix`
 
 Other values in the configuration files are ignored.

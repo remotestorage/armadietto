@@ -16,6 +16,10 @@ Tested services include:
 
 * Fully working
 
+### Scaleway Object Storage
+
+* Fully working
+
 ### Garage
 
 * doesn't implement versioning (which would be nice for recovery)

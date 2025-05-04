@@ -15,7 +15,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
 
     after(async function () {
       if (this.userIdAccount) {
-        this.timeout(10_000);
+        this.timeout(15_000);
         await this.accountMgr.deleteUser(this.userIdAccount, new Set());
       }
     });
@@ -33,6 +33,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('creates a user & rejects creating a new user with an existing username', async function () {
+      this.timeout(15_000);
       const params1 = { username: this.usernameAccount, contactURL: 'a@b.cc' };
       const logNotes1 = new Set();
       const user = await this.accountMgr.createUser(params1, logNotes1);
@@ -71,12 +72,13 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     after(async function () {
+      this.timeout(15_000);
       await this.accountMgr.deleteUser(this.user1?.username, new Set());
       await this.accountMgr.deleteUser(this.user2?.username, new Set());
     });
 
     it('should list users', async function () {
-      this.timeout(10_000);
+      this.timeout(15_000);
       const params1 = { username: this.usernameAccountList1, contactURL: 'mailto:d@ef.gh' };
       this.user1 = await this.accountMgr.createUser(params1, new Set());
       const params2 = { username: this.usernameAccountList2, contactURL: 'mailto:i@jk.lm' };
@@ -99,7 +101,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     after(async function () {
-      this.timeout(10_000);
+      this.timeout(15_000);
       if (this.user2?.username) {
         await this.accountMgr.deleteUser(this.user2.username, new Set());
       }
@@ -109,7 +111,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('deletes a user', async function () {
-      this.timeout(10_000);
+      this.timeout(15_000);
       const params = { username: this.usernameAccount2, contactURL: 'a@b.cc' };
       this.user2 = await this.accountMgr.createUser(params, new Set());
 
@@ -122,7 +124,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('returns normally when user deleted twice at the same time', async function () {
-      this.timeout(10_000);
+      this.timeout(15_000);
       const params = { username: this.usernameAccount3, contactURL: 'b@c.dd' };
       this.user3 = await this.accountMgr.createUser(params, new Set());
 
@@ -135,7 +137,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
       expect(results[1]?.[0]).to.be.within(0, 1); // at most 1 blob
       expect(results[1]?.[1]).to.equal(0); // no errors
       expect(results[1]?.[2]).to.be.within(0, 1); // at most 1 pass
-      expect(logNotes.size).to.equal(2); // success note from each call
+      expect(logNotes.size).to.be.within(1, 2); // success notes may be identical
     });
 
     it('returns normally when user doesn\'t exist', async function () {

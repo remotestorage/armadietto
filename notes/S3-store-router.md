@@ -12,6 +12,10 @@ Tested services include:
 
 * Fully working
 
+### DigitalOcean Spaces
+
+* Fully working
+
 ### Garage
 
 * doesn't implement versioning (which would be nice for recovery)

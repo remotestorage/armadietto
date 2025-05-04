@@ -11,6 +11,7 @@ const { shouldCreateDeleteAndReadAccounts } = require('../account.spec');
 
 describe('S3 store router', function () {
   before(function () {
+    this.timeout(15_000);
     configureLogger({ stdout: ['notice'], log_dir: './test-log', log_files: ['debug'] });
     this.USER_NAME_SUFFIX = '-java.extraordinary.org';
     // If the environment variables aren't set, tests are run using a shared public account on play.min.io

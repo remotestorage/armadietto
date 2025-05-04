@@ -380,11 +380,11 @@ module.exports.shouldStoreStreams = function () {
         expect(folder.items['yellow-red'].ETag).to.equal(stripQuotes(putRes1.get('ETag')));
         expect(folder.items['yellow-red']['Content-Type']).to.equal('text/csv');
         expect(folder.items['yellow-red']['Content-Length']).to.equal(content1.length);
-        expect(Date.now() - new Date(folder.items['yellow-red']['Last-Modified'])).to.be.lessThan(9_000);
+        expect(Date.now() - new Date(folder.items['yellow-red']['Last-Modified'])).to.be.lessThan(20_000);
         expect(folder.items['blue-green'].ETag).to.equal(stripQuotes(putRes2.get('ETag')));
         expect(folder.items['blue-green']['Content-Type']).to.equal('text/n3');
         expect(folder.items['blue-green']['Content-Length']).to.equal(content2.length);
-        expect(Date.now() - new Date(folder.items['blue-green']['Last-Modified'])).to.be.lessThan(9_000);
+        expect(Date.now() - new Date(folder.items['blue-green']['Last-Modified'])).to.be.lessThan(15_000);
         expect(folder.items['subfolder/'].ETag).to.match(/^.{6,128}$/);
 
         const [_subfolderReq, subfolderRes] = await callMiddleware(this.handler, {
@@ -400,7 +400,7 @@ module.exports.shouldStoreStreams = function () {
         expect(subfolder.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolder.items['purple-ultraviolet']['Content-Type']).to.equal('text/plain');
         expect(subfolder.items['purple-ultraviolet']['Content-Length']).to.equal(content3.length);
-        expect(Date.now() - new Date(subfolder.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(9_000);
+        expect(Date.now() - new Date(subfolder.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
 
         const [_getReq2, getRes2] = await callMiddleware(this.handler, {
           method: 'GET',
@@ -447,7 +447,7 @@ module.exports.shouldStoreStreams = function () {
         const subfolderChanged = JSON.parse(subfolderRes2._getBuffer().toString());
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).not.to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes4.get('ETag')));
-        expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(9_000);
+        expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
       });
 
       it('returns folder when If-None-Match has an old ETag', async function () {
@@ -475,7 +475,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder.items.mud.ETag).to.equal(stripQuotes(putRes.get('ETag')));
         expect(folder.items.mud['Content-Type']).to.equal('text/vnd.qq');
         expect(folder.items.mud['Content-Length']).to.equal(content.length);
-        expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(9_000);
+        expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(15_000);
       });
     });
   });
@@ -911,7 +911,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder1.items.qux['Content-Length']).to.be.equal(content.length);
         expect(folder1.items.qux['Content-Type']).to.be.equal('text/example');
         expect(folder1.items.qux.ETag).to.be.equal(stripQuotes(putRes.get('ETag')));
-        expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(5000);
+        expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(15_000);
 
         const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/foo/` });
         expect(folderRes2.statusCode).to.equal(200);

@@ -53,11 +53,11 @@ if (!hostIdentity) {
 const userNameSuffix = conf.user_name_suffix ?? '-' + hostIdentity;
 
 if (conf.http?.port) {
-  start( Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT})).catch(getLogger.error);
+  start( Object.assign({}, conf.http, process.env.PORT && {port: process.env.PORT})).catch(getLogger().error);
 }
 
 if (conf.https?.enable) {
-  start(conf.https).catch(getLogger.error);
+  start(conf.https).catch(getLogger().error);
 }
 
 

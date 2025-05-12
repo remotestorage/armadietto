@@ -6,11 +6,33 @@ There's an NPM module for almost anything worth doing in a Node.js server (albei
 
 ## Installation
 
+### S3-compatible storage
+
 In addition to installing Armadietto, you **MUST** have a server  with an S3-compatible interface.
 If your hosting provider doesn't offer S3-compatible storage as a service, you can self-host using any of several open-source servers, on the same machine as Armadietto if you like.
 
 See [S3-compatible Streaming Store](S3-store-router.md) for compatability of various implementations.
 [Garage](https://garagehq.deuxfleurs.fr/) is used while developing Armadietto.
+
+For testing, you can not set the [S3 environment variables](S3-store-router.md#configuration), in which case the S3 router will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world!
+
+### Secure origin
+
+The modular server uses Passkeys and the Web Authentication API.
+This requires a secure origin — it must be served over HTTPS.
+If you don't have another source of TLS certificates for your production machine, [Let's Encript](https://letsencrypt.org/docs/) is a good choice.
+
+
+To develop or run the modular server locally, add a new entry for the local machine under a new name, to `/etc/hosts` .  For example
+```
+127.0.0.1 foo.example.org
+```
+and then use [`mkcert`](https://github.com/FiloSottile/mkcert) to generate a TLS certificate for `foo.example.org` that the browser on your machine will accept.
+Finally, set the value of `host_identity` in your config file to `foo.example.org` (or whatever), and set `https.cert` and `https.key` to point to your TLS certificate and key files.
+
+Another approach is setting up a reverse proxy on your development machine.
+There are other solutions, as well, to setting up a local origin that your browser will accept as secure.
+
 
 ## Use
 
@@ -39,7 +61,7 @@ The following environment variables are read:
 * NODE_ENV
 
 For production, you should set the environment variable `NODE_ENV` to `production` and configure systemd (or your OS's equivalent) to start and re-start Armadietto.
-See [the systemd docs](../contrib/systemd/README.md).
+See [the systemd notes](../contrib/systemd/README.md).
 
 To add Express modules (such as [express-rate-limit](https://www.npmjs.com/package/express-rate-limit)), edit `bin/www` and `lib/appFactory.js`, or write your own scripts.
 

@@ -20,7 +20,7 @@ For testing, you can not set the [S3 environment variables](S3-store-router.md#c
 
 The modular server uses Passkeys and the Web Authentication API.
 This requires a secure origin — it must be served over HTTPS.
-If you don't have another source of TLS certificates for your production machine, [Let's Encript](https://letsencrypt.org/docs/) is a good choice.
+If you don't have another source of TLS certificates for your production machine, [Let's Encrypt](https://letsencrypt.org/docs/) is a good choice.
 
 
 To develop or run the modular server locally, add a new entry for the local machine under a new name, to `/etc/hosts` .  For example

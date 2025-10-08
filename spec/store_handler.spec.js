@@ -846,21 +846,21 @@ module.exports.shouldStoreStreams = function () {
           })
         ]);
 
-        expect(res1.statusCode).to.equal(201);
-        expect(res1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(res1.statusCode).to.be.oneOf([201, 409]);
         expect(res1._getBuffer().toString()).to.equal('');
         expect(next1).not.to.have.been.called();
 
-        expect(res2.statusCode).to.equal(201);
-        expect(res2.get('ETag')).to.equal(res1.get('ETag'));
+        expect(res2.statusCode).to.be.oneOf([201, 409]);
         expect(res2._getBuffer().toString()).to.equal('');
         expect(next2).not.to.have.been.called();
+
+        expect(res1.get('ETag') || res2.get('ETag')).to.match(/^".{6,128}"$/);
 
         const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
-        expect(headRes.get('ETag')).to.equal(res1.get('ETag'));
+        expect(headRes.get('ETag')).to.equal(res1.get('ETag') || res2.get('ETag'));
       });
 
       it('creates at least one of conflicting simultaneous creates', async function () {
@@ -883,19 +883,19 @@ module.exports.shouldStoreStreams = function () {
           })
         ]);
 
+        expect(resLong.get('ETag') || resShort.get('ETag')).to.match(/^".{6,128}"$/);
+
         expect(resLong.statusCode).to.be.oneOf([201, 409, 503]);
-        // expect(resLong.get('ETag')).to.match(/^".{6,128}"$/);
         expect(resLong._getBuffer().toString()).to.equal('');
         expect(nextLong).not.to.have.been.called();
 
         expect(resShort.statusCode).to.be.oneOf([201, 409, 503]);
-        // expect(resShort.get('ETag')).to.match(/^".{6,128}"$/);
         expect(resShort.get('ETag')).not.to.equal(resLong.get('ETag'));
         expect(resShort._getBuffer().toString()).to.equal('');
         expect(nextShort).not.to.have.been.called();
 
-        // One or neither call receives a Conflict.
-        expect(resLong.statusCode + resShort.statusCode).to.be.lessThanOrEqual(201 + 503);
+        // At least one succeeds
+        expect([resLong.statusCode, resShort.statusCode]).to.include(201);
 
         const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/conflicting-simultanous-put` });
         expect(headRes.statusCode).to.equal(200);

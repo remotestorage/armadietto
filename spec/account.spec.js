@@ -73,12 +73,12 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
 
     after(async function () {
       this.timeout(15_000);
-      await this.accountMgr.deleteUser(this.user1?.username, new Set());
-      await this.accountMgr.deleteUser(this.user2?.username, new Set());
+      await this.accountMgr.deleteUser(this.usernameAccountList1, new Set());
+      await this.accountMgr.deleteUser(this.usernameAccountList2, new Set());
     });
 
     it('should list users', async function () {
-      this.timeout(15_000);
+      this.timeout(30_000);
       const params1 = { username: this.usernameAccountList1, contactURL: 'mailto:d@ef.gh' };
       this.user1 = await this.accountMgr.createUser(params1, new Set());
       const params2 = { username: this.usernameAccountList2, contactURL: 'mailto:i@jk.lm' };

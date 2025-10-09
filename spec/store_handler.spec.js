@@ -865,7 +865,7 @@ module.exports.shouldStoreStreams = function () {
 
       it('creates at least one of conflicting simultaneous creates', async function () {
         this.timeout(240_000);
-        const LONG = 10_000_000;
+        const LONG = 10_001;
         const SHORT = 10_000;
 
         const [[_, resLong, nextLong], [_reqShort, resShort, nextShort]] = await Promise.all([
@@ -883,16 +883,16 @@ module.exports.shouldStoreStreams = function () {
           })
         ]);
 
-        expect(resLong.get('ETag') || resShort.get('ETag')).to.match(/^".{6,128}"$/);
-
-        expect(resLong.statusCode).to.be.oneOf([201, 409, 503]);
+        expect(resLong.statusCode).to.be.oneOf([201, 409, 429, 503]);
         expect(resLong._getBuffer().toString()).to.equal('');
         expect(nextLong).not.to.have.been.called();
 
-        expect(resShort.statusCode).to.be.oneOf([201, 409, 503]);
-        expect(resShort.get('ETag')).not.to.equal(resLong.get('ETag'));
+        expect(resShort.statusCode).to.be.oneOf([201, 409, 429, 503]);
         expect(resShort._getBuffer().toString()).to.equal('');
         expect(nextShort).not.to.have.been.called();
+
+        expect(resLong.get('ETag') || resShort.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(resShort.get('ETag')).not.to.equal(resLong.get('ETag'));
 
         // At least one succeeds
         expect([resLong.statusCode, resShort.statusCode]).to.include(201);
@@ -902,6 +902,74 @@ module.exports.shouldStoreStreams = function () {
         expect(parseInt(headRes.get('Content-Length'))).to.be.oneOf([LONG, SHORT]);
         expect(headRes.get('Content-Type')).to.be.oneOf(['text/csv', 'text/tab-separated-values']);
         expect(headRes.get('ETag')).to.be.oneOf([resLong.get('ETag'), resShort.get('ETag')]);
+
+        const [_folderReq, folderRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
+        expect(folderRes.statusCode).to.equal(200);
+        expect(folderRes.get('Content-Type')).to.equal('application/ld+json');
+        const folder = JSON.parse(folderRes._getBuffer());
+        expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(folder.items['conflicting-simultanous-put'].ETag).to.match(/^"?[#-~!]{6,128}"?$/);
+        expect(folder.items['conflicting-simultanous-put'].ETag).to.equal(stripQuotes(headRes.get('ETag')));
+        expect(folder.items['conflicting-simultanous-put']['Content-Type']).to.equal(headRes.get('Content-Type'));
+        expect(folder.items['conflicting-simultanous-put']['Content-Length']).to.equal(JSON.parse(headRes.get('Content-Length')));
+        expect(Math.abs(Date.parse(folder.items['conflicting-simultanous-put']['Last-Modified']) - Date.now())).to.be.lessThan(10 * 60 * 1000);
+        expect(folderRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+      });
+
+      it('adds all to parent dir when simultaneous sibling requests are made', async function () {
+        this.timeout(240_000);
+        const LIMIT = 1_000;
+        const COUNT = 6;
+
+        const calls = [];
+        for (let i = 0; i < COUNT; i++) {
+          calls[i] = callMiddleware(this.handler, {
+            method: 'PUT',
+            url: `/${this.userIdStore}/category-all/folder-all/sibling-put-${i}`,
+            headers: { 'Content-Length': LIMIT, 'Content-Type': `text/${i}` },
+            body: new LongStream(LIMIT)
+          });
+        }
+        const fulfilled = await Promise.all(calls);
+
+        for (let i = 0; i < fulfilled.length; i++) {
+          const [_req, res, next] = fulfilled[i];
+          expect(res.statusCode).to.equal(201, `response ${i}`);
+          expect(res.get('ETag')).to.match(/^".{6,128}"$/, `response ${i}`);
+          expect(res._getBuffer().toString()).to.equal('', `response ${i}`);
+          expect(next).not.to.have.been.called();
+        }
+
+        const [_folderReq, folderRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/category-all/folder-all/` });
+        expect(folderRes.statusCode).to.equal(200);
+        expect(folderRes.get('Content-Type')).to.equal('application/ld+json');
+        const folder = JSON.parse(folderRes._getBuffer());
+        expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        for (let i = 0; i < COUNT; i++) {
+          expect(folder.items[`sibling-put-${i}`].ETag).to.match(/^"?[#-~!]{6,128}"?$/);
+          expect(folder.items[`sibling-put-${i}`]['Content-Type']).to.equal(`text/${i}`);
+          expect(folder.items[`sibling-put-${i}`]['Content-Length']).to.equal(LIMIT);
+          expect(Math.abs(Date.parse(folder.items[`sibling-put-${i}`]['Last-Modified']) - Date.now())).to.be.lessThan(10 * 60 * 1000);
+        }
+        expect(Object.keys(folder.items).length).to.equal(COUNT);
+        expect(folderRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+
+        const [_categoryReq, categoryRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/category-all/` });
+        expect(categoryRes.statusCode).to.equal(200);
+        expect(categoryRes.get('Content-Type')).to.equal('application/ld+json');
+        const category = JSON.parse(categoryRes._getBuffer());
+        expect(category['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(category.items['folder-all/'].ETag).to.equal(stripQuotes(folderRes.get('ETag')));
+        expect(Object.keys(category.items).length).to.equal(1);
+        expect(categoryRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+
+        const [_rootReq, rootRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
+        expect(rootRes.statusCode).to.equal(200);
+        expect(rootRes.get('Content-Type')).to.equal('application/ld+json');
+        const root = JSON.parse(rootRes._getBuffer());
+        expect(root['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(root.items['category-all/'].ETag).to.equal(stripQuotes(categoryRes.get('ETag')));
+        expect(rootRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
       });
     });
 

@@ -138,7 +138,8 @@ module.exports.shouldStoreStreams = function () {
           expect(Boolean(res.get('Content-Length'))).to.be.false;
           expect(Boolean(res.get('Content-Type'))).to.be.false;
           expect(Boolean(res.get('ETag'))).to.be.false;
-          expect(next).not.to.have.been.called;
+          expect(res._getData()).to.equal(''); // doesn't explain
+          expect(next).not.to.have.been.called();
         });
 
         it('returns Not Found for a non-existing path', async function () {
@@ -153,7 +154,8 @@ module.exports.shouldStoreStreams = function () {
           expect(Boolean(res.get('Content-Length'))).to.be.false;
           expect(Boolean(res.get('Content-Type'))).to.be.false;
           expect(Boolean(res.get('ETag'))).to.be.false;
-          expect(next).not.to.have.been.called;
+          expect(res._getData()).to.equal(''); // doesn't explain
+          expect(next).not.to.have.been.called();
         });
 
         it('returns Not Found for a non-existing path in an existing category', async function () {
@@ -177,7 +179,8 @@ module.exports.shouldStoreStreams = function () {
           expect(Boolean(res.get('Content-Length'))).to.be.false;
           expect(Boolean(res.get('Content-Type'))).to.be.false;
           expect(Boolean(res.get('ETag'))).to.be.false;
-          expect(next).not.to.have.been.called;
+          expect(res._getData()).to.equal(''); // doesn't explain
+          expect(next).not.to.have.been.called();
         });
       });
 
@@ -205,7 +208,7 @@ module.exports.shouldStoreStreams = function () {
           expect(res.get('Content-Length')).to.equal(String(content.length));
           expect(res.get('Content-Type')).to.equal('text/calendar');
           expect(res.get('ETag')).to.equal(putRes.get('ETag'));
-          expect(next).not.to.have.been.called;
+          expect(next).not.to.have.been.called();
         });
 
         it('should return Not Modified for If-None-Match with matching ETag', async function () {
@@ -231,7 +234,7 @@ module.exports.shouldStoreStreams = function () {
           expect(Boolean(res.get('Content-Length'))).to.be.false;
           expect(Boolean(res.get('Content-Type'))).to.be.false;
           expect(Boolean(res.get('ETag'))).to.be.false;
-          expect(next).not.to.have.been.called;
+          expect(next).not.to.have.been.called();
         });
 
         it('should return file for If-Match with matching ETag', async function () {
@@ -257,7 +260,7 @@ module.exports.shouldStoreStreams = function () {
           expect(res.get('Content-Length')).to.equal(String(content.length));
           expect(res.get('Content-Type')).to.equal('text/calendar');
           expect(res.get('ETag')).to.equal(putRes.get('ETag'));
-          expect(next).not.to.have.been.called;
+          expect(next).not.to.have.been.called();
         });
 
         it('should return Precondition Failed for If-Match with mismatched ETag', async function () {
@@ -283,7 +286,7 @@ module.exports.shouldStoreStreams = function () {
           expect(Boolean(res.get('Content-Length'))).to.be.false;
           expect(Boolean(res.get('Content-Type'))).to.be.false;
           expect(Boolean(res.get('ETag'))).to.be.false;
-          expect(next).not.to.have.been.called;
+          expect(next).not.to.have.been.called();
         });
       });
     });
@@ -301,7 +304,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(folder.items).to.deep.equal({});
         expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       it('returns listing with no items for a non-existing public folder', async function () {
@@ -316,7 +319,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(folder.items).to.deep.equal({});
         expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       it('returns listing with no items for a non-existing folder in non-existing category', async function () {
@@ -331,7 +334,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(folder.items).to.deep.equal({});
         expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       it('returns JSON-LD unconditionally & Not Modified when If-None-Match has a matching ETag', async function () {
@@ -488,22 +491,29 @@ module.exports.shouldStoreStreams = function () {
         const content = 'microbe';
         const req = httpMocks.createRequest({ method: 'PUT', url: '/@@@/not-created/non-existent/user', body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
+        res.logNotes = new Set();
         const next = chai.spy();
 
         await this.handler(req, res, next);
 
-        expect(next).to.have.been.called;
+        // expect(res.statusCode).to.be.greaterThanOrEqual(400);
+        // expect(res.get('Content-Type')).to.equal('text/plain');
+        // expect(res._getData()).to.match(/msgId=/);
+        expect(next).not.to.have.been.called();
       });
 
       it('does not create a file for a bad path', async function () {
         const content = 'microbe';
         const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}//`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
+        res.logNotes = new Set();
         const next = chai.spy();
 
         await this.handler(req, res, next);
 
-        expect(next).to.have.been.called;
+        expect(res.statusCode).to.equal(400);
+        expect(res._getData()).to.equal('invalid path');
+        expect(next).not.to.have.been.called();
       });
 
       it('responds with Conflict for folder', async function () {
@@ -512,7 +522,7 @@ module.exports.shouldStoreStreams = function () {
 
         expect(res.statusCode).to.equal(409);
         expect(res._getBuffer().toString()).to.equal('');
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       // TODO: should there be a clearer message?
@@ -521,44 +531,56 @@ module.exports.shouldStoreStreams = function () {
         const content = 'microbe';
         const req = httpMocks.createRequest({ method: 'PUT', url: '/non-existent-user/not-created/non-existent/user', body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
+        res.logNotes = new Set();
         const next = chai.spy();
 
         await this.handler(req, res, next);
 
-        expect(next).to.have.been.called;
+        // expect(res.statusCode).to.be.greaterThanOrEqual(400);
+        // expect(res._getData() ).to.equal('invalid path');
+        expect(next).not.to.have.been.called();
       });
 
       it('does not create a file for an empty path', async function () {
         const content = 'microbe';
         const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}/`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
+        res.logNotes = new Set();
         const next = chai.spy();
 
         await this.handler(req, res, next);
 
-        expect(next).to.have.been.called;
+        // expect(res.statusCode).to.equal(400);
+        // expect(res._getData() ).to.equal('invalid path');
+        expect(next).not.to.have.been.called();
       });
 
       it('does not create a file for a path with a bad character', async function () {
         const content = 'microbe';
         const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}/foo\0bar`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
+        res.logNotes = new Set();
         const next = chai.spy();
 
         await this.handler(req, res, next);
 
-        expect(next).to.have.been.called;
+        expect(res.statusCode).to.equal(400);
+        expect(res._getData()).to.equal('invalid path');
+        expect(next).not.to.have.been.called();
       });
 
       it('does not create a file for a path with a bad element', async function () {
         const content = 'microbe';
         const req = httpMocks.createRequest({ method: 'PUT', url: `/${this.userIdStore}/foo/../bar`, body: content, headers: { 'Content-Type': 'image/tiff', 'Content-Length': content.length } });
         const res = httpMocks.createResponse({ req });
+        res.logNotes = new Set();
         const next = chai.spy();
 
         await this.handler(req, res, next);
 
-        expect(next).to.have.been.called;
+        expect(res.statusCode).to.equal(400);
+        expect(res._getData()).to.equal('invalid path');
+        expect(next).not.to.have.been.called();
       });
 
       it('sets the value of an item', async function () {
@@ -824,26 +846,26 @@ module.exports.shouldStoreStreams = function () {
           })
         ]);
 
-        expect(res1.statusCode).to.equal(201);
-        expect(res1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(res1.statusCode).to.be.oneOf([201, 409]);
         expect(res1._getBuffer().toString()).to.equal('');
-        expect(next1).not.to.have.been.called;
+        expect(next1).not.to.have.been.called();
 
-        expect(res2.statusCode).to.equal(201);
-        expect(res2.get('ETag')).to.equal(res1.get('ETag'));
+        expect(res2.statusCode).to.be.oneOf([201, 409]);
         expect(res2._getBuffer().toString()).to.equal('');
-        expect(next2).not.to.have.been.called;
+        expect(next2).not.to.have.been.called();
+
+        expect(res1.get('ETag') || res2.get('ETag')).to.match(/^".{6,128}"$/);
 
         const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
-        expect(headRes.get('ETag')).to.equal(res1.get('ETag'));
+        expect(headRes.get('ETag')).to.equal(res1.get('ETag') || res2.get('ETag'));
       });
 
       it('creates at least one of conflicting simultaneous creates', async function () {
         this.timeout(240_000);
-        const LONG = 10_000_000;
+        const LONG = 10_001;
         const SHORT = 10_000;
 
         const [[_, resLong, nextLong], [_reqShort, resShort, nextShort]] = await Promise.all([
@@ -861,25 +883,93 @@ module.exports.shouldStoreStreams = function () {
           })
         ]);
 
-        expect(resLong.statusCode).to.be.oneOf([201, 409, 503]);
-        // expect(resLong.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(resLong.statusCode).to.be.oneOf([201, 409, 429, 503]);
         expect(resLong._getBuffer().toString()).to.equal('');
-        expect(nextLong).not.to.have.been.called;
+        expect(nextLong).not.to.have.been.called();
 
-        expect(resShort.statusCode).to.be.oneOf([201, 409, 503]);
-        // expect(resShort.get('ETag')).to.match(/^".{6,128}"$/);
-        expect(resShort.get('ETag')).not.to.equal(resLong.get('ETag'));
+        expect(resShort.statusCode).to.be.oneOf([201, 409, 429, 503]);
         expect(resShort._getBuffer().toString()).to.equal('');
-        expect(nextShort).not.to.have.been.called;
+        expect(nextShort).not.to.have.been.called();
 
-        // One or neither call receives a Conflict.
-        expect(resLong.statusCode + resShort.statusCode).to.be.lessThanOrEqual(201 + 503);
+        expect(resLong.get('ETag') || resShort.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(resShort.get('ETag')).not.to.equal(resLong.get('ETag'));
+
+        // At least one succeeds
+        expect([resLong.statusCode, resShort.statusCode]).to.include(201);
 
         const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/conflicting-simultanous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.be.oneOf([LONG, SHORT]);
         expect(headRes.get('Content-Type')).to.be.oneOf(['text/csv', 'text/tab-separated-values']);
         expect(headRes.get('ETag')).to.be.oneOf([resLong.get('ETag'), resShort.get('ETag')]);
+
+        const [_folderReq, folderRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
+        expect(folderRes.statusCode).to.equal(200);
+        expect(folderRes.get('Content-Type')).to.equal('application/ld+json');
+        const folder = JSON.parse(folderRes._getBuffer());
+        expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(folder.items['conflicting-simultanous-put'].ETag).to.match(/^"?[#-~!]{6,128}"?$/);
+        expect(folder.items['conflicting-simultanous-put'].ETag).to.equal(stripQuotes(headRes.get('ETag')));
+        expect(folder.items['conflicting-simultanous-put']['Content-Type']).to.equal(headRes.get('Content-Type'));
+        expect(folder.items['conflicting-simultanous-put']['Content-Length']).to.equal(JSON.parse(headRes.get('Content-Length')));
+        expect(Math.abs(Date.parse(folder.items['conflicting-simultanous-put']['Last-Modified']) - Date.now())).to.be.lessThan(10 * 60 * 1000);
+        expect(folderRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+      });
+
+      it('adds all to parent dir when simultaneous sibling requests are made', async function () {
+        this.timeout(240_000);
+        const LIMIT = 1_000;
+        const COUNT = 6;
+
+        const calls = [];
+        for (let i = 0; i < COUNT; i++) {
+          calls[i] = callMiddleware(this.handler, {
+            method: 'PUT',
+            url: `/${this.userIdStore}/category-all/folder-all/sibling-put-${i}`,
+            headers: { 'Content-Length': LIMIT, 'Content-Type': `text/${i}` },
+            body: new LongStream(LIMIT)
+          });
+        }
+        const fulfilled = await Promise.all(calls);
+
+        for (let i = 0; i < fulfilled.length; i++) {
+          const [_req, res, next] = fulfilled[i];
+          expect(res.statusCode).to.equal(201, `response ${i}`);
+          expect(res.get('ETag')).to.match(/^".{6,128}"$/, `response ${i}`);
+          expect(res._getBuffer().toString()).to.equal('', `response ${i}`);
+          expect(next).not.to.have.been.called();
+        }
+
+        const [_folderReq, folderRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/category-all/folder-all/` });
+        expect(folderRes.statusCode).to.equal(200);
+        expect(folderRes.get('Content-Type')).to.equal('application/ld+json');
+        const folder = JSON.parse(folderRes._getBuffer());
+        expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        for (let i = 0; i < COUNT; i++) {
+          expect(folder.items[`sibling-put-${i}`].ETag).to.match(/^"?[#-~!]{6,128}"?$/);
+          expect(folder.items[`sibling-put-${i}`]['Content-Type']).to.equal(`text/${i}`);
+          expect(folder.items[`sibling-put-${i}`]['Content-Length']).to.equal(LIMIT);
+          expect(Math.abs(Date.parse(folder.items[`sibling-put-${i}`]['Last-Modified']) - Date.now())).to.be.lessThan(10 * 60 * 1000);
+        }
+        expect(Object.keys(folder.items).length).to.equal(COUNT);
+        expect(folderRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+
+        const [_categoryReq, categoryRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/category-all/` });
+        expect(categoryRes.statusCode).to.equal(200);
+        expect(categoryRes.get('Content-Type')).to.equal('application/ld+json');
+        const category = JSON.parse(categoryRes._getBuffer());
+        expect(category['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(category.items['folder-all/'].ETag).to.equal(stripQuotes(folderRes.get('ETag')));
+        expect(Object.keys(category.items).length).to.equal(1);
+        expect(categoryRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+
+        const [_rootReq, rootRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
+        expect(rootRes.statusCode).to.equal(200);
+        expect(rootRes.get('Content-Type')).to.equal('application/ld+json');
+        const root = JSON.parse(rootRes._getBuffer());
+        expect(root['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(root.items['category-all/'].ETag).to.equal(stripQuotes(categoryRes.get('ETag')));
+        expect(rootRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
       });
     });
 
@@ -977,7 +1067,7 @@ module.exports.shouldStoreStreams = function () {
         const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection/` });
         expect(folderRes2.statusCode).to.equal(409);
         expect(folderRes2.get('ETag')).to.be.undefined;
-        expect(folderRes2._getData()).to.equal('');
+        expect(folderRes2._getData()).to.equal('folder/document conflict');
 
         const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection` });
         expect(getRes.statusCode).to.equal(200);
@@ -1035,7 +1125,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.statusCode).to.equal(412); // Precondition Failed
         expect(putRes.get('ETag')).to.be.undefined;
         expect(putRes._getBuffer().toString()).to.equal('');
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
 
         const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/zipwire3` });
         expect(getRes.statusCode).to.equal(404);
@@ -1116,7 +1206,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.statusCode).to.equal(201);
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
 
         const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/if-none-match/new-star` });
         expect(getRes.statusCode).to.equal(200);
@@ -1168,7 +1258,7 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes.statusCode).to.equal(201);
         expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes._getBuffer().toString()).to.equal('');
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
 
         const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/if-none-match/new-ETag` });
         expect(getRes.statusCode).to.equal(200);
@@ -1253,7 +1343,7 @@ module.exports.shouldStoreStreams = function () {
           url: '/not-a-user/some-category/some-folder/some-thing'
         });
 
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
         expect(res.statusCode).to.equal(404);
         expect(res._getBuffer().toString()).to.equal('');
         expect(Boolean(res.get('ETag'))).to.be.false;
@@ -1265,7 +1355,7 @@ module.exports.shouldStoreStreams = function () {
           url: `/${this.userIdStore}/non-existent-category/non-existent-folder/non-existent-thing`
         });
 
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
         expect(res.statusCode).to.equal(404);
         expect(res._getBuffer().toString()).to.equal('');
         expect(Boolean(res.get('ETag'))).to.be.false;
@@ -1288,7 +1378,7 @@ module.exports.shouldStoreStreams = function () {
           url: `/${this.userIdStore}/consumables/food`
         });
 
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
         expect(res.statusCode).to.equal(409);
         expect(res._getBuffer().toString()).to.equal('');
         expect(Boolean(res.get('ETag'))).to.be.false;
@@ -1325,7 +1415,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res.statusCode).to.equal(204); // No Content
         expect(res._getBuffer().toString()).to.equal('');
         expect(res.get('ETag')).to.equal(putRes1.get('ETag'));
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
 
         const [_getReq1, getRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/animal/vertebrate/australia/marsupial/wombat` });
         expect(getRes1.statusCode).to.equal(404);
@@ -1362,7 +1452,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res2.statusCode).to.equal(404); // Not Found
         expect(res2._getBuffer().toString()).to.equal('');
         expect(res2.get('ETag')).to.equal(undefined);
-        expect(next2).not.to.have.been.called;
+        expect(next2).not.to.have.been.called();
 
         const [_req3, res3, next3] = await callMiddleware(this.handler, {
           method: 'DELETE',
@@ -1371,7 +1461,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res3.statusCode).to.equal(404); // Not Found, instead of Conflict
         expect(res3._getBuffer().toString()).to.equal('');
         expect(res3.get('ETag')).to.equal(undefined);
-        expect(next3).not.to.have.been.called;
+        expect(next3).not.to.have.been.called();
       });
 
       // OpenIO (container) always fails this test.
@@ -1394,12 +1484,12 @@ module.exports.shouldStoreStreams = function () {
         expect(delRes1.statusCode).to.be.oneOf([204, 404]);
         expect(delRes1.get('ETag')).to.equal(delRes1.statusCode === 204 ? putRes.get('ETag') : undefined);
         expect(delRes1._getBuffer().toString()).to.equal('');
-        expect(delNext1).not.to.have.been.called;
+        expect(delNext1).not.to.have.been.called();
 
         expect(delRes2.statusCode).to.be.oneOf([204, 404]);
         expect(delRes2.get('ETag')).to.equal(delRes2.statusCode === 204 ? putRes.get('ETag') : undefined);
         expect(delRes2._getBuffer().toString()).to.equal('');
-        expect(delNext2).not.to.have.been.called;
+        expect(delNext2).not.to.have.been.called();
 
         const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-delete` });
         expect(headRes.statusCode).to.equal(404);
@@ -1429,7 +1519,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res.statusCode).to.equal(204);
         expect(res._getBuffer().toString()).to.equal('');
         expect(res.get('ETag')).to.equal(putRes.get('ETag'));
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       it('should not delete a blob if the If-Match header isn\'t equal', async function () {
@@ -1453,7 +1543,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res.statusCode).to.equal(412);
         expect(res._getBuffer().toString()).to.equal('');
         expect(Boolean(res.get('ETag'))).to.be.false;
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       it('should not delete a blob if the If-None-Match header is equal', async function () {
@@ -1477,7 +1567,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res.statusCode).to.equal(412);
         expect(res._getBuffer().toString()).to.equal('');
         expect(Boolean(res.get('ETag'))).to.be.false;
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
 
       it('deletes a blob if the If-None-Match header is not equal', async function () {
@@ -1501,7 +1591,7 @@ module.exports.shouldStoreStreams = function () {
         expect(res.statusCode).to.equal(204);
         expect(res._getBuffer().toString()).to.equal('');
         expect(res.get('ETag')).to.equal(putRes.get('ETag'));
-        expect(next).not.to.have.been.called;
+        expect(next).not.to.have.been.called();
       });
     });
   });

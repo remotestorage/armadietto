@@ -32,6 +32,7 @@ See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-
 * Streaming storage (documents don't have to fit in server memory)
 * S3-compatible storage (requires separate S3 server; AWS S3 allows documents up to 5 TB)
 * Can run multiple application servers to increase capacity to enterprise-scale
+* Unauthorized clients are rate-limited; an authorized client may use all capacity to back up or restore quickly
 * Bug Fix: correctly handles If-None-Match with ETag
 * Bug Fix: returns empty listing for nonexistent folder
 * Implements current spec: draft-dejong-remotestorage-22

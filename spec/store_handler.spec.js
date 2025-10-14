@@ -413,7 +413,7 @@ module.exports.shouldStoreStreams = function () {
         expect(subfolderRes.get('Content-Type')).to.equal('application/ld+json');
         expect(subfolderRes.get('ETag')).to.match(/^".{6,128}"$/);
         expect(stripQuotes(subfolderRes.get('ETag'))).to.equal(folder.items['subfolder/'].ETag);
-        const subfolder = JSON.parse(subfolderRes._getData());
+        const subfolder = JSON.parse(subfolderRes._getBuffer().toString());
         expect(subfolder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
         expect(subfolder.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolder.items['purple-ultraviolet']['Content-Type']).to.equal('text/plain');
@@ -462,7 +462,7 @@ module.exports.shouldStoreStreams = function () {
         expect(subfolderRes2.get('ETag')).to.match(/^".{6,128}"$/);
         expect(stripQuotes(subfolderRes2.get('ETag'))).not.to.equal(folder.items['subfolder/'].ETag);
         expect(stripQuotes(subfolderRes2.get('ETag'))).to.equal(folderChanged.items['subfolder/'].ETag);
-        const subfolderChanged = JSON.parse(subfolderRes2._getData());
+        const subfolderChanged = JSON.parse(subfolderRes2._getBuffer().toString());
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).not.to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes4.get('ETag')));
         expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
@@ -470,7 +470,7 @@ module.exports.shouldStoreStreams = function () {
         const logNotes = new Set();
         const newFolder = await this.handler.listFolder(this.userIdStore, 'color-category/color-folder/', logNotes);
         expect(newFolder.items).to.deep.equal(folderChanged.items);
-        expect(logNotes.size).to.equal(0);
+        expect(logNotes.size).to.equal(1);
 
         const categoryFolder = await this.handler.listFolder(this.userIdStore, 'color-category/', logNotes);
         expect(categoryFolder.items['color-folder/'].ETag).to.match(/^.{6,128}$/);
@@ -511,7 +511,7 @@ module.exports.shouldStoreStreams = function () {
         const logNotes = new Set();
         const newFolder = await this.handler.listFolder(this.userIdStore, 'fill-category/fill-folder', logNotes);
         expect(newFolder).to.deep.equal(folder);
-        expect(logNotes.size).to.equal(0);
+        expect(logNotes.size).to.equal(1);
       });
     });
   });
@@ -867,13 +867,13 @@ module.exports.shouldStoreStreams = function () {
         const [[_req1, res1, next1], [_req2, res2, next2]] = await Promise.all([
           callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.userIdStore}/simultaneous-put`,
+            url: `/${this.userIdStore}/sim-category/simultaneous-put`,
             headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
             body: new LongStream(LIMIT)
           }),
           callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.userIdStore}/simultaneous-put`,
+            url: `/${this.userIdStore}/sim-category/simultaneous-put`,
             headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/plain' },
             body: new LongStream(LIMIT)
           })
@@ -889,19 +889,19 @@ module.exports.shouldStoreStreams = function () {
 
         expect(res1.get('ETag') || res2.get('ETag')).to.match(/^".{6,128}"$/);
 
-        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-put` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/sim-category/simultaneous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.equal(LIMIT);
         expect(headRes.get('Content-Type')).to.equal('text/plain');
         expect(headRes.get('ETag')).to.equal(res1.get('ETag') || res2.get('ETag'));
 
         const logNotes = new Set();
-        const folder = await this.handler.listFolder(this.userIdStore, '/', logNotes);
+        const folder = await this.handler.listFolder(this.userIdStore, '/sim-category/', logNotes);
         expect(folder.items['simultaneous-put'].ETag).to.equal(stripQuotes(res1.get('ETag') || res2.get('ETag')));
         expect(folder.items['simultaneous-put']['Content-Type']).to.equal('text/plain');
         expect(folder.items['simultaneous-put']['Content-Length']).to.equal(LIMIT);
         expect(Math.abs(Date.parse(folder.items['simultaneous-put']['Last-Modified']) - Date.now())).to.be.lessThan(10 * 60 * 1000);
-        expect(logNotes.size).to.equal(0);
+        expect(logNotes.size).to.equal(1);
       });
 
       it('creates at least one of conflicting simultaneous creates', async function () {
@@ -912,13 +912,13 @@ module.exports.shouldStoreStreams = function () {
         const [[_, resLong, nextLong], [_reqShort, resShort, nextShort]] = await Promise.all([
           callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.userIdStore}/conflicting-simultanous-put`,
+            url: `/${this.userIdStore}/clash/conflicting-simultanous-put`,
             headers: { 'Content-Length': LONG, 'Content-Type': 'text/csv' },
             body: new LongStream(LONG)
           }),
           callMiddleware(this.handler, {
             method: 'PUT',
-            url: `/${this.userIdStore}/conflicting-simultanous-put`,
+            url: `/${this.userIdStore}/clash/conflicting-simultanous-put`,
             headers: { 'Content-Length': SHORT, 'Content-Type': 'text/tab-separated-values' },
             body: new LongStream(SHORT)
           })
@@ -938,13 +938,13 @@ module.exports.shouldStoreStreams = function () {
         // At least one succeeds
         expect([resLong.statusCode, resShort.statusCode]).to.include(201);
 
-        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/conflicting-simultanous-put` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/clash/conflicting-simultanous-put` });
         expect(headRes.statusCode).to.equal(200);
         expect(parseInt(headRes.get('Content-Length'))).to.be.oneOf([LONG, SHORT]);
         expect(headRes.get('Content-Type')).to.be.oneOf(['text/csv', 'text/tab-separated-values']);
         expect(headRes.get('ETag')).to.be.oneOf([resLong.get('ETag'), resShort.get('ETag')]);
 
-        const [_folderReq, folderRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
+        const [_folderReq, folderRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/clash/` });
         expect(folderRes.statusCode).to.equal(200);
         expect(folderRes.get('Content-Type')).to.equal('application/ld+json');
         const folder = folderRes._getJSONData(); // short-hand for JSON.parse( response._getData() );
@@ -957,12 +957,13 @@ module.exports.shouldStoreStreams = function () {
         expect(folderRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
         const logNotes = new Set();
-        const folderFromS3 = await this.handler.listFolder(this.userIdStore, '/', logNotes);
+        const folderFromS3 = await this.handler.listFolder(this.userIdStore, '/clash/', logNotes);
         expect(folderFromS3.items['conflicting-simultanous-put'].ETag).to.be.oneOf([stripQuotes(resLong.get('ETag')), stripQuotes(resShort.get('ETag'))]);
         expect(folderFromS3.items['conflicting-simultanous-put']['Content-Type']).to.equal(headRes.get('Content-Type'));
         expect(folderFromS3.items['conflicting-simultanous-put']['Content-Length']).to.be.oneOf([LONG, SHORT]);
         expect(Math.abs(Date.parse(folderFromS3.items['conflicting-simultanous-put']['Last-Modified']) - Date.now())).to.be.lessThan(10 * 60 * 1000);
-        expect(logNotes.size).to.equal(0);
+        expect(Object.keys(folderFromS3.items)).to.have.length(1);
+        expect(logNotes.size).to.equal(1);
       });
 
       it('adds all to parent dir when simultaneous sibling requests are made', async function () {
@@ -1027,7 +1028,7 @@ module.exports.shouldStoreStreams = function () {
           expect(folderFromS3.items[`sibling-put-${i}`].ETag).to.equal(stripQuotes(res.get('ETag')));
         }
         expect(Object.keys(folderFromS3.items)).to.have.length(COUNT);
-        expect(logNotes.size).to.equal(0);
+        expect(logNotes.size).to.equal(1); // listFolder always writes the target folder
       });
     });
 

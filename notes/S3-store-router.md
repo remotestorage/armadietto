@@ -1,6 +1,6 @@
 # S3-compatible Streaming Store
 
-Note: S3-compatible storage trades the strong consistency of a file system for higher performance and multi-datacenter capability, so this store only offers eventual consistency.
+Note: S3-compatible storage trades the strong consistency of a file system for durability and expandability, so this store only offers eventual consistency.
 
 Streaming Stores like this can only be used with the modular server.
 
@@ -67,11 +67,39 @@ HTTPS is used if the endpoint is not localhost.  If you must use http, you can i
 This one access key is used to create a bucket for each user.
 The bucket name is the id plus the suffix, if any.
 If other non-remoteStorage buckets are created at that endpoint, those bucket names will be unavailable as usernames.
-Buckets can be administered using the service's tools, such as a webapp console or command-line tools.
-The bucket **SHOULD NOT** contain non-RS blobs with these prefixes:
+
+## Maintenance / Administration / Integrations
+
+Buckets can be administered, backed up, and restored, using the service's tools, such as a webapp console or a command-line tool such as [aws s3](https://docs.aws.amazon.com/cli/latest/reference/s3/).
+The bucket **MUST NOT** contain non-RS blobs ("objects") with these prefixes:
 
 * remoteStorageBlob/
 * remoteStorageAuth/
+
+The bucket MAY contain any blobs that don't start with one of those two prefixes.
+
+Deleting a bucket, or all keys in a bucket that start with one of those two prefixes, will cleanly delete a user's account.
+
+### Folder cache blobs
+
+If blobs ("objects") are added, deleted, or changed, the ancestor folder cache blobs SHOULD be deleted.
+For example, if you add, delete or modify a blob with the key `remoteStorageBlob/foo/bar/spam`, you SHOULD delete (if they exist) the blobs  `remoteStorageBlob/foo/bar/`, `remoteStorageBlob/foo/` and `remoteStorageBlob/`.
+If those ancestor folder cache blobs are not immediately deleted, the changes to `remoteStorageBlob/foo/bar/spam` will not be visible in folder listings, and will not be synced to RS clients.  The changes *will* be visible if reading the document. That would cause unexpected behavior with RS apps.
+
+Backups MAY copy these blobs, but don't have to.
+Restores should *only* restore these blobs when doing a complete restore.
+
+#### Forbidden keys
+
+If a blob with the key `remoteStorageBlob/foo/bar/spam` exists, blobs with these keys SHOULD NOT exist: `remoteStorageBlob/foo/bar`, nor `remoteStorageBlob/foo`.
+
+Integrations with other software that follow these rules will work properly with remoteStorage.
+
+### Content-Type cache blobs
+
+When the setting of `folder_items_contain_type` in the config file is left at the default of `true`, the S3 store router also creates blobs to cache the Content-Type of documents, with keys such as `remoteStorageBlob/foo/bar/spam!application!2Fjson!3B!20charset!3DUTF-8`. The RegExp pattern is `/!(application|audio|font|image|model|text|video)!2F[A-Za-z0-9][A-Za-z0-9_.!'-]{0,100}$/`
+These blobs SHOULD be ignored by integrations.  Backups MAY copy these blobs, but don't have to.
+They should only be restored when the associated document is restored.
 
 ## Limits
 

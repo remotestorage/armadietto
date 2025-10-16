@@ -15,6 +15,7 @@
     "key": "/etc/letsencrypt/live/example.com/privkey.pem"
   },
   "trust_proxy": null,
+  "folder_items_contain_type": true,
   "logging": {
 	  "log_dir": "logs",
 	  "stdout": ["info"],

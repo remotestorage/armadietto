@@ -307,7 +307,7 @@ module.exports.shouldStoreStreams = function () {
         expect(next).not.to.have.been.called();
 
         const logNotes = new Set();
-        const newFolder = await this.handler.listFolder(this.userIdStore, 'non-existing-category/', logNotes);
+        const newFolder = await this.handler.listFolder(this.userIdStore, 'non-existing-category/', true, logNotes);
         expect(Object.keys(newFolder.items).length).to.equal(0);
         expect(logNotes.size).to.equal(0);
       });
@@ -327,7 +327,7 @@ module.exports.shouldStoreStreams = function () {
         expect(next).not.to.have.been.called();
 
         const logNotes = new Set();
-        const newFolder = await this.handler.listFolder(this.userIdStore, 'public/some-category/', logNotes);
+        const newFolder = await this.handler.listFolder(this.userIdStore, 'public/some-category/', true, logNotes);
         expect(Object.keys(newFolder.items).length).to.equal(0);
         expect(logNotes.size).to.equal(0);
       });
@@ -347,7 +347,7 @@ module.exports.shouldStoreStreams = function () {
         expect(next).not.to.have.been.called();
 
         const logNotes = new Set();
-        const newFolder = await this.handler.listFolder(this.userIdStore, 'non-existing-category/non-existing-folder/', logNotes);
+        const newFolder = await this.handler.listFolder(this.userIdStore, 'non-existing-category/non-existing-folder/', true, logNotes);
         expect(Object.keys(newFolder.items).length).to.equal(0);
         expect(logNotes.size).to.equal(0);
       });
@@ -468,15 +468,15 @@ module.exports.shouldStoreStreams = function () {
         expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
 
         const logNotes = new Set();
-        const newFolder = await this.handler.listFolder(this.userIdStore, 'color-category/color-folder/', logNotes);
+        const newFolder = await this.handler.listFolder(this.userIdStore, 'color-category/color-folder/', true, logNotes);
         expect(newFolder.items).to.deep.equal(folderChanged.items);
         expect(logNotes.size).to.equal(1);
 
-        const categoryFolder = await this.handler.listFolder(this.userIdStore, 'color-category/', logNotes);
+        const categoryFolder = await this.handler.listFolder(this.userIdStore, 'color-category/', true, logNotes);
         expect(categoryFolder.items['color-folder/'].ETag).to.match(/^.{6,128}$/);
         expect(Object.keys(categoryFolder.items)).to.have.lengthOf(1);
 
-        const rootFolder = await this.handler.listFolder(this.userIdStore, '', logNotes);
+        const rootFolder = await this.handler.listFolder(this.userIdStore, '', true, logNotes);
         expect(rootFolder.items['color-category/'].ETag).to.match(/^.{6,128}$/);
         expect(Object.keys(rootFolder.items).length).to.be.lessThanOrEqual(2);
       });
@@ -509,7 +509,7 @@ module.exports.shouldStoreStreams = function () {
         expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(15_000);
 
         const logNotes = new Set();
-        const newFolder = await this.handler.listFolder(this.userIdStore, 'fill-category/fill-folder', logNotes);
+        const newFolder = await this.handler.listFolder(this.userIdStore, 'fill-category/fill-folder', true, logNotes);
         expect(newFolder).to.deep.equal(folder);
         expect(logNotes.size).to.equal(1);
       });
@@ -896,7 +896,7 @@ module.exports.shouldStoreStreams = function () {
         expect(headRes.get('ETag')).to.equal(res1.get('ETag') || res2.get('ETag'));
 
         const logNotes = new Set();
-        const folder = await this.handler.listFolder(this.userIdStore, '/sim-category/', logNotes);
+        const folder = await this.handler.listFolder(this.userIdStore, '/sim-category/', true, logNotes);
         expect(folder.items['simultaneous-put'].ETag).to.equal(stripQuotes(res1.get('ETag') || res2.get('ETag')));
         expect(folder.items['simultaneous-put']['Content-Type']).to.equal('text/plain');
         expect(folder.items['simultaneous-put']['Content-Length']).to.equal(LIMIT);
@@ -957,7 +957,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folderRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
         const logNotes = new Set();
-        const folderFromS3 = await this.handler.listFolder(this.userIdStore, '/clash/', logNotes);
+        const folderFromS3 = await this.handler.listFolder(this.userIdStore, '/clash/', true, logNotes);
         expect(folderFromS3.items['conflicting-simultanous-put'].ETag).to.be.oneOf([stripQuotes(resLong.get('ETag')), stripQuotes(resShort.get('ETag'))]);
         expect(folderFromS3.items['conflicting-simultanous-put']['Content-Type']).to.equal(headRes.get('Content-Type'));
         expect(folderFromS3.items['conflicting-simultanous-put']['Content-Length']).to.be.oneOf([LONG, SHORT]);
@@ -1022,7 +1022,7 @@ module.exports.shouldStoreStreams = function () {
         expect(rootRes.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
         const logNotes = new Set();
-        const folderFromS3 = await this.handler.listFolder(this.userIdStore, '/category-all/folder-all/', logNotes);
+        const folderFromS3 = await this.handler.listFolder(this.userIdStore, '/category-all/folder-all/', true, logNotes);
         for (let i = 0; i < fulfilled.length; i++) {
           const res = fulfilled[i][1];
           expect(folderFromS3.items[`sibling-put-${i}`].ETag).to.equal(stripQuotes(res.get('ETag')));

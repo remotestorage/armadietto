@@ -14,6 +14,7 @@
     "cert": "/etc/armadietto/cert.pem",
     "key": "/etc/armadietto/privkey.pem"
   },
+  "folder_items_contain_type": true,
   "trust_proxy": null,
   "logging": {
 	  "log_dir": "logs",

@@ -89,6 +89,8 @@ async function start(network) {
   app.locals.host = (network?.host || '0.0.0.0') + (port ? ':' + port : '');
   app.locals.signup = conf.allow_signup;
 
+  app.set('folder_items_contain_type', conf.folder_items_contain_type ?? true);
+
   /** Creates HTTP server. */
 
   let server;

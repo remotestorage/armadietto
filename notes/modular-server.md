@@ -16,7 +16,7 @@ If your hosting provider doesn't offer S3-compatible storage as a service, you c
 See [S3-compatible Streaming Store](S3-store-router.md) for compatability of various implementations.
 [Garage](https://garagehq.deuxfleurs.fr/) is used while developing Armadietto.
 
-For testing, you can not set the [S3 environment variables](S3-store-router.md#configuration), in which case the S3 router will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world!
+For testing, you can leave the [S3 environment variables](S3-store-router.md#configuration) unset, in which case the S3 router will use the public account on `play.min.io`, where the documents & folders can be **read, altered and deleted** by anyone in the world!
 
 ### Secure origin
 
@@ -34,6 +34,9 @@ Finally, set the value of `host_identity` in your config file to `foo.example.or
 
 Another approach is setting up a reverse proxy on your development machine.
 There are other solutions, as well, to setting up a local origin that your browser will accept as secure.
+
+
+We recommend that you set `folder_items_contain_type` (in the config file) to `true`, as many remoteStorage clients depend on the `Content-Type`.  However, to obtain this from the S3 store, the server must make extra requests to and create extra entries in S3.  If you are serving many clients on a server or S3 implementation with limited resources, you can set this to false.
 
 
 ## Use
@@ -55,17 +58,17 @@ The following environment variables are read:
 * S3_ENDPOINT
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
-* S3_REGION [defaults to `us-east-1`]
+* S3_REGION [defaults to "`us-east-1`"]
 * JWT_SECRET [defaults to `S3_SECRET_KEY`]
-* BOOTSTRAP_OWNER [used to create OWNER accounts]
+* BOOTSTRAP_OWNER [set this to a URL or email address to create an OWNER account]
 * PORT [overrides `http.port` configuration file value]
 * DEBUG [set to log all calls to the S3 server]
 * NODE_ENV
 
-For production, you should set the environment variable `NODE_ENV` to `production` and configure systemd (or your OS's equivalent) to start and re-start Armadietto.
+For production, you should set the environment variable `NODE_ENV` to `production` and configure `systemd` (or your OS's equivalent) to start and re-start Armadietto.
 See [the systemd notes](../contrib/systemd/README.md).
 
-To add Express modules (such as [express-rate-limit](https://www.npmjs.com/package/express-rate-limit)), edit `bin/www` and `lib/appFactory.js`, or write your own scripts.
+To add Express modules (such as [nuxt-csurf](https://www.npmjs.com/package/nuxt-csurf)), edit `bin/www` and `lib/appFactory.js`, or write your own scripts.
 
 ## Configuration
 

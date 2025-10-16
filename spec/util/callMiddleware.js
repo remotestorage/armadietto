@@ -19,6 +19,7 @@ module.exports = async function callMiddleware (middleware, reqOpts) {
   req.socket ||= {};
   req.ips = [req.ip = '127.0.0.1'];
   req.session ||= {};
+  req.app = { get: () => true }; // for folder_items_contain_type
 
   const res = httpMocks.createResponse({ req });
   res.req = req;

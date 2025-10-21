@@ -725,7 +725,7 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes2._getBuffer().toString()).to.equal('');
       });
 
-      it('sets the value of a root item', async function () {
+      it('blocks creating document in root folder', async function () {
         const content = 'gizmos';
         const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
@@ -733,19 +733,19 @@ module.exports.shouldStoreStreams = function () {
           headers: { 'Content-Length': content.length, 'Content-Type': 'text/plain' },
           body: content
         });
-        expect(putRes.statusCode).to.equal(201);
-        expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
-        expect(putRes._getBuffer().toString()).to.equal('');
+        expect(putRes.statusCode).to.equal(409);
+        expect(putRes._getData()).to.match(/document in root folder/);
+        expect(putRes.get('Content-Type')).to.equal('text/plain');
 
         const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/manifesto` });
-        expect(getRes.statusCode).to.equal(200);
-        expect(getRes._getBuffer().toString()).to.equal(content);
-        expect(parseInt(getRes.get('Content-Length'))).to.equal(content.length);
-        expect(getRes.get('Content-Type')).to.equal('text/plain');
-        expect(getRes.get('ETag')).to.equal(putRes.get('ETag'));
+        expect(getRes.statusCode).to.equal(404);
+        expect(getRes._getData()).to.equal('');
+        expect(getRes.get('Content-Length')).to.be.undefined;
+        expect(getRes.get('Content-Type')).to.be.undefined;
+        expect(getRes.get('ETag')).to.be.undefined;
       });
 
-      it('updates the value of an item', async function () {
+      it('updates the value of an item & its folder entry', async function () {
         const content1 = 'abracadabra';
         const [_putReq1, putRes1] = await callMiddleware(this.handler, {
           method: 'PUT',
@@ -756,6 +756,15 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes1.statusCode).to.equal(201);
         expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
         expect(putRes1._getBuffer().toString()).to.equal('');
+
+        // getting the folder forces S3 store to cache folder & type
+        const [_folderReq1, folderRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/magic/` });
+        expect(folderRes1.statusCode).to.equal(200);
+        expect(folderRes1.get('Content-Type')).to.equal('application/ld+json');
+        const folder1 = folderRes1._getJSONData();
+        expect(folder1.items.sterotypical).to.have.property('ETag', stripQuotes(putRes1.get('ETag')));
+        expect(folder1.items.sterotypical).to.have.property('Content-Type', 'text/vnd.abc');
+        expect(folder1.items.sterotypical).to.have.property('Content-Length', content1.length);
 
         const content2 = 'alakazam';
         const [_putReq2, putRes2] = await callMiddleware(this.handler, {
@@ -775,6 +784,14 @@ module.exports.shouldStoreStreams = function () {
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
         expect(getRes.get('Content-Type')).to.equal('text/vnd.xyz');
         expect(getRes.get('ETag')).to.equal(putRes2.get('ETag'));
+
+        const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/magic/` });
+        expect(folderRes2.statusCode).to.equal(200);
+        expect(folderRes2.get('Content-Type')).to.equal('application/ld+json');
+        const folder2 = folderRes2._getJSONData();
+        expect(folder2.items.sterotypical).to.have.property('ETag', stripQuotes(putRes2.get('ETag')));
+        expect(folder2.items.sterotypical).to.have.property('Content-Type', 'text/vnd.xyz');
+        expect(folder2.items.sterotypical).to.have.property('Content-Length', content2.length);
       });
 
       it('allows an item to be overwritten with same value', async function () {
@@ -1113,7 +1130,7 @@ module.exports.shouldStoreStreams = function () {
         });
         expect(putRes2.statusCode).to.equal(409); // Conflict
         expect(putRes2.get('ETag')).to.be.undefined;
-        expect(putRes2._getData()).to.match(/existing document/);
+        expect(putRes2._getData()).to.match(/child of document/);
 
         const [_folderReq1, folderRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection/dramatic/` });
         expect(folderRes1.statusCode).to.equal(200); // folder with no items returns empty listing
@@ -1156,7 +1173,7 @@ module.exports.shouldStoreStreams = function () {
         });
         expect(putRes2.statusCode).to.equal(409); // Conflict
         expect(putRes2.get('ETag')).to.be.undefined;
-        expect(putRes2._getData()).to.equal('is actually folder: photos/album');
+        expect(putRes2._getData()).to.match(/is folder/);
 
         const [_getReq1, getRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/album` });
         expect(getRes1.statusCode).to.equal(409);
@@ -1530,15 +1547,15 @@ module.exports.shouldStoreStreams = function () {
 
         const [_putReq, putRes] = await callMiddleware(this.handler, {
           method: 'PUT',
-          url: `/${this.userIdStore}/simultaneous-delete`,
+          url: `/${this.userIdStore}/sim-cat/simultaneous-delete`,
           headers: { 'Content-Length': LIMIT, 'Content-Type': 'text/x-foo' },
           body: new LongStream(LIMIT)
         });
         expect(putRes.statusCode).to.equal(201);
 
         const [[_delReq1, delRes1, delNext1], [_delReq2, delRes2, delNext2]] = await Promise.all([
-          callMiddleware(this.handler, { method: 'DELETE', url: `/${this.userIdStore}/simultaneous-delete` }),
-          callMiddleware(this.handler, { method: 'DELETE', url: `/${this.userIdStore}/simultaneous-delete` })
+          callMiddleware(this.handler, { method: 'DELETE', url: `/${this.userIdStore}/sim-cat/simultaneous-delete` }),
+          callMiddleware(this.handler, { method: 'DELETE', url: `/${this.userIdStore}/sim-cat/simultaneous-delete` })
         ]);
         expect(delRes1.statusCode).to.be.oneOf([204, 404]);
         expect(delRes1.get('ETag')).to.equal(delRes1.statusCode === 204 ? putRes.get('ETag') : undefined);
@@ -1550,7 +1567,7 @@ module.exports.shouldStoreStreams = function () {
         expect(delRes2._getBuffer().toString()).to.equal('');
         expect(delNext2).not.to.have.been.called();
 
-        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/simultaneous-delete` });
+        const [_headReq, headRes] = await callMiddleware(this.handler, { method: 'HEAD', url: `/${this.userIdStore}/sim-cat/simultaneous-delete` });
         expect(headRes.statusCode).to.equal(404);
         expect(headRes.get('ETag')).to.be.undefined;
       });

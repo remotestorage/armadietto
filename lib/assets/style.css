@@ -736,9 +736,10 @@ button[name="signup"]:focus {
   text-align: center;
 }
 
-.success em {
+.success code {
   font-weight: 700;
   font-style: normal;
+  font-size: 1.2rem;
 }
 
 .oauth-form {

@@ -1,5 +1,7 @@
 # Monolithic (old) Server
 
+[Docker image](https://hub.docker.com/r/remotestorage/armadietto-monolithic)
+
 ## Use
 
 1. Run `armadietto -e` to see a sample configuration file.

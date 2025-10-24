@@ -4,6 +4,8 @@ It's built using Express, so bespoke versions can be implemented by copying appF
 
 There's an NPM module for almost anything worth doing in a Node.js server (albeit, not everything is production-quality).
 
+[Docker image](https://hub.docker.com/r/remotestorage/armadietto-modular)
+
 ## Installation
 
 ### S3-compatible storage

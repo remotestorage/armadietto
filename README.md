@@ -27,7 +27,7 @@ See [the Docker README](./docker/README.md)
 
 See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-configuration.md) and other recipes.
 
-### Modular (new) Server
+### Modular (new) Server ([Docker image](https://hub.docker.com/r/remotestorage/armadietto-modular))
 
 * Streaming storage (documents don't have to fit in server memory)
 * S3-compatible storage (requires separate S3 server; AWS S3 allows documents up to 5 TB)
@@ -38,7 +38,7 @@ See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-
 
 See [the modular-server-specific documentation](./notes/modular-server.md) for usage.
 
-### Monolithic (old) Server
+### Monolithic (old) Server ([Docker image](https://hub.docker.com/r/remotestorage/armadietto-monolithic))
 
 * Stores user documents in server file system
 * More thoroughly tested

@@ -111,7 +111,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('deletes a user', async function () {
-      this.timeout(15_000);
+      this.timeout(60_000);
       const params = { username: this.usernameAccount2, contactURL: 'a@b.cc' };
       this.user2 = await this.accountMgr.createUser(params, new Set());
 

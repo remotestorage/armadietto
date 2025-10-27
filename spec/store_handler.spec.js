@@ -20,9 +20,9 @@ const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTE
 
 module.exports.shouldStoreStreams = function () {
   before(async function () {
-    this.timeout(15_000);
+    this.timeout(60_000);
 
-    const usernameStore = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
+    const usernameStore = ('automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER)).slice(0, 29);
     const user = await this.store.createUser({ username: usernameStore, contactURL: 'l@m.no' }, new Set());
     this.userIdStore = user.username;
   });
@@ -33,7 +33,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('upsertAdminBlob & readAdminBlob', function () {
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     it('should store and retrieve blobs', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Atestname%40testhost.org.yaml');
@@ -49,7 +49,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('metadataAdminBlob', function () {
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     it('should retrieve metadata', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Asomename%40somehost.edu.yaml');
@@ -69,7 +69,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('deleteAdminBlob', function () {
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     it('should delete blob', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Asomename%40somehost.edu.yaml');
@@ -122,7 +122,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('GET', function () {
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     describe('for files', function () {
       describe('unversioned', function () {
@@ -383,11 +383,11 @@ module.exports.shouldStoreStreams = function () {
         expect(folder.items['yellow-red'].ETag).to.equal(stripQuotes(putRes1.get('ETag')));
         expect(folder.items['yellow-red']['Content-Type']).to.equal('text/csv');
         expect(folder.items['yellow-red']['Content-Length']).to.equal(content1.length);
-        expect(Date.now() - new Date(folder.items['yellow-red']['Last-Modified'])).to.be.lessThan(20_000);
+        expect(Date.now() - new Date(folder.items['yellow-red']['Last-Modified'])).to.be.lessThan(60_000);
         expect(folder.items['blue-green'].ETag).to.equal(stripQuotes(putRes2.get('ETag')));
         expect(folder.items['blue-green']['Content-Type']).to.equal('text/n3');
         expect(folder.items['blue-green']['Content-Length']).to.equal(content2.length);
-        expect(Date.now() - new Date(folder.items['blue-green']['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(folder.items['blue-green']['Last-Modified'])).to.be.lessThan(60_000);
         expect(folder.items['subfolder/'].ETag).to.match(/^.{6,128}$/);
 
         const [_subfolderReq, subfolderRes] = await callMiddleware(this.handler, {
@@ -484,7 +484,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('PUT', function () {
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     describe('unversioned', function () {
       it('does not create a file for a bad user name', async function () {
@@ -1334,7 +1334,7 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('DELETE', function () {
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {

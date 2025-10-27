@@ -11,9 +11,9 @@ const { shouldCreateDeleteAndReadAccounts } = require('../account.spec');
 
 describe('S3 store router', function () {
   before(function () {
-    this.timeout(15_000);
+    this.timeout(60_000);
     configureLogger({ stdout: ['notice'], log_dir: './test-log', log_files: ['debug'] });
-    this.USER_NAME_SUFFIX = '-java.extraordinary.org';
+    this.USER_NAME_SUFFIX = '-java.extraordinary.test';
     // If the environment variables aren't set, tests are run using a shared public account on play.min.io
     console.info(`creating s3storeHandler with endpoint “${process.env.S3_ENDPOINT}”, accessKey “${process.env.S3_ACCESS_KEY}”, & region “${process.env.S3_REGION}”`);
     this.handler = s3storeHandler({ endPoint: process.env.S3_ENDPOINT, accessKey: process.env.S3_ACCESS_KEY, secretKey: process.env.S3_SECRET_KEY, region: process.env.S3_REGION || 'us-east-1', userNameSuffix: this.USER_NAME_SUFFIX });

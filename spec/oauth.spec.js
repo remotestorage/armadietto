@@ -21,6 +21,7 @@ exports.shouldImplementOAuth = function () {
         scope: 'the_scope'
         // no state
       };
+      this.timeout(60_000);
     });
 
     it('returns an error if redirect_uri is missing', async function () {

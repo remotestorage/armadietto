@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
-const http = require('http');
-const fs = require("fs");
-const path = require("path");
+const http = require('node:http');
+const fs = require("node:fs");
+const path = require("node:path");
 const {ArgumentParser} = require("argparse");
-const { stat } = require('node:fs/promises');
 const appFactory = require('../lib/appFactory');
 const {configureLogger, getLogger} = require("../lib/logger");
 const S3StoreRouter = require("../lib/routes/S3_store_router");
-const process = require("process");
-const https = require("https");
+const process = require("node:process");
+const https = require("node:https");
 const errToMessages = require("../lib/util/errToMessages");
 
 const SSL_CIPHERS = 'ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM';
@@ -82,7 +81,10 @@ async function start(network) {
 
   if (conf.trust_proxy) {
     app.set('trust proxy', conf.trust_proxy);
+  } else if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 'loopback'); // required for secure cookies + session
   }
+  getLogger().info(`trust proxy: ${app.get('trust proxy')}`);
 
   app.locals.title = "Modular Armadietto";
   // Before rendering, `locals.host` should be set to `getHost(req)`
@@ -222,7 +224,10 @@ function clientError (err, socket) {
     message = 'Bad Request';
   }
   const logNotes = errToMessages(err, new Set([message]));
-  getLogger().warning(`- - - - - ${status} - “${Array.from(logNotes).join(' ')}”`);
+  if (Number.isFinite(err.bytesParsed)) {
+    logNotes.add(`${err.bytesParsed} bytes parsed`);
+  }
+  getLogger().warning(`${socket.address?.()?.address || '-'} - - - - ${status} - «${Array.from(logNotes).join(' ')}»`);
 
   if (err.code !== 'ECONNRESET' && socket.writable) {
     socket.end(`HTTP/1.1 ${status} ${message}\r\n\r\n`);

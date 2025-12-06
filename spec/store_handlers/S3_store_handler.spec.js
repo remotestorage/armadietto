@@ -22,8 +22,9 @@ function calcTypeCachePath (itemS3Path, contentType) {
 }
 
 describe('S3 store router', function () {
+  this.timeout(60_000);
+
   before(function () {
-    this.timeout(60_000);
     configureLogger({ stdout: ['notice'], log_dir: './test-log', log_files: ['debug'] });
     this.USER_NAME_SUFFIX = '-java.extraordinary.test';
     // If the environment variables aren't set, tests are run using a shared public account on play.min.io
@@ -46,8 +47,6 @@ describe('S3 store router', function () {
 
   describe('folder & Content-Type caching', function () {
     before(async function () {
-      this.timeout(15_000);
-
       const usernameStore = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
       const user = await this.store.createUser({ username: usernameStore, contactURL: 'p@q.rr' }, new Set());
       this.userIdStore = user.username;

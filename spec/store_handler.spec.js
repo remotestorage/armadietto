@@ -19,9 +19,9 @@ const ADMIN_INVITE_DIR_NAME = 'invites';
 const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
 
 module.exports.shouldStoreStreams = function () {
-  before(async function () {
-    this.timeout(60_000);
+  this.timeout(60_000);
 
+  before(async function () {
     const usernameStore = ('automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER)).slice(0, 29);
     const user = await this.store.createUser({ username: usernameStore, contactURL: 'l@m.no' }, new Set());
     this.userIdStore = user.username;
@@ -33,8 +33,6 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('upsertAdminBlob & readAdminBlob', function () {
-    this.timeout(60_000);
-
     it('should store and retrieve blobs', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Atestname%40testhost.org.yaml');
       const value = { foo: 'bar', spam: [42, 69, 'hut', 'hut', 'hike!'] };
@@ -49,8 +47,6 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('metadataAdminBlob', function () {
-    this.timeout(60_000);
-
     it('should retrieve metadata', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Asomename%40somehost.edu.yaml');
       const content = YAML.stringify({ frotz: 'frell' });
@@ -122,8 +118,6 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('GET', function () {
-    this.timeout(60_000);
-
     describe('for files', function () {
       describe('unversioned', function () {
         it('returns Not Found for a non-existing user', async function () {
@@ -517,8 +511,6 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('PUT', function () {
-    this.timeout(60_000);
-
     describe('unversioned', function () {
       it('does not create a file for a bad user name', async function () {
         const content = 'microbe';
@@ -1410,8 +1402,6 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('DELETE', function () {
-    this.timeout(60_000);
-
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {
         const [_req, res, next] = await callMiddleware(this.handler, {

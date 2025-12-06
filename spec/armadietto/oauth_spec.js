@@ -74,9 +74,10 @@ describe('OAuth', async function () {
   });
 
   describe('with invalid client input', function () {
+    this.timeout(60_000);
+
     beforeEach(function () {
       delete this.auth_params?.state;
-      this.timeout(60_000);
     });
 
     it('returns an error if redirect_uri is missing', async function () {

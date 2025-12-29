@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: '24'
       - run: npm ci
       - run: npm run lint
 
@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         # Support LTS versions based on https://nodejs.org/en/about/releases/
-        node-version: ['18', '20', '21']
+        node-version: ['20', '22', '24']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,19 +34,16 @@ jobs:
       - run: npm ci
       - run: npm test
 
-  Conditional-Publish-to-NPM:
+  Publish-to-NPM:
     needs: [Lint, Automated-Tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Update npm
-        run: npm install -g npm@latest
       - run: npm ci
-      - id: publish
-        run: npm publish
-      - if: steps.publish.outputs.type != 'none'
-        run: |
-          echo "NPM ${{steps.publish.outputs.type}} version changed: ${{ steps.publish.outputs.old-version }} => ${{ steps.publish.outputs.version }}"
+      - run: npm test
+      - run: npm publish
+        # npm publish has no outputs to check

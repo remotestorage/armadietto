@@ -81,14 +81,11 @@ exports.shouldImplementWebFinger = function () {
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
     expect(res).to.be.json;
     expect(res.body.links[0].href).to.equal(host + '/storage/zebcoe');
-    expect(res.body.links[0].rel).to.match(/http:\/\/tools\.ietf\.org\/id\/draft-dejong-remotestorage|remotestorage/);
-    expect(res.body.links[0].type).to.match(/draft-dejong-remotestorage-\d\d/);
-    expect(res.body.links[0].properties['http://remotestorage.io/spec/version']).to.match(/draft-dejong-remotestorage-\d\d/);
+    expect(res.body.links[0].rel).to.equal('http://tools.ietf.org/id/draft-dejong-remotestorage');
+    expect(res.body.links[0].type).to.equal('draft-dejong-remotestorage-22');
+    expect(res.body.links[0].properties['http://remotestorage.io/spec/version']).to.equal('draft-dejong-remotestorage-22');
     expect(res.body.links[0].properties['http://tools.ietf.org/html/rfc6749#section-4.2']).to.equal(host + '/oauth/zebcoe');
     // expect(res.body.links[0].properties['http://tools.ietf.org/html/rfc7233']).to.equal('GET'); // Range requests
-    // for compatability with old versions of spec
-    expect(res.body.links[0].properties['auth-method']).to.equal('http://tools.ietf.org/html/rfc6749#section-4.2');
-    expect(res.body.links[0].properties['auth-endpoint']).to.equal(host + '/oauth/zebcoe');
     expect(res.body.links).to.have.length(1);
   });
 
@@ -102,17 +99,10 @@ exports.shouldImplementWebFinger = function () {
     <Link href="http://127.0.0.1:${this.port}/storage/zebcoe" rel="
 `)));
     expect(trim(res.text)).to.match(new RegExp(trim(`
-        <Property type="http://remotestorage.io/spec/version">draft-dejong-remotestorage-\\d\\d</Property>
+        <Property type="http://remotestorage.io/spec/version">draft-dejong-remotestorage-22</Property>
 `)));
     expect(trim(res.text)).to.match(new RegExp(trim(`
         <Property type="http://tools.ietf.org/html/rfc6749#section-4.2">http://127.0.0.1:${this.port}/oauth/zebcoe</Property>
-`)));
-    // for compatability with old versions of spec
-    expect(trim(res.text)).to.match(new RegExp(trim(`
-        <Property type="auth-method">http://tools.ietf.org/html/rfc6749#section-4.2</Property>
-`)));
-    expect(trim(res.text)).to.match(new RegExp(trim(`
-        <Property type="auth-endpoint">http://127.0.0.1:${this.port}/oauth/zebcoe</Property>
 `)));
   });
 };

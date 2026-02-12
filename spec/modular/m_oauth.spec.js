@@ -38,7 +38,7 @@ describe('OAuth (modular)', function () {
       contentSecurityPolicy: {
         directives: {
           sandbox: ['allow-scripts', 'allow-forms', 'allow-popups', 'allow-same-origin'],
-          defaultSrc: ['\'self\''],
+          defaultSrc: ['\'none\''],
           scriptSrc: ['\'self\''],
           scriptSrcAttr: ['\'none\''],
           styleSrc: ['\'self\''],
@@ -177,7 +177,7 @@ describe('OAuth (modular)', function () {
       const res = await post(this.app, '/oauth', this.auth_params);
       expect(res).to.have.status(401);
       expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
-      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
       expect(res).to.have.header('Referrer-Policy', 'no-referrer');
       expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
       expect(res.text).to.contain('application <em>the_client_id</em> hosted');
@@ -279,7 +279,7 @@ describe('OAuth (modular)', function () {
 
       expect(res).to.have.status(401);
       expect(res).to.have.header('Content-Type', 'text/html; charset=utf-8');
-      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+      expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
 
       expect(res.text).to.contain('<title>Authorization Failure — Armadietto</title>');
       expect(res.text).to.contain('<p class="message">Go back to the app then try again — your session expired</p>');

@@ -40,7 +40,7 @@ describe('Home w/o signup and no base path', () => {
     const res = await get('/');
     expect(res).not.to.redirect;
     expect(res).to.have.status(200);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -60,7 +60,7 @@ describe('Home w/o signup and no base path', () => {
   it('blocks access to the signup page', async () => {
     const res = await get('/signup');
     expect(res).to.have.status(403);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -74,7 +74,7 @@ describe('Home w/o signup and no base path', () => {
       password: 'iloveyou'
     });
     expect(res).to.have.status(403);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -107,7 +107,7 @@ describe('Signup w/ base path & signup', () => {
   it('returns a home page w/ signup link', async () => {
     const res = await get('/basic/');
     expect(res).to.have.status(200);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -119,7 +119,7 @@ describe('Signup w/ base path & signup', () => {
   it('returns a signup page with form', async () => {
     const res = await get('/basic/signup');
     expect(res).to.have.status(200);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -134,7 +134,7 @@ describe('Signup w/ base path & signup', () => {
       password: 'iloveyou'
     });
     expect(res).to.have.status(201);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;

@@ -67,7 +67,7 @@ describe('root page (modular)', function () {
       const res = await chai.request(this.app).get('/');
       expect(res).to.have.status(200);
       expect(res.get('Content-Security-Policy')).to.contain('sandbox allow-scripts allow-forms allow-popups allow-same-origin allow-orientation-lock;');
-      expect(res.get('Content-Security-Policy')).to.contain('default-src \'self\';');
+      expect(res.get('Content-Security-Policy')).to.contain('default-src \'none\';');
       expect(res.get('Content-Security-Policy')).to.contain('script-src \'self\';');
       expect(res.get('Content-Security-Policy')).to.contain('script-src-attr \'none\';');
       expect(res.get('Content-Security-Policy')).to.contain('style-src \'self\';');

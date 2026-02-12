@@ -31,7 +31,7 @@ describe('Static asset handler (modular)', function () {
     const res = await chai.request(this.app).get('/assets/outfit-variablefont_wght.woff2');
     expect(res).to.have.status(200);
     expect(res).to.have.header('Content-Security-Policy', /\bsandbox\b/);
-    expect(res).to.have.header('Content-Security-Policy', /\bdefault-src 'self';/);
+    expect(res).to.have.header('Content-Security-Policy', /\bdefault-src 'none';/);
     expect(res).to.have.header('Content-Security-Policy', /\bscript-src 'self';.*\bscript-src-attr 'none';/);
     expect(res).to.have.header('Content-Security-Policy', /\bstyle-src 'self';/);
     expect(res).to.have.header('Content-Security-Policy', /\bimg-src 'self';/);

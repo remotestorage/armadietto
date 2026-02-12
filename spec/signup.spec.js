@@ -10,7 +10,7 @@ exports.shouldBlockSignups = function () {
   it('blocks access to the signup page', async function () {
     const res = await chai.request(this.app).get('/signup');
     expect(res).to.have.status(403);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -30,7 +30,7 @@ exports.shouldBlockSignups = function () {
     });
 
     expect(res).to.have.status(403);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -48,7 +48,7 @@ exports.shouldAllowSignupsBasePath = function () {
   it('returns a home page w/ signup link', async function () {
     const res = await chai.request(this.app).get('/basic/');
     expect(res).to.have.status(200);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -62,7 +62,7 @@ exports.shouldAllowSignupsBasePath = function () {
   it('returns a signup page with empty form', async function () {
     const res = await chai.request(this.app).get('/basic/signup');
     expect(res).to.have.status(200);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     // expect(res).to.have.header('Strict-Transport-Security', /^max-age=/);
@@ -92,7 +92,7 @@ exports.shouldAllowSignupsBasePath = function () {
     });
     expect(res).to.have.status(409);
     expect(res).to.have.header('Content-Length');
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;
@@ -118,7 +118,7 @@ exports.shouldAllowSignupsBasePath = function () {
       password: 'iloveyou'
     });
     expect(res).to.have.status(201);
-    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'self'/);
+    expect(res).to.have.header('Content-Security-Policy', /sandbox.*default-src 'none'/);
     expect(res).to.have.header('Referrer-Policy', 'no-referrer');
     expect(res).to.have.header('X-Content-Type-Options', 'nosniff');
     expect(res).to.be.html;

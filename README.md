@@ -27,25 +27,30 @@ See [the Docker README](./docker/README.md)
 
 See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-configuration.md) and other recipes.
 
-### Modular (new) Server ([Docker image](https://hub.docker.com/r/remotestorage/armadietto-modular))
+### Express (Modular, new) Server ([Docker image](https://hub.docker.com/r/remotestorage/armadietto-modular))
 
 * Streaming storage (documents don't have to fit in server memory)
 * S3-compatible storage (requires separate S3 server; AWS S3 allows documents up to 5 TB)
+* Authenticates user with Passkey or "invitation" URL
 * Can run multiple application servers to increase capacity to enterprise-scale
 * Unauthorized clients are rate-limited; an authorized client may use all capacity to back up or restore quickly
 * Bug Fix: correctly handles If-None-Match with ETag
 * Bug Fix: returns empty listing for nonexistent folder
 * Implements current spec: draft-dejong-remotestorage-22
 
-See [the modular-server-specific documentation](./notes/modular-server.md) for usage.
+See [the Express-server-specific documentation](./notes/modular-server.md) for usage.
 
-### Monolithic (old) Server ([Docker image](https://hub.docker.com/r/remotestorage/armadietto-monolithic))
+### Classic (Monolithic, old) Server ([Docker image](https://hub.docker.com/r/remotestorage/armadietto-monolithic))
 
 * Stores user documents in server file system
+* Authenticates user with password
 * More thoroughly tested
-* Implements current spec: draft-dejong-remotestorage-22
+* Doesn't fully implement spec:
+  * doesn't send the `Last-Modified` header
+  * sometimes doesn't send the `Content-Length` header
+  * sends incorrect 403 status when Authorization header is missing.
 
-See [the monolithic-server-specific documentation](./notes/monolithic-server.md) for usage.
+See [the Classic-server-specific documentation](./notes/monolithic-server.md) for usage.
 
 ### In Production
 

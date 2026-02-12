@@ -19,8 +19,6 @@ const ADMIN_INVITE_DIR_NAME = 'invites';
 const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
 
 module.exports.shouldStoreStreams = function () {
-  this.timeout(60_000);
-
   before(async function () {
     const usernameStore = ('automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER)).slice(0, 29);
     const user = await this.store.createUser({ username: usernameStore, contactURL: 'l@m.no' }, new Set());
@@ -506,6 +504,21 @@ module.exports.shouldStoreStreams = function () {
         const newFolder = await this.handler.listFolder(this.userIdStore, 'fill-category/fill-folder', true, logNotes);
         expect(newFolder).to.deep.equal(folder);
         expect(logNotes.size).to.equal(1);
+      });
+
+      it('returns listing for root folder', async function () {
+        const [_req, res, next] = await callMiddleware(this.handler, {
+          method: 'GET',
+          url: `/${this.userIdStore}/`
+        });
+
+        expect(res.statusCode).to.equal(200);
+        expect(res.get('Content-Type')).to.equal('application/ld+json');
+        const rootFolder = res._getJSONData();
+        expect(rootFolder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(Object.getPrototypeOf(rootFolder.items)).to.equal(Object.prototype);
+        expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+        expect(next).not.to.have.been.called();
       });
     });
   });

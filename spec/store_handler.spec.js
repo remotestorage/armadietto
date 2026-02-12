@@ -513,6 +513,21 @@ module.exports.shouldStoreStreams = function () {
         expect(newFolder).to.deep.equal(folder);
         expect(logNotes.size).to.equal(1);
       });
+
+      it('returns listing for root folder', async function () {
+        const [_req, res, next] = await callMiddleware(this.handler, {
+          method: 'GET',
+          url: `/${this.userIdStore}/`
+        });
+
+        expect(res.statusCode).to.equal(200);
+        expect(res.get('Content-Type')).to.equal('application/ld+json');
+        const rootFolder = res._getJSONData();
+        expect(rootFolder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
+        expect(Object.getPrototypeOf(rootFolder.items)).to.equal(Object.prototype);
+        expect(res.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
+        expect(next).not.to.have.been.called();
+      });
     });
   });
 

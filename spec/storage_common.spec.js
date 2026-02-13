@@ -48,6 +48,7 @@ module.exports.shouldCrudBlobs = function () {
       expect(res.get('Access-Control-Allow-Methods')).to.contain('HEAD');
       expect(res.get('Access-Control-Allow-Methods')).to.contain('PUT');
       expect(res.get('Access-Control-Allow-Methods')).to.contain('DELETE');
+      expect(res.get('Access-Control-Allow-Methods')).to.contain('OPTIONS');
       expect(res.get('Access-Control-Allow-Methods')).not.to.contain('POST');
       expect(res.get('Access-Control-Allow-Methods')).not.to.contain('PATCH');
       expect(res.get('Access-Control-Expose-Headers')).to.contain('ETag');

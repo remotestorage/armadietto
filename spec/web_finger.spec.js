@@ -10,6 +10,27 @@ const trim = (what) => what.replace(/\s+/gm, ' ').trim();
 
 // arrow functions are incompatible with sharing tests
 exports.shouldImplementWebFinger = function () {
+  it('returns webfinger resource metadata as JSON', async function () {
+    const host = `http://127.0.0.1:${this.port}`;
+    const res = await chai.request(this.server).keepOpen().get('/.well-known/webfinger?resource=acct:darius@persia.gov');
+    expect(res).to.have.status(200);
+    expect(res).to.have.header('Access-Control-Allow-Origin', '*');
+    // HTTPS is required for Express (Modular) server, but not Classic (Monolithic)
+    // expect(res).to.have.header('Strict-Transport-Security', /^max-age=\d{8,9}/);
+    expect(res).to.have.header('Content-Type', /^application\/jrd\+json\b/);
+    expect(res).to.have.charset('utf-8');
+    expect(res.body).to.have.property('subject', 'acct:darius@persia.gov');
+    expect(res.body).to.have.nested.property('links[0].href', host + '/storage/darius');
+    expect(res.body).to.have.nested.property('links[0].rel', 'http://tools.ietf.org/id/draft-dejong-remotestorage');
+    expect(res.body).nested.property('links[0].type').to.match(/draft-dejong-remotestorage-\d\d/);
+    expect(res.body.links[0].properties['http://remotestorage.io/spec/version']).to.match(/draft-dejong-remotestorage-\d\d/);
+    expect(res.body.links[0].properties['http://tools.ietf.org/html/rfc6749#section-4.2']).to.equal(host + '/oauth/darius');
+    // expect(res.body.links[0].properties['http://tools.ietf.org/html/rfc7233']).to.equal('GET'); // Range requests
+    expect(res.body.links).to.have.length(1);
+  });
+
+  // TODO: Determine what's actually needed; remove obsolete tests & code
+
   it('returns webfinger data as JRD+JSON', async function () {
     const host = `http://127.0.0.1:${this.port}`;
     const res = await chai.request(this.server).keepOpen().get('/.well-known/webfinger');
@@ -79,7 +100,7 @@ exports.shouldImplementWebFinger = function () {
     const res = await chai.request(this.server).keepOpen().get('/.well-known/host-meta.json?resource=acct:zebcoe@locog');
     expect(res).to.have.status(200);
     expect(res).to.have.header('Access-Control-Allow-Origin', '*');
-    expect(res).to.be.json;
+    expect(res).to.have.header('Content-Type', /^application\/jrd\+json\b/);
     expect(res.body.links[0].href).to.equal(host + '/storage/zebcoe');
     expect(res.body.links[0].rel).to.equal('http://tools.ietf.org/id/draft-dejong-remotestorage');
     expect(res.body.links[0].type).to.match(/draft-dejong-remotestorage-\d\d/);

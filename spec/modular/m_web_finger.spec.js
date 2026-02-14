@@ -1,4 +1,5 @@
 /* eslint-env mocha, chai, node */
+/* eslint-disable no-unused-expressions */
 
 const { mockAccountFactory } = require('../util/mockAccount');
 const http = require('http');
@@ -42,5 +43,14 @@ describe('Web Finger (modular)', function () {
   it('redirects change-password to /signup', async function () {
     const res = await chai.request(this.app).get('/.well-known/change-password');
     expect(res).to.redirectTo(/^http:\/\/127.0.0.1:\d{1,5}\/signup$/);
+  });
+
+  it('advertises passkey management endpoint', async function () {
+    const res = await chai.request(this.app).get('/.well-known/passkey-endpoints');
+    expect(res).to.have.status(200);
+    expect(res).to.have.header('Strict-Transport-Security', /^max-age=\d{8,9}/);
+    expect(res).to.be.json;
+    expect(res).to.have.charset('utf-8');
+    expect(res.body.manage).to.match(/^http:\/\/127.0.0.1:\d{1,5}\/account\/$/);
   });
 });

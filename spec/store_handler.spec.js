@@ -19,8 +19,6 @@ const ADMIN_INVITE_DIR_NAME = 'invites';
 const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
 
 module.exports.shouldStoreStreams = function () {
-  this.timeout(60_000);
-
   before(async function () {
     const usernameStore = ('automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER)).slice(0, 29);
     const user = await this.store.createUser({ username: usernameStore, contactURL: 'l@m.no' }, new Set());
@@ -33,6 +31,8 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('upsertAdminBlob & readAdminBlob', function () {
+    this.timeout(60_000);
+
     it('should store and retrieve blobs', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Atestname%40testhost.org.yaml');
       const value = { foo: 'bar', spam: [42, 69, 'hut', 'hut', 'hike!'] };
@@ -47,6 +47,8 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('metadataAdminBlob', function () {
+    this.timeout(60_000);
+
     it('should retrieve metadata', async function () {
       const relativePath = path.join(ADMIN_INVITE_DIR_NAME, 'mailto%3Asomename%40somehost.edu.yaml');
       const content = YAML.stringify({ frotz: 'frell' });
@@ -87,6 +89,8 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('listAdminBlobs', function () {
+    this.timeout(60_000);
+
     it('should list blobs', async function () {
       const blobs = await this.handler.listAdminBlobs(LIST_DIR_NAME);
       expect(blobs).to.have.length(0);
@@ -118,6 +122,8 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('GET', function () {
+    this.timeout(60_000);
+
     describe('for files', function () {
       describe('unversioned', function () {
         it('returns Not Found for a non-existing user', async function () {
@@ -511,6 +517,8 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('PUT', function () {
+    this.timeout(60_000);
+
     describe('unversioned', function () {
       it('does not create a file for a bad user name', async function () {
         const content = 'microbe';
@@ -934,10 +942,12 @@ module.exports.shouldStoreStreams = function () {
         ]);
 
         expect(resLong.statusCode).to.be.oneOf([201, 409, 429, 503]);
+        if ([429, 503].includes(resLong.statusCode)) console.warn('first simultaneous create (long) got busy response');
         expect(resLong._getBuffer().toString()).to.equal('');
         expect(nextLong).not.to.have.been.called();
 
         expect(resShort.statusCode).to.be.oneOf([201, 409, 429, 503]);
+        if ([429, 503].includes(resShort.statusCode)) console.warn('second simultaneous create (short) got busy response');
         expect(resShort._getBuffer().toString()).to.equal('');
         expect(nextShort).not.to.have.been.called();
 
@@ -1402,6 +1412,8 @@ module.exports.shouldStoreStreams = function () {
   });
 
   describe('DELETE', function () {
+    this.timeout(60_000);
+
     describe('unversioned', function () {
       it('should return Not Found for nonexistent user', async function () {
         const [_req, res, next] = await callMiddleware(this.handler, {
@@ -1664,5 +1676,5 @@ module.exports.shouldStoreStreams = function () {
 };
 
 function stripQuotes (ETag) {
-  return ETag.replace(/^"|^W\/"|"$/g, '');
+  return ETag?.replace(/^"|^W\/"|"$/g, '');
 }

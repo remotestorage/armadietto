@@ -131,7 +131,7 @@ describe('S3 store router', function () {
         method: 'PUT',
         url: `/${this.userIdStore}/${rsPath}`,
         headers: { 'Content-Length': content2.length, 'Content-Type': contentType },
-        body: content
+        body: content2
       });
       expect(putRes2.statusCode).to.equal(200);
       expect(putRes2.get('ETag')).not.to.equal(putRes.get('ETag'));

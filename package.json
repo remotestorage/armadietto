@@ -37,7 +37,7 @@
     "argparse": "^2.0.1",
     "cors": "^2.8.5",
     "ejs": "^3.1.9",
-    "express": "^4.18.2",
+    "express": "^4.22.1",
     "express-jwt": "^8.4.1",
     "express-session": "^1.18.0",
     "helmet": "^7.1.0",

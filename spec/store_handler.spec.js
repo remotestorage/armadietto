@@ -14,6 +14,7 @@ const LongStream = require('./util/LongStream');
 const callMiddleware = require('./util/callMiddleware');
 const YAML = require('yaml');
 const NoSuchBlobError = require('../lib/util/NoSuchBlobError');
+const { deleteUsersLoggingFailures } = require('./util/cleanup');
 
 const ADMIN_INVITE_DIR_NAME = 'invites';
 const LIST_DIR_NAME = 'stuff-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
@@ -27,7 +28,7 @@ module.exports.shouldStoreStreams = function () {
 
   after(async function () {
     this.timeout(360_000);
-    await this.store.deleteUser(this.userIdStore, new Set());
+    await deleteUsersLoggingFailures(this.store, [this.userIdStore]);
   });
 
   describe('upsertAdminBlob & readAdminBlob', function () {

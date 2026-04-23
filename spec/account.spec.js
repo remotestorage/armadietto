@@ -4,6 +4,7 @@
 const chai = require('chai');
 const widelyCompatibleId = require('../lib/util/widelyCompatibleId');
 const NoSuchUserError = require('../lib/util/NoSuchUserError');
+const { deleteUsersLoggingFailures } = require('./util/cleanup');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 
@@ -16,7 +17,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     after(async function () {
       if (this.userIdAccount) {
         this.timeout(15_000);
-        await this.accountMgr.deleteUser(this.userIdAccount, new Set());
+        await deleteUsersLoggingFailures(this.accountMgr, [this.userIdAccount]);
       }
     });
 
@@ -73,8 +74,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
 
     after(async function () {
       this.timeout(15_000);
-      await this.accountMgr.deleteUser(this.usernameAccountList1, new Set());
-      await this.accountMgr.deleteUser(this.usernameAccountList2, new Set());
+      await deleteUsersLoggingFailures(this.accountMgr, [this.usernameAccountList1, this.usernameAccountList2]);
     });
 
     it('should list users', async function () {
@@ -102,12 +102,10 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
 
     after(async function () {
       this.timeout(15_000);
-      if (this.user2?.username) {
-        await this.accountMgr.deleteUser(this.user2.username, new Set());
-      }
-      if (this.user3?.username) {
-        await this.accountMgr.deleteUser(this.user3.username, new Set());
-      }
+      const usernames = [];
+      if (this.user2?.username) { usernames.push(this.user2.username); }
+      if (this.user3?.username) { usernames.push(this.user3.username); }
+      await deleteUsersLoggingFailures(this.accountMgr, usernames);
     });
 
     it('deletes a user', async function () {

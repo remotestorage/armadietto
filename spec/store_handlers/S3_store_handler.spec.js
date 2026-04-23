@@ -9,6 +9,7 @@ chai.use(require('chai-as-promised'));
 const { posix } = require('node:path');
 const s3storeHandler = require('../../lib/routes/S3_store_router');
 const { shouldStoreStreams } = require('../store_handler.spec');
+const { deleteUsersLoggingFailures } = require('../util/cleanup');
 const { configureLogger } = require('../../lib/logger');
 const { shouldCreateDeleteAndReadAccounts } = require('../account.spec');
 const callMiddleware = require('../util/callMiddleware');
@@ -55,7 +56,7 @@ describe('S3 store router', function () {
 
     after(async function () {
       this.timeout(360_000);
-      await this.store.deleteUser(this.userIdStore, new Set());
+      await deleteUsersLoggingFailures(this.accountMgr, [this.userIdStore]);
     });
 
     it("doesn't cache folder after PUT, but does after GET", async function () {

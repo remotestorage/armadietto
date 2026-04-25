@@ -157,7 +157,7 @@ describe('S3 store router', function () {
         headers: { 'Content-Length': content1.length, 'Content-Type': contentType1 },
         body: content1
       });
-      expect(putRes1.statusCode).to.equal(201);
+      expect(putRes1.statusCode).to.equal(201, putRes1._getData());
 
       const logNotes1 = new Set();
       const folder1 = await this.handler.listFolder(this.userIdStore, '/' + category, true, logNotes1);
@@ -176,7 +176,7 @@ describe('S3 store router', function () {
         headers: { 'Content-Length': content2.length, 'Content-Type': contentType2 },
         body: content2
       });
-      expect(putRes2.statusCode).to.equal(200);
+      expect(putRes2.statusCode).to.equal(200, putRes2._getData());
 
       // tests that both old and new type cache blobs no longer exist
       await expect(this.store.readJson(this.bucketName, typeCachePath1))
@@ -211,21 +211,21 @@ describe('S3 store router', function () {
         headers: { 'Content-Length': content1.length, 'Content-Type': contentType1 },
         body: content1
       });
-      expect(putRes1.statusCode).to.equal(201);
+      expect(putRes1.statusCode).to.equal(201, putRes1._getData());
       const [_putReq2, putRes2] = await callMiddleware(this.handler, {
         method: 'PUT',
         url: `/${this.userIdStore}/${rsPath2}`,
         headers: { 'Content-Length': content2.length, 'Content-Type': contentType2 },
         body: content2
       });
-      expect(putRes2.statusCode).to.equal(201);
+      expect(putRes2.statusCode).to.equal(201, putRes2._getData());
 
       // GETs category, which caches type
       const [_catReq, catRes] = await callMiddleware(this.handler, {
         method: 'GET',
         url: `/${this.userIdStore}/${categoryPath}`
       });
-      expect(catRes.statusCode).to.equal(200);
+      expect(catRes.statusCode).to.equal(200, catRes._getData());
 
       // tests that type cache blob exists
       const typeCachePath1 = calcTypeCachePath(posix.join(BLOB_PREFIX, rsPath1), contentType1);
@@ -240,7 +240,7 @@ describe('S3 store router', function () {
         method: 'DELETE',
         url: `/${this.userIdStore}/${rsPath1}`
       });
-      expect(deleteRes.statusCode).to.equal(204);
+      expect(deleteRes.statusCode).to.equal(204, deleteRes._getData());
 
       // tests that one type cache blob was deleted and the other remains
       await expect(this.store.readJson(this.bucketName, typeCachePath2))

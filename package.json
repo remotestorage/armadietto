@@ -52,7 +52,7 @@
     "robots.txt": "^1.1.0",
     "ua-parser-js": "^1.0.38",
     "winston": "^3.11.0",
-    "yaml": "^2.4.0"
+    "yaml": "2.8.3"
   },
   "devDependencies": {
     "bdd-lazy-var": "^2.6.1",

@@ -69,7 +69,7 @@ describe('S3 store router', function () {
         headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.zoo.kcl' },
         body: content
       });
-      expect(putRes.statusCode).to.equal(201);
+      expect(putRes.statusCode).to.equal(201, putRes._getData());
       expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
       expect(putRes._getData()).to.equal('');
 
@@ -77,7 +77,7 @@ describe('S3 store router', function () {
         .to.be.rejectedWith(NoSuchKey);
 
       const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/${categoryPath}` });
-      expect(getRes.statusCode).to.equal(200);
+      expect(getRes.statusCode).to.equal(200, getRes._getData());
       expect(getRes.get('Content-Type')).to.equal('application/ld+json');
       const category = getRes._getJSONData();
       expect(category['@context']).to.equal('http://remotestorage.io/spec/folder-description');
@@ -165,7 +165,7 @@ describe('S3 store router', function () {
 
       // tests that type cache blob exists
       const typeCachePath1 = calcTypeCachePath(posix.join(BLOB_PREFIX, category, name), contentType1);
-      await expect(this.store.readJson(this.bucketName, typeCachePath1))
+      await expect(this.store.readJson(this.bucketName, typeCachePath1), "initial type cache blob doesn't exist")
         .to.be.rejectedWith(SyntaxError); // 0-length
 
       const content2 = 'orogeny';
@@ -192,7 +192,7 @@ describe('S3 store router', function () {
       expect(folder2.items[name]['Content-Type']).to.equal(contentType2);
 
       // tests that the new type cache blob exists
-      await expect(this.store.readJson(this.bucketName, typeCachePath2))
+      await expect(this.store.readJson(this.bucketName, typeCachePath2), "new type cache blob doesn't exist")
         .to.be.rejectedWith(SyntaxError); // 0-length
     });
 

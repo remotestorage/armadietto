@@ -42,7 +42,7 @@
     "express-session": "^1.18.0",
     "helmet": "^7.1.0",
     "http-errors": "^2.0.0",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "9.0.3",
     "lockfile": "^1.0.4",
     "memorystore": "^1.6.7",
     "mkdirp": "^1.0.4",

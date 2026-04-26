@@ -13,7 +13,7 @@
     "decentralization"
   ],
   "license": "MIT",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "engines": {
     "node": ">=20.0"
   },
@@ -37,12 +37,12 @@
     "argparse": "^2.0.1",
     "cors": "^2.8.5",
     "ejs": "^3.1.9",
-    "express": "^4.18.2",
+    "express": "^4.22.1",
     "express-jwt": "^8.4.1",
     "express-session": "^1.18.0",
     "helmet": "^7.1.0",
     "http-errors": "^2.0.0",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "9.0.3",
     "lockfile": "^1.0.4",
     "memorystore": "^1.6.7",
     "mkdirp": "^1.0.4",
@@ -52,7 +52,7 @@
     "robots.txt": "^1.1.0",
     "ua-parser-js": "^1.0.38",
     "winston": "^3.11.0",
-    "yaml": "^2.4.0"
+    "yaml": "2.8.3"
   },
   "devDependencies": {
     "bdd-lazy-var": "^2.6.1",
@@ -66,7 +66,7 @@
     "eslint-plugin-n": "^16.6.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1",
-    "mocha": "^10.3.0",
+    "mocha": "^11.7.5",
     "nodemon": "^3.0.3",
     "rimraf": "^3.0.2"
   },

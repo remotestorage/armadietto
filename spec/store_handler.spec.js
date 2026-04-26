@@ -1088,7 +1088,7 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes.get('ETag')).to.equal(putRes.get('ETag'));
 
         const [_folderReq1, folderRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/videos/foo/bar/` });
-        expect(folderRes1.statusCode).to.equal(200);
+        expect(folderRes1.statusCode).to.equal(200, folderRes1._getData());
         expect(folderRes1.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes1.get('ETag')).to.match(/^".{6,128}"$/);
         const folder1 = JSON.parse(folderRes1._getData());
@@ -1098,7 +1098,7 @@ module.exports.shouldStoreStreams = function () {
         expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(15_000);
 
         const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/videos/foo/` });
-        expect(folderRes2.statusCode).to.equal(200);
+        expect(folderRes2.statusCode).to.equal(200, folderRes2._getData());
         expect(folderRes2.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes2.get('ETag')).to.match(/^".{6,128}"$/);
         const folder2 = JSON.parse(folderRes2._getData());
@@ -1108,7 +1108,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder2.items['bar/']['Last-Modified']).to.be.undefined;
 
         const [_folderReq3, folderRes3] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/videos/` });
-        expect(folderRes3.statusCode).to.equal(200);
+        expect(folderRes3.statusCode).to.equal(200, folderRes3._getData());
         expect(folderRes3.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes3.get('ETag')).to.match(/^".{6,128}"$/);
         const folder3 = JSON.parse(folderRes3._getData());
@@ -1118,7 +1118,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder3.items['foo/']['Last-Modified']).to.be.undefined;
 
         const [_folderReq4, folderRes4] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/` });
-        expect(folderRes4.statusCode).to.equal(200);
+        expect(folderRes4.statusCode).to.equal(200, folderRes4._getData());
         expect(folderRes4.get('Content-Type')).to.equal('application/ld+json');
         expect(folderRes4.get('ETag')).to.match(/^".{6,128}"$/);
         const folder4 = folderRes4._getJSONData();
@@ -1151,7 +1151,8 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2._getData()).to.match(/child of document/);
 
         const [_folderReq1, folderRes1] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection/dramatic/` });
-        expect(folderRes1.statusCode).to.equal(200); // folder with no items returns empty listing
+        // a folder with no items returns an empty listing
+        expect(folderRes1.statusCode).to.equal(200, folderRes1._getData());
         expect(folderRes1.get('Content-Type')).to.equal('application/ld+json');
         const folder = folderRes1._getJSONData();
         expect(folder['@context']).to.equal('http://remotestorage.io/spec/folder-description');
@@ -1159,7 +1160,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folderRes1.get('ETag')).to.match(/^"[#-~!]{6,128}"$/);
 
         const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/photos/collection/` });
-        expect(folderRes2.statusCode).to.equal(409);
+        expect(folderRes2.statusCode).to.equal(409, folderRes2._getData());
         expect(folderRes2.get('ETag')).to.be.undefined;
         expect(folderRes2._getData()).to.equal('is document, not folder');
 

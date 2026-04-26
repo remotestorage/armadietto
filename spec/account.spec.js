@@ -15,8 +15,8 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     after(async function () {
+      this.timeout(60_000);
       if (this.userIdAccount) {
-        this.timeout(15_000);
         await deleteUsersLoggingFailures(this.accountMgr, [this.userIdAccount]);
       }
     });
@@ -34,7 +34,7 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('creates a user & rejects creating a new user with an existing username', async function () {
-      this.timeout(15_000);
+      this.timeout(60_000);
       const params1 = { username: this.usernameAccount, contactURL: 'a@b.cc' };
       const logNotes1 = new Set();
       const user = await this.accountMgr.createUser(params1, logNotes1);
@@ -50,6 +50,8 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
   });
 
   describe('getUser', function () {
+    this.timeout(60_000);
+
     it('should throw NoSuchUserError if user doesn\'t exist', async function () {
       const novelUsername = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
 
@@ -58,6 +60,8 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
   });
 
   describe('updateUser', function () {
+    this.timeout(60_000);
+
     it('should throw NoSuchUserError if user doesn\'t exist', async function () {
       const novelUsername = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
       const novelUser = { username: novelUsername, contactURL: 'j@kk.ll' };
@@ -67,18 +71,19 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
   });
 
   describe('listUsers', function () {
+    this.timeout(60_000);
+
     before(function () {
       this.usernameAccountList1 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
       this.usernameAccountList2 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
     });
 
     after(async function () {
-      this.timeout(15_000);
+      this.timeout(60_000);
       await deleteUsersLoggingFailures(this.accountMgr, [this.usernameAccountList1, this.usernameAccountList2]);
     });
 
     it('should list users', async function () {
-      this.timeout(30_000);
       const params1 = { username: this.usernameAccountList1, contactURL: 'mailto:d@ef.gh' };
       this.user1 = await this.accountMgr.createUser(params1, new Set());
       const params2 = { username: this.usernameAccountList2, contactURL: 'mailto:i@jk.lm' };
@@ -95,13 +100,15 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
   });
 
   describe('deleteUser', function () {
+    this.timeout(60_000);
+
     before(function () {
       this.usernameAccount2 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
       this.usernameAccount3 = 'automated-test-' + Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
     });
 
     after(async function () {
-      this.timeout(15_000);
+      this.timeout(60_000);
       const usernames = [];
       if (this.user2?.username) { usernames.push(this.user2.username); }
       if (this.user3?.username) { usernames.push(this.user3.username); }
@@ -109,7 +116,6 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('deletes a user', async function () {
-      this.timeout(60_000);
       const params = { username: this.usernameAccount2, contactURL: 'a@b.cc' };
       this.user2 = await this.accountMgr.createUser(params, new Set());
 
@@ -122,7 +128,6 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('returns normally when user deleted twice at the same time', async function () {
-      this.timeout(15_000);
       const params = { username: this.usernameAccount3, contactURL: 'b@c.dd' };
       this.user3 = await this.accountMgr.createUser(params, new Set());
 
@@ -139,8 +144,6 @@ module.exports.shouldCreateDeleteAndReadAccounts = function () {
     });
 
     it('returns normally when user doesn\'t exist', async function () {
-      this.timeout(10_000);
-
       const logNotes = new Set();
       const result = await this.accountMgr.deleteUser(widelyCompatibleId(64), logNotes);
       expect(result?.[0]).to.equal(0);

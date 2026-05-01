@@ -1,11 +1,18 @@
 # Armadietto [![npm](https://img.shields.io/npm/v/armadietto)](https://www.npmjs.com/package/armadietto) [![Build Status](https://github.com/remotestorage/armadietto/actions/workflows/test-and-lint.yml/badge.svg)](https://github.com/remotestorage/armadietto/actions/workflows/test-and-lint.yml?query=branch%3Amaster)
 
-> ### :warning: WARNING
-> Please do not consider `armadietto` production ready, this project is still
-> considered experimental.  As with any alpha-stage storage technology, you
-> MUST expect that it will eat your data and take precautions against this. You
-> SHOULD expect that its APIs and storage schemas will change before it is
-> labelled stable.
+> [!IMPORTANT]
+> While this project has been used operationally for years,
+> it should be considered beta software.
+> Before using it, check the
+> [current bugs](https://github.com/remotestorage/armadietto/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug)
+> to see if any will affect your installation.
+>
+> Run a test installation to determine if the current feature set meets your needs;
+> you may need to help extend any features important to you.
+>
+> Implement a robust backup system for production,
+> and ramp up usage slowly while monitoring the load on your server(s).
+
 
 ## What is this?
 
@@ -34,9 +41,9 @@ See the `notes` directory for [configuring a reverse proxy](notes/reverse-proxy-
 * Authenticates user with Passkey or "invitation" URL
 * Can run multiple application servers to increase capacity to enterprise-scale
 * Unauthorized clients are rate-limited; an authorized client may use all capacity to back up or restore quickly
-* Bug Fix: correctly handles If-None-Match with ETag
-* Bug Fix: returns empty listing for nonexistent folder
-* Implements current spec: draft-dejong-remotestorage-22
+* Correctly handles If-None-Match with ETag [fix relative to Classic]
+* Returns empty listing for nonexistent folder [fix relative to Classic]
+* Implements recent spec: draft-dejong-remotestorage-22
 
 See [the Express-server-specific documentation](./notes/modular-server.md) for usage.
 
@@ -44,8 +51,9 @@ See [the Express-server-specific documentation](./notes/modular-server.md) for u
 
 * Stores user documents in server file system
 * Authenticates user with password
-* More thoroughly tested
-* Doesn't fully implement spec:
+* Longer history of production use
+* Bug: [restoring a backup of a non-existent file fails](https://github.com/remotestorage/armadietto/issues/164)
+* Doesn't fully implement [spec](https://github.com/remotestorage/spec/blob/main/release/draft-dejong-remotestorage-26.txt):
   * doesn't send the `Last-Modified` header
   * sometimes doesn't send the `Content-Length` header
   * sends incorrect 403 status when Authorization header is missing.
@@ -167,7 +175,7 @@ See [`DEVELOPMENT.md`](./DEVELOPMENT.md)
 (The MIT License)
 
 Copyright © 2012–2015 James Coglan
-Copyright © 2018–2025 remoteStorage contributors
+Copyright © 2018–2026 remoteStorage contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in

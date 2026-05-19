@@ -10,7 +10,7 @@ There's an NPM module for almost anything worth doing in a Node.js server (albei
 
 ### S3-compatible storage
 
-In addition to installing Armadietto, you **MUST** have a server  with an S3-compatible interface.
+Before installing Armadietto, you **MUST** have a server with an S3-compatible interface.
 If your hosting provider doesn't offer S3-compatible storage as a service, you can self-host using any of several open-source servers, on the same machine as Armadietto if you like.
 
 See [S3-compatible Streaming Store](S3-store-router.md) for compatability of various implementations.
@@ -116,7 +116,10 @@ You *MUST* set `app.locals.title` and `app.locals.signup` or the web pages won't
 
 ## Multiple instances of the modular server
 
-Sessions are stored in memory, so your load balancer must use sticky sessions (session affinity), for `/admin`, `/account` and `/oauth` paths.
+Sessions are stored in memory, so your load balancer **must** use sticky sessions (session affinity), for everything under the `/admin`, `/account` and `/oauth` paths.
+
+Other paths **should not** use sticky sessions (session affinity), so the load is evenly distributed across the instances.
+As requests may vary greatly in size, least-connections or random-two are probably better load-balancing algorithms than round-robin.
 
 ## Proxies
 
@@ -136,6 +139,8 @@ Contact URLs are used to identify users, when issuing invitations. Ideally, it s
 Armadietto can't send invitations itself yet; an admin must send the invitation manually, using their own account.  The Armadietto user interface allows you to send the invite via the system share functionality, or copy and paste from the user interface.
 You can send the invite by any means; it's not required that you use the contact info in the Contact URL.
 For example, you could send an invite to a person in the same room, using AirDrop or Nearby Share, or save the invite in a file drop.
+
+For each ecosystem of devices that share Passkeys (Apple Keychain, Windows Hello, Google Password Manager, YubiKey, etc.) and each browser not part of an ecosystem, a separate Passkey must be generated, and thus a separate invite must be sent.  After the first invite, users can create the other invites themselves.
 
 If `allow_signup` is set in the configuration file, anyone can *request* an invite.
 Admins can list these requests and grant them.

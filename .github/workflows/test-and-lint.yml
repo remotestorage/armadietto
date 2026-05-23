@@ -1,9 +1,7 @@
 name: test-and-lint
 on:
   push:
-    branches: [ master, modular ]
   pull_request:
-    branches: [ master, modular ]
 jobs:
   build:
     name: node.js
@@ -12,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         # Support LTS versions based on https://nodejs.org/en/about/releases/
-        node-version: ['18', '20', '21']
+        node-version: ['22', '24', '26']
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}

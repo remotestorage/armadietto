@@ -958,11 +958,12 @@ only screen and (max-width: 500px)  {
 }
 
 #switch.dark::before {
-  mask-image: url('sprite.svg#icon-sun');
+  mask-image: url('sprite.svg#icon-moon');
 }
 #switch.light::before {
-  mask-image: url('sprite.svg#icon-moon ');
+  mask-image: url('sprite.svg#icon-sun');
 }
+
 .deemphasize {
 	color: #a6a6a6;
 	font-size: 0.8em;

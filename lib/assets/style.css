@@ -8,6 +8,8 @@
 
 /* VARIABLES */
 :root {
+  color-scheme: light dark;
+
   --font-fallback: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
     "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-sans;
 
@@ -34,84 +36,50 @@
   --default-error-color: #aa2e2e;
 
   --github-sprite-url: url("sprite.svg#icon-github-dark");
+
+  /* Same across themes */
+  --rs-brand-color: var(--rs-orange-color);
+  --arma-brand-color: var(--arma-orange-color);
+  --arma-link-color: var(--arma-black-color);
+  --arma-link-bckgrd-color: var(--arma-orange-color);
+  --arma-link-border-width: 0 .25rem;
+  --arma-btn-txt-color: var(--arma-black-color);
+  --default-signup-color: var(--arma-brand-color);
+  --default-cancel-hover-color: var(--arma-orangered-color);
+  --default-allow-color: var(--default-success-color);
+
+  /* Light-dark theme-aware colors */
+  --rs-frgrd-color: light-dark(var(--rs-white-color), var(--rs-black-color));
+  --rs-bckgrd-color: light-dark(var(--rs-black-color), var(--rs-white-color));
+  --arma-bckgrd-color: light-dark(var(--arma-whitesmoke-color), var(--arma-black-color));
+  --arma-bckgrd-color-alt: light-dark(var(--arma-lightgray-color), var(--arma-darkgray-color));
+  --arma-title-color: light-dark(#0d0608, var(--arma-whitesmoke-color));
+  --arma-text-color: light-dark(var(--arma-black-color), var(--arma-wheat-color));
+  --arma-extra-color: light-dark(#185d6e, #69a2b0);
+  --arma-link-color-hover: light-dark(var(--arma-whitesmoke-color), var(--arma-black-color));
+  --arma-link-hover-bckgrd-color: light-dark(var(--arma-black-color), var(--arma-whitesmoke-color));
+  --default-success-color: light-dark(#057013, #3fb34f);
+  --default-cancel-color: light-dark(#121314, var(--arma-whitesmoke-color));
+  --default-cancel-reverse-color: light-dark(var(--arma-whitesmoke-color), #121314);
+  --arma-focus-bckgrd-color: light-dark(var(--arma-extra-color), hsla(0, 0%, 30%, .45));
+  --arma-focus-border-color: light-dark(var(--arma-extra-color), hsla(0, 0%, 100%, .45));
+  --icon-eye-blocked: light-dark(url('sprite.svg#icon-eye-blocked-dark'), url('sprite.svg#icon-eye-blocked-light'));
+  --icon-eye: light-dark(url('sprite.svg#icon-eye-dark'), url('sprite.svg#icon-eye-light'));
+
+  /* Light-only (no dark counterpart) */
+  --rs-blurb-bckgrd-color: var(--rs-black-color);
+  --rs-blurb-border-color: var(--rs-black-color);
+  --em-form-bckgrd-color: var(--arma-orange-color);
+  --github-sprite-url-hover: url("sprite.svg#icon-github-light");
 }
 
 :root[data-theme="light"] {
-  --rs-brand-color: var(--rs-orange-color);
-  --rs-frgrd-color: var(--rs-white-color);
-  --rs-bckgrd-color: var(--rs-black-color);
-
-  --arma-bckgrd-color:  var(--arma-whitesmoke-color);
-  --arma-bckgrd-color-alt:  var(--arma-lightgray-color);
-  --arma-title-color: #0d0608;
-  --arma-text-color: var(--arma-black-color);
-  --arma-brand-color: var(--arma-orange-color);
-  --arma-extra-color: #185d6e;
-
-  --arma-link-color: var(--arma-black-color);
-  --arma-link-color-hover: var(--arma-whitesmoke-color);
-  --arma-link-bckgrd-color: var(--arma-orange-color);
-  --arma-link-hover-bckgrd-color: var(--arma-black-color);
-  --arma-link-border-width: 0 .25rem;
-
-  --arma-btn-txt-color: var(--arma-black-color);
-
-  --default-allow-color: var(--default-success-color);
-  --default-signup-color: var(--arma-brand-color);
-
-  --default-cancel-color: #121314;
-  --default-cancel-reverse-color: var(--arma-whitesmoke-color);
-  --default-cancel-hover-color: var(--arma-orangered-color);
-
-  --default-success-color: #057013;
-  --arma-focus-bckgrd-color: var(--arma-extra-color);
-  --arma-focus-border-color: var(--arma-extra-color);
-
-  --rs-blurb-bckgrd-color: var(--rs-black-color);
-  --rs-blurb-border-color: var(--rs-black-color);
-
-  --em-form-bckgrd-color: var(--arma-orange-color);
-
-  --github-sprite-url-hover: url("sprite.svg#icon-github-light");
-  --icon-eye-blocked: url('sprite.svg#icon-eye-blocked-dark');
-  --icon-eye: url('sprite.svg#icon-eye-dark');
+  color-scheme: only light;
 }
 
-/* @media (prefers-color-scheme: dark) { */
-  :root[data-theme="dark"] {
-    --rs-brand-color: var(--rs-orange-color);
-    --rs-frgrd-color: var(--rs-black-color);
-    --rs-bckgrd-color: var(--rs-white-color);
-
-    --arma-bckgrd-color:  var(--arma-black-color);
-    --arma-bckgrd-color-alt:  var(--arma-darkgray-color);
-    --arma-title-color: var(--arma-whitesmoke-color);
-    --arma-text-color: var(--arma-wheat-color);
-    --arma-brand-color: var(--arma-orange-color);
-    --arma-extra-color: #69a2b0;
-
-    --arma-link-color: var(--arma-black-color);
-    --arma-link-color-hover: var(--arma-black-color);
-    --arma-link-bckgrd-color: var(--arma-orange-color);
-    --arma-link-hover-bckgrd-color: var(--arma-whitesmoke-color);
-    --arma-link-border-width: 0 .25rem;
-
-    --arma-btn-txt-color: var(--arma-black-color);
-
-    --default-success-color: #3fb34f;
-    --arma-focus-bckgrd-color: hsla(0, 0%, 30%, .45);
-    --arma-focus-border-color: hsla(0, 0%, 100%, .45);
-    --default-allow-color: var(--default-success-color);
-    --default-signup-color: var(--arma-brand-color);
-
-    --default-cancel-color: var(--arma-whitesmoke-color);
-    --default-cancel-reverse-color: #121314;
-    --default-cancel-hover-color: var(--arma-orangered-color);
-
-    --icon-eye-blocked: url('sprite.svg#icon-eye-blocked-light');
-    --icon-eye: url('sprite.svg#icon-eye-light');
-  }
-/* } */
+:root[data-theme="dark"] {
+  color-scheme: only dark;
+}
 
 /* GLOBALS */
 

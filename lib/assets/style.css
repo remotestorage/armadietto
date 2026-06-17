@@ -946,17 +946,22 @@ only screen and (max-width: 500px)  {
 #switch::before {
   content: '';
   display: inline-block;
-  place-content: center;
   width: var(--default-icon-size);
+  height: var(--default-icon-size);
   margin: auto;
+  background-color: var(--arma-text-color);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: url('sprite.svg#icon-screen');
 }
 
 #switch.dark::before {
-  content: url('sprite.svg#icon-sun');
+  mask-image: url('sprite.svg#icon-sun');
 }
-
 #switch.light::before {
-  content: url('sprite.svg#icon-moon');
+  mask-image: url('sprite.svg#icon-moon ');
 }
 .deemphasize {
 	color: #a6a6a6;

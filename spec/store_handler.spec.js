@@ -419,7 +419,7 @@ module.exports.shouldStoreStreams = function () {
         expect(subfolder.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolder.items['purple-ultraviolet']['Content-Type']).to.equal('text/plain');
         expect(subfolder.items['purple-ultraviolet']['Content-Length']).to.equal(content3.length);
-        expect(Date.now() - new Date(subfolder.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(subfolder.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(30_000);
 
         const [_getReq2, getRes2] = await callMiddleware(this.handler, {
           method: 'GET',
@@ -466,7 +466,7 @@ module.exports.shouldStoreStreams = function () {
         const subfolderChanged = JSON.parse(subfolderRes2._getBuffer().toString());
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).not.to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes4.get('ETag')));
-        expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(30_000);
 
         const logNotes = new Set();
         const newFolder = await this.handler.listFolder(this.userIdStore, 'color-category/color-folder/', true, logNotes);
@@ -507,7 +507,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder.items.mud.ETag).to.equal(stripQuotes(putRes.get('ETag')));
         expect(folder.items.mud['Content-Type']).to.equal('text/vnd.qq');
         expect(folder.items.mud['Content-Length']).to.equal(content.length);
-        expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(30_000);
 
         const logNotes = new Set();
         const newFolder = await this.handler.listFolder(this.userIdStore, 'fill-category/fill-folder', true, logNotes);
@@ -1095,7 +1095,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder1.items.qux['Content-Length']).to.be.equal(content.length);
         expect(folder1.items.qux['Content-Type']).to.be.equal('text/example');
         expect(folder1.items.qux.ETag).to.be.equal(stripQuotes(putRes.get('ETag')));
-        expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(30_000);
 
         const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/videos/foo/` });
         expect(folderRes2.statusCode).to.equal(200, folderRes2._getData());

@@ -1259,6 +1259,38 @@ module.exports.shouldStoreStreams = function () {
         expect(getRes.get('ETag')).to.equal(putRes2.get('ETag'));
       });
 
+      it('updates a file when If-Match has a mangled matching ETag', async function () {
+        const content1 = 'Burroughs';
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
+          method: 'PUT',
+          url: `/${this.userIdStore}/existing/if-match-mangled`,
+          headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
+          body: content1
+        });
+        expect(putRes1.statusCode).to.equal(201);
+        expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes1._getBuffer().toString()).to.equal('');
+
+        const content2 = 'Carter';
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
+          method: 'PUT',
+          url: `/${this.userIdStore}/existing/if-match-mangled`,
+          headers: { 'If-Match': '"W/' + putRes1.get('ETag'), 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
+          body: content2
+        });
+        expect(putRes2.statusCode).to.equal(200);
+        expect(putRes2.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes2.get('ETag')).not.to.equal(putRes1.get('ETag'));
+        expect(putRes2._getBuffer().toString()).to.equal('');
+
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/existing/if-match-mangled` });
+        expect(getRes.statusCode).to.equal(200);
+        expect(getRes._getBuffer().toString()).to.equal(content2);
+        expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
+        expect(getRes.get('Content-Type')).to.equal('text/vnd.xyz');
+        expect(getRes.get('ETag')).to.equal(putRes2.get('ETag'));
+      });
+
       it('does not update a file when If-Match has an old ETag', async function () {
         const content1 = 'Nemo';
         const [_putReq1, putRes1] = await callMiddleware(this.handler, {

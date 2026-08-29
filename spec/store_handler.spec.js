@@ -1649,6 +1649,30 @@ module.exports.shouldStoreStreams = function () {
         expect(next).not.to.have.been.called();
       });
 
+      it('deletes a document if the If-Match header is mangled but equal', async function () {
+        const content = 'spasm';
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
+          method: 'PUT',
+          url: `/${this.userIdStore}/deleting/if-match/equal-mangled`,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.s' },
+          body: content
+        });
+        expect(putRes.statusCode).to.equal(201);
+        expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes._getBuffer().toString()).to.equal('');
+
+        const [_deleteReq, deleteRes, next] = await callMiddleware(this.handler, {
+          method: 'DELETE',
+          url: `/${this.userIdStore}/deleting/if-match/equal-mangled`,
+          headers: { 'If-Match': '"W/' + putRes.get('ETag') }
+        });
+
+        expect(deleteRes.statusCode).to.equal(204);
+        expect(deleteRes._getBuffer().toString()).to.equal('');
+        expect(stripQuotes(deleteRes.get('ETag'))).to.equal(stripQuotes(putRes.get('ETag')));
+        expect(next).not.to.have.been.called();
+      });
+
       it('should not delete a blob if the If-Match header isn\'t equal', async function () {
         const content = 'elbow';
         const [_putReq, putRes] = await callMiddleware(this.handler, {

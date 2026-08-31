@@ -1,3 +1,4 @@
+/* eslint-env mocha, chai */
 const chai = require('chai');
 const expect = chai.expect;
 const normalizeETag = require('../lib/util/normalizeETag');

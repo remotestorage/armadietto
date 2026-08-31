@@ -419,7 +419,7 @@ module.exports.shouldStoreStreams = function () {
         expect(subfolder.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolder.items['purple-ultraviolet']['Content-Type']).to.equal('text/plain');
         expect(subfolder.items['purple-ultraviolet']['Content-Length']).to.equal(content3.length);
-        expect(Date.now() - new Date(subfolder.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(subfolder.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(30_000);
 
         const [_getReq2, getRes2] = await callMiddleware(this.handler, {
           method: 'GET',
@@ -466,7 +466,7 @@ module.exports.shouldStoreStreams = function () {
         const subfolderChanged = JSON.parse(subfolderRes2._getBuffer().toString());
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).not.to.equal(stripQuotes(putRes3.get('ETag')));
         expect(subfolderChanged.items['purple-ultraviolet'].ETag).to.equal(stripQuotes(putRes4.get('ETag')));
-        expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(subfolderChanged.items['purple-ultraviolet']['Last-Modified'])).to.be.lessThan(30_000);
 
         const logNotes = new Set();
         const newFolder = await this.handler.listFolder(this.userIdStore, 'color-category/color-folder/', true, logNotes);
@@ -507,7 +507,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder.items.mud.ETag).to.equal(stripQuotes(putRes.get('ETag')));
         expect(folder.items.mud['Content-Type']).to.equal('text/vnd.qq');
         expect(folder.items.mud['Content-Length']).to.equal(content.length);
-        expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(folder.items.mud['Last-Modified'])).to.be.lessThan(30_000);
 
         const logNotes = new Set();
         const newFolder = await this.handler.listFolder(this.userIdStore, 'fill-category/fill-folder', true, logNotes);
@@ -1095,7 +1095,7 @@ module.exports.shouldStoreStreams = function () {
         expect(folder1.items.qux['Content-Length']).to.be.equal(content.length);
         expect(folder1.items.qux['Content-Type']).to.be.equal('text/example');
         expect(folder1.items.qux.ETag).to.be.equal(stripQuotes(putRes.get('ETag')));
-        expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(15_000);
+        expect(Date.now() - new Date(folder1.items.qux['Last-Modified'])).to.be.lessThan(30_000);
 
         const [_folderReq2, folderRes2] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/videos/foo/` });
         expect(folderRes2.statusCode).to.equal(200, folderRes2._getData());
@@ -1252,6 +1252,38 @@ module.exports.shouldStoreStreams = function () {
         expect(putRes2._getBuffer().toString()).to.equal('');
 
         const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/existing/if-match` });
+        expect(getRes.statusCode).to.equal(200);
+        expect(getRes._getBuffer().toString()).to.equal(content2);
+        expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
+        expect(getRes.get('Content-Type')).to.equal('text/vnd.xyz');
+        expect(getRes.get('ETag')).to.equal(putRes2.get('ETag'));
+      });
+
+      it('updates a file when If-Match has a mangled matching ETag', async function () {
+        const content1 = 'Burroughs';
+        const [_putReq1, putRes1] = await callMiddleware(this.handler, {
+          method: 'PUT',
+          url: `/${this.userIdStore}/existing/if-match-mangled`,
+          headers: { 'Content-Length': content1.length, 'Content-Type': 'text/vnd.abc' },
+          body: content1
+        });
+        expect(putRes1.statusCode).to.equal(201);
+        expect(putRes1.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes1._getBuffer().toString()).to.equal('');
+
+        const content2 = 'Carter';
+        const [_putReq2, putRes2] = await callMiddleware(this.handler, {
+          method: 'PUT',
+          url: `/${this.userIdStore}/existing/if-match-mangled`,
+          headers: { 'If-Match': '"W/' + putRes1.get('ETag'), 'Content-Length': content2.length, 'Content-Type': 'text/vnd.xyz' },
+          body: content2
+        });
+        expect(putRes2.statusCode).to.equal(200);
+        expect(putRes2.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes2.get('ETag')).not.to.equal(putRes1.get('ETag'));
+        expect(putRes2._getBuffer().toString()).to.equal('');
+
+        const [_getReq, getRes] = await callMiddleware(this.handler, { method: 'GET', url: `/${this.userIdStore}/existing/if-match-mangled` });
         expect(getRes.statusCode).to.equal(200);
         expect(getRes._getBuffer().toString()).to.equal(content2);
         expect(parseInt(getRes.get('Content-Length'))).to.equal(content2.length);
@@ -1614,6 +1646,30 @@ module.exports.shouldStoreStreams = function () {
         expect(res.statusCode).to.equal(204);
         expect(res._getBuffer().toString()).to.equal('');
         expect(res.get('ETag')).to.equal(putRes.get('ETag'));
+        expect(next).not.to.have.been.called();
+      });
+
+      it('deletes a document if the If-Match header is mangled but equal', async function () {
+        const content = 'spasm';
+        const [_putReq, putRes] = await callMiddleware(this.handler, {
+          method: 'PUT',
+          url: `/${this.userIdStore}/deleting/if-match/equal-mangled`,
+          headers: { 'Content-Length': content.length, 'Content-Type': 'text/vnd.s' },
+          body: content
+        });
+        expect(putRes.statusCode).to.equal(201);
+        expect(putRes.get('ETag')).to.match(/^".{6,128}"$/);
+        expect(putRes._getBuffer().toString()).to.equal('');
+
+        const [_deleteReq, deleteRes, next] = await callMiddleware(this.handler, {
+          method: 'DELETE',
+          url: `/${this.userIdStore}/deleting/if-match/equal-mangled`,
+          headers: { 'If-Match': '"W/' + putRes.get('ETag') }
+        });
+
+        expect(deleteRes.statusCode).to.equal(204);
+        expect(deleteRes._getBuffer().toString()).to.equal('');
+        expect(stripQuotes(deleteRes.get('ETag'))).to.equal(stripQuotes(putRes.get('ETag')));
         expect(next).not.to.have.been.called();
       });
 

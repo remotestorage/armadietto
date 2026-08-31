@@ -1,5 +1,6 @@
-const { expect } = require('chai');
-const normalizeETag = require('../../lib/util/normalizeETag');
+const chai = require('chai');
+const expect = chai.expect;
+const normalizeETag = require('../lib/util/normalizeETag');
 
 describe('normalizeETag', () => {
   it('returns the input if it is falsy', () => {

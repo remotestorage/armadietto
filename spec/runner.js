@@ -14,7 +14,7 @@ require('./armadietto/a_storage_spec');
 require('./stores/file_tree_spec');
 // require('./stores/redis_spec');
 
-require('./util/normalizeETag.spec');
+require('./normalizeETag.spec');
 
 require('./modular/m_root.spec');
 require('./modular/m_not_found.spec');

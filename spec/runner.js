@@ -15,6 +15,7 @@ require('./stores/file_tree_spec');
 // require('./stores/redis_spec');
 
 require('./normalizeETag.spec');
+require('./S3_store_router.spec');
 
 require('./modular/m_root.spec');
 require('./modular/m_not_found.spec');

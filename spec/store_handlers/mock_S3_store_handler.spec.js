@@ -3,9 +3,9 @@ const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-spies'));
 const { S3Client } = require('@aws-sdk/client-s3');
-const s3StoreHandler = require('../lib/routes/S3_store_router');
-const callMiddleware = require('./util/callMiddleware');
-const { configureLogger } = require('../lib/logger');
+const s3StoreHandler = require('../../lib/routes/S3_store_router');
+const callMiddleware = require('../util/callMiddleware');
+const { configureLogger } = require('../../lib/logger');
 
 describe('S3 store router with malformed backend ETags', function () {
   const storedETag = 'W/ABC123';

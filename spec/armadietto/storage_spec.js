@@ -240,6 +240,16 @@ describe('Storage', () => {
         expect(res.text).to.be.equal('a value');
       });
 
+      it('returns the stored Content-Length for a HEAD request', async () => {
+        store.get = () => ({ item: { ...item, 'Content-Length': 7, value: '' } });
+        const res = await req.head('/storage/zebcoe/locog/seats')
+          .set('Authorization', 'Bearer a_token').send();
+        expect(res).to.have.status(200);
+        expect(res).to.have.header('Content-Length', '7');
+        expect(res).to.have.header('Content-Type', 'custom/type');
+        expect(res).to.have.header('ETag', '"1330177020000"');
+      });
+
       it('returns a 304 for a failed conditional', async () => {
         store.get = () => ({ item, versionMatch: true });
         const res = await get('/storage/zebcoe/locog/seats');
